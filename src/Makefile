@@ -1,0 +1,81 @@
+
+OS := $(shell sh -c 'uname -s 2>/dev/null || echo unknow')
+
+OPTIMIZATION?=-O2
+
+
+RM=rm -rf
+PREFIX?=/usr/local
+INSTALL_BIN=$(PREFIX)/bin
+INSTALL=install
+
+STD=-std=c99 -pedantic
+WARN=-Wall -W -Wno-missing-field-initializers
+OPT=$(OPTIMIZATION)
+DEBUG=-g -ggdb
+
+DEPENDENCY_TARGETS=yaml
+LIBYAML=yaml-0.1.5
+
+FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS)
+FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
+
+FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG)
+
+ifeq ($(OS), Linux)
+	FINAL_LIBS+= -lm -lrt -lpthread
+else
+ifeq ($(OS), Darwin)
+	FINAL_LIBS+= -lm
+endif
+endif
+
+FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
+
+CC?=gcc
+RPG_CC=$(CC) $(FINAL_CFLAGS)
+RPG_LD=$(CC) $(FINAL_LDFLAGS)
+RPG_INSTALL=$(INSTALL)
+
+RPG_BIN=rpg
+RPG_OBJ=rpg.o log.o config.o
+
+%.o: %.c
+	$(RPG_CC) -c $<
+
+default: single
+
+
+all: make-contrib $(RPG_BIN)
+.PHONY: all
+
+make-contrib:
+	-(cd ../contrib && $(MAKE) $(DEPENDENCY_TARGETS)) 
+.PHONY: make-contrib
+
+$(RPG_BIN): $(RPG_OBJ) 
+	$(RPG_LD) $(FINAL_LIBS) $^  -o $@ 
+
+single: $(RPG_BIN)
+.PHONY: single
+
+clean:
+	$(RM) $(RPG_BIN) *.o *.gch *.swp
+.PHONY: clean
+
+distclean: clean
+	-(cd ../contrib && $(MAKE) distclean)
+
+install: 
+	@mkdir -p $(INSTALL_BIN)
+	$(RPG_INSTALL) $(RPG_BIN) $(INSTALL_BIN)
+
+noopt:
+	$(MAKE) OPTIMIZATION="-O0"
+	
+test:
+	@echo $(FINAL_CFLAGS)
+	@echo $(FINAL_LIBS)
+.PHONY: test
+
+
