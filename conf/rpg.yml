@@ -1,0 +1,9 @@
+
+title: Rotating Proxy Gateway
+author: kenshin
+
+daemon: true
+
+log:
+    file: ../logs/rpg.log
+    level: NOTICE #DEBUG| INFO| NOTICE| WARN| ERROR| CRIT

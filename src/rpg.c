@@ -8,6 +8,11 @@
 #include <getopt.h>
 
 
+#define RPG_DEFAULT_LOG_LEVEL       LOG_NOTICE
+#define RPG_DEFAULT_LOG_FILE        NULL
+#define RPG_DEFAULT_CONFIG_FILE     "../conf/rpg.yml"
+#define RPG_DEFAULT_PID_FILE        NULL
+
 
 static struct option long_options[] = {
     { "help",        no_argument,        NULL,   'h' },
@@ -39,8 +44,8 @@ rpg_show_usage() {
         "   -c, --config=S       :set configuration file (default: %s)" CRLF
         "   -p, --pidfile=S      :set pid file (default: %s)" CRLF
         "",
-        CONFIG_DEFAULT_FILE, 
-        CONFIG_DEFAULT_PIDFILE == NULL ? "off" : CONFIG_DEFAULT_PIDFILE
+        RPG_DEFAULT_CONFIG_FILE, 
+        RPG_DEFAULT_PID_FILE == NULL ? "off" : RPG_DEFAULT_PID_FILE
     );
     exit(1);
 }
@@ -50,6 +55,18 @@ rpg_show_version() {
     log_stdout("rpg %s", RPG_VERSION);
     exit(0);
 } 
+
+static void
+rpg_set_default_options(struct application *app) {
+    app->log_level = RPG_DEFAULT_LOG_LEVEL;
+    app->log_filename = RPG_DEFAULT_LOG_FILE;
+    
+    app->pid = (pid_t)-1;
+    app->pid_filename = NULL;
+    
+    app->config_filename = RPG_DEFAULT_CONFIG_FILE;
+    app->conf = NULL;
+}
 
 static rpg_status_t
 rpg_get_options(int argc, char **argv, struct application *app) {
@@ -72,13 +89,13 @@ rpg_get_options(int argc, char **argv, struct application *app) {
                 app->daemon = 1;
                 break;
             case 'v':
-                app->log_level = LOG_DEBUG;
+                app->log_level = LOG_VERBOSE;
                 break;
             case 'c':
-                app->config_file = optarg;
+                app->config_filename = optarg;
                 break;
             case 'p':
-                app->pid_file = optarg;
+                app->pid_filename = optarg;
                 break;
             case '?':
                 /* getopt_long already printed an error message. */
@@ -95,9 +112,10 @@ static rpg_status_t
 rpg_load_config(struct application *app) {
     struct config *conf;
 
-    conf = config_create(app->config_file);
+    printf("%s\n", app->config_filename);
+    conf = config_create(app->config_filename);
     if (conf == NULL) {
-        log_stderr("configure file '%s' syntax is invalid", app->config_file);
+        log_stderr("configure file '%s' syntax is invalid", app->config_filename);
         return RPG_ERROR;
     }
     
@@ -110,10 +128,14 @@ main(int argc, char **argv) {
     struct application app;
     rpg_status_t status;
 
+    rpg_set_default_options(&app);
+
     status = rpg_get_options(argc, argv, &app);
     if (status != RPG_OK) {
         rpg_show_usage();
     }
+
+    log_init(app.log_level, app.log_filename);
 
     status = rpg_load_config(&app);
     if (status != RPG_OK) {

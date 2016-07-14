@@ -21,4 +21,8 @@ src/.*.swp
 *.swp
 *.o
 /src/rpg
+<<<<<<< HEAD
 >>>>>>> Better protocols directory designs
+=======
+/src/tags
+>>>>>>> Configure file load function

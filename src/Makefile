@@ -38,7 +38,7 @@ RPG_LD=$(CC) $(FINAL_LDFLAGS)
 RPG_INSTALL=$(INSTALL)
 
 RPG_BIN=rpg
-RPG_OBJ=rpg.o log.o config.o
+RPG_OBJ=rpg.o log.o config.o util.o
 
 %.o: %.c
 	$(RPG_CC) -c $<

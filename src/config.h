@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-#define CONFIG_DEFAULT_FILE     "../conf/rpg.yml"
-#define CONFIG_DEFAULT_PIDFILE  NULL
-
 struct config_server {
     char        *listen;
     uint16_t     port;

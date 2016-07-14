@@ -9,12 +9,13 @@
 typedef int rpg_status_t;
 
 struct application {
-    pid_t               pid;
     int                 log_level;
-    char                *config_file;
-    char                *pid_file;
-    unsigned            daemon:1;
+    char                *log_filename;
+    pid_t               pid;
+    char                *pid_filename;
+    char                *config_filename;
     struct config       *conf;
+    unsigned            daemon:1;
 };
 
 
