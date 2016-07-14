@@ -89,7 +89,7 @@ rpg_get_options(int argc, char **argv, struct application *app) {
                 app->daemon = 1;
                 break;
             case 'v':
-                app->log_level = LOG_VERBOSE;
+                app->verbose = 1;
                 break;
             case 'c':
                 app->config_filename = optarg;
@@ -112,7 +112,6 @@ static rpg_status_t
 rpg_load_config(struct application *app) {
     struct config *conf;
 
-    printf("%s\n", app->config_filename);
     conf = config_create(app->config_filename);
     if (conf == NULL) {
         log_stderr("configure file '%s' syntax is invalid", app->config_filename);
@@ -135,7 +134,7 @@ main(int argc, char **argv) {
         rpg_show_usage();
     }
 
-    log_init(app.log_level, app.log_filename);
+    //log_init(app.log_level, app.log_filename);
 
     status = rpg_load_config(&app);
     if (status != RPG_OK) {

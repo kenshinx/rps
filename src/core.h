@@ -16,6 +16,7 @@ struct application {
     char                *config_filename;
     struct config       *conf;
     unsigned            daemon:1;
+    unsigned            verbose:1;
 };
 
 
