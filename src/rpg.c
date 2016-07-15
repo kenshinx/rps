@@ -8,7 +8,11 @@
 #include <getopt.h>
 
 
+#ifdef RPG_DEBUG_OPEN
+#define RPG_DEFAULT_LOG_LEVEL       LOG_VERBOSE
+#else
 #define RPG_DEFAULT_LOG_LEVEL       LOG_NOTICE
+#endif
 #define RPG_DEFAULT_LOG_FILE        NULL
 #define RPG_DEFAULT_CONFIG_FILE     "../conf/rpg.yml"
 #define RPG_DEFAULT_PID_FILE        NULL
@@ -25,7 +29,6 @@ static struct option long_options[] = {
 };
 
 static char short_options[] = "hVdvc:p:";
-
 
 static void
 rpg_show_usage() {
@@ -134,7 +137,7 @@ main(int argc, char **argv) {
         rpg_show_usage();
     }
 
-    //log_init(app.log_level, app.log_filename);
+    log_init(RPG_DEFAULT_LOG_LEVEL, RPG_DEFAULT_LOG_FILE);
 
     status = rpg_load_config(&app);
     if (status != RPG_OK) {

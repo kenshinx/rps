@@ -2,6 +2,7 @@
 #include "log.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 
 void *
@@ -51,6 +52,8 @@ _rpg_realloc(void *ptr, size_t size, const char *name, int line) {
     } else {
         log_verb("realloc(%zu) at %p @ %s:%d", size, p, name, line);
     }
+    
+    return p;
 }
 
 void 

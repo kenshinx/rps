@@ -13,11 +13,12 @@ STD=-std=c99 -pedantic
 WARN=-Wall -W -Wno-missing-field-initializers
 OPT=$(OPTIMIZATION)
 DEBUG=-g -ggdb
+RPG_DEBUG = $(RPG_DEBUG_OPEN)
 
 DEPENDENCY_TARGETS=yaml
 LIBYAML=yaml-0.1.5
 
-FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(CFLAGS)
+FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(RPG_DEBUG) $(CFLAGS)
 FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
 
 FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG)
@@ -38,7 +39,7 @@ RPG_LD=$(CC) $(FINAL_LDFLAGS)
 RPG_INSTALL=$(INSTALL)
 
 RPG_BIN=rpg
-RPG_OBJ=rpg.o log.o config.o util.o
+RPG_OBJ=rpg.o log.o config.o util.o array.o
 
 %.o: %.c
 	$(RPG_CC) -c $<
@@ -72,6 +73,9 @@ install:
 
 noopt:
 	$(MAKE) OPTIMIZATION="-O0"
+
+debug:
+	$(MAKE) RPG_DEBUG_OPEN="-DRPG_DEBUG_OPEN"
 	
 test:
 	@echo $(FINAL_CFLAGS)
