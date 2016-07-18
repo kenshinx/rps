@@ -4,11 +4,13 @@
 #include "array.h"
 #include "string.h"
 
+#include <yaml.h>
+
 #include <stdio.h>
 #include <stdint.h>
 
 struct config_server {
-    rpg_str_t       *listen;
+    rpg_str_t       listen;
     uint16_t        port;
 };
 
@@ -20,15 +22,22 @@ struct config_log {
 
 struct config {
     char            *fname;
-    FILE            *fd;
     rpg_str_t       title;
-    unsigned        daemon:1;
     rpg_str_t       pidfile;
-
-    rpg_array_t     *servers;
+    FILE            *fd;
+    unsigned        daemon:1;
+    rpg_array_t     servers;
+    rpg_array_t     arg;
+    uint32_t        depth;
+    unsigned        seq:1;
+    yaml_parser_t   parser;
+    yaml_event_t    event;
+    yaml_token_t    token;
+    
 };
 
 
 struct config *config_create(char *config_file);
+void config_destroy(struct config *cfg);
 
 #endif

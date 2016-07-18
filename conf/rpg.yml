@@ -6,6 +6,7 @@ daemon: true
 
 pidfile: /var/run/rpg.log
 
+
 log:
     file: ../logs/rpg.log
     level: NOTICE #DEBUG| INFO| NOTICE| WARN| ERROR| CRIT

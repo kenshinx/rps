@@ -114,7 +114,6 @@ rpg_load_config(struct application *app) {
 
     conf = config_create(app->config_filename);
     if (conf == NULL) {
-        log_stderr("configure file '%s' syntax is invalid", app->config_filename);
         return RPG_ERROR;
     }
     
