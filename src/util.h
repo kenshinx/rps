@@ -27,6 +27,7 @@ void *_rpg_realloc(void *ptr, size_t size, const char *name, int line);
 void _rpg_free(void *ptr, const char *name, int line);
 
 
+#define NOT_REACHED() rpg_assert("not reached", __FILE__, __LINE__);                                      
 #define ASSERT(_x) do {                                             \
     if (!(_x)) {                                                    \
         rpg_assert(#_x, __FILE__, __LINE__);                        \
