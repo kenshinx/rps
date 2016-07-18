@@ -26,8 +26,8 @@ struct config {
     rpg_str_t       pidfile;
     FILE            *fd;
     unsigned        daemon:1;
-    rpg_array_t     servers;
-    rpg_array_t     arg;
+    rpg_array_t     *servers;
+    rpg_array_t     *args;
     uint32_t        depth;
     unsigned        seq:1;
     yaml_parser_t   parser;

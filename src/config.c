@@ -13,6 +13,10 @@
 
 
 #define CONFIG_SERVERS_NUM  3
+#define CONFIG_DEFAULT_ARGS  3
+
+#define CONFIG_ROOT_PATH    1
+#define CONFIG_MAX_PATH     CONFIG_ROOT_PATH + 1
 
 
 static  rpg_status_t
@@ -36,24 +40,52 @@ config_event_done(struct config *cfg) {
 static rpg_status_t
 config_push_scalar(struct config *cfg) {
     rpg_status_t status;
+    rpg_str_t   *value;
 
-    uint8_t *scalar;
+    char *scalar;
     size_t length;
 
-    scalar = cfg->event.data.scalar.value;
+    scalar = (char *)cfg->event.data.scalar.value;
     length = cfg->event.data.scalar.length;
     if (length == 0) {
         return RPG_ERROR;
     }
 
     log_verb("push '%.*s'", length, scalar);
+
+    value = array_push(cfg->args);
+    if (value == NULL) {
+        return RPG_ENOMEM;
+    }
+    string_init(value);
+
+    status = string_dup(value, scalar, length);
+    if (status != RPG_OK) {
+        array_pop(cfg->args);
+        return status;
+    }
+
+    return RPG_OK;   
+}
+
+static void
+config_pop_scalar(struct config *cfg) {
+    rpg_str_t *value;
+
+    value = array_pop(cfg->args);
+    log_verb("pop '%.*s'", value->len, value->data);
+    string_deinit(value);
+}
+
+static rpg_status_t
+config_handler(struct config *cfg, char *section) {
+    return RPG_OK;
 }
 
 static struct config *
 config_open(char *filename) {
     struct config *cfg;
     FILE *fd;
-    rpg_array_t *array;
 
     fd = fopen(filename, "r");
     if (fd == NULL) {
@@ -156,17 +188,16 @@ config_begin_parse(struct config *cfg) {
 }
 
 static rpg_status_t
-config_parse_core(struct config *cfg) {
+config_parse_core(struct config *cfg, char *section) {
     rpg_status_t status;
     bool done, leaf;
-    yaml_char_t *section;
 
     status = config_event_next(cfg);
     if(status != RPG_OK) {
         return status;
     }
 
-    log_verb("next event %d depth %d seq %d", cfg->event.type,cfg->depth, cfg->seq);
+    log_verb("next event %d depth %d seq %d args.length %d", cfg->event.type,cfg->depth, cfg->seq, array_n(cfg->args));
 
     done = false;
     leaf = false;
@@ -177,11 +208,17 @@ config_parse_core(struct config *cfg) {
         break;
     case YAML_MAPPING_END_EVENT:
         cfg->depth--;
+        if (cfg->depth == 1) {
+            config_pop_scalar(cfg);
+        } else if (cfg->depth == 0) {
+            done = true;
+        }
         break;
     case YAML_SEQUENCE_START_EVENT:
         cfg->seq = 1;
         break;
     case YAML_SEQUENCE_END_EVENT:
+        config_pop_scalar(cfg);
         cfg->seq = 0;
         break;
     case YAML_SCALAR_EVENT:
@@ -189,9 +226,35 @@ config_parse_core(struct config *cfg) {
         if (status != RPG_OK) {
             break;
         }
+        if (cfg->seq) {
+            leaf = true;
+        } else if (cfg->depth == CONFIG_ROOT_PATH) {
+            /* new section */
+            section = (char *)cfg->event.data.scalar.value;
+            
+        } else if (array_n(cfg->args) == cfg->depth + 1) {
+            leaf = true;
+        }
+        break;
+    default:
+        NOT_REACHED();
     }
 
-    return RPG_OK;
+    config_event_done(cfg);
+    
+    if (status != RPG_OK) {
+        return status;
+    }
+
+    if (done) {
+        return RPG_OK;
+    }
+
+    if (leaf) {
+        status = config_handler(cfg, section);
+    }
+
+    return config_parse_core(cfg, section);
     
 }
 
@@ -199,7 +262,7 @@ static rpg_status_t
 config_parse(struct config *cfg){
     rpg_status_t status;
     
-    ASSERT(array_n(&cfg->servers) == 0);   
+    ASSERT(array_n(cfg->servers) == 0);   
 
     status = config_begin_parse(cfg);
     if (status != RPG_OK) {
@@ -207,7 +270,7 @@ config_parse(struct config *cfg){
     }
 
 
-    status = config_parse_core(cfg);
+    status = config_parse_core(cfg, NULL);
     if (status != RPG_OK) {
         return status;
     }
@@ -248,5 +311,6 @@ config_create(char *filename) {
 void
 config_destroy(struct config *cfg) {
     array_destroy(cfg->servers);
+    array_destroy(cfg->args);
     rpg_free(cfg);
 }
