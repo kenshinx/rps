@@ -24,7 +24,6 @@ static struct option long_options[] = {
     { "daemonize",   no_argument,        NULL,   'd' },
     { "verbose",     no_argument,        NULL,   'v' },
     { "conf-file",   required_argument,  NULL,   'c' },
-    { "pid-file",    required_argument,  NULL,   'p' },
     {  NULL,         0,                  NULL,    0  }
 };
 
@@ -45,7 +44,6 @@ rpg_show_usage() {
     log_stderr(
         "   -d, --daemon         :run as daemonize" CRLF
         "   -c, --config=S       :set configuration file (default: %s)" CRLF
-        "   -p, --pidfile=S      :set pid file (default: %s)" CRLF
         "",
         RPG_DEFAULT_CONFIG_FILE, 
         RPG_DEFAULT_PID_FILE == NULL ? "off" : RPG_DEFAULT_PID_FILE
@@ -65,7 +63,6 @@ rpg_set_default_options(struct application *app) {
     app->log_filename = RPG_DEFAULT_LOG_FILE;
     
     app->pid = (pid_t)-1;
-    app->pid_filename = NULL;
     
     app->config_filename = RPG_DEFAULT_CONFIG_FILE;
     app->conf = NULL;
@@ -130,6 +127,8 @@ main(int argc, char **argv) {
     struct application app;
     rpg_status_t status;
 
+    log_init(RPG_DEFAULT_LOG_LEVEL, RPG_DEFAULT_LOG_FILE);
+
     rpg_set_default_options(&app);
 
     status = rpg_get_options(argc, argv, &app);
@@ -137,13 +136,10 @@ main(int argc, char **argv) {
         rpg_show_usage();
     }
 
-    log_init(RPG_DEFAULT_LOG_LEVEL, RPG_DEFAULT_LOG_FILE);
-
     status = rpg_load_config(&app);
     if (status != RPG_OK) {
         exit(1);
     }
-    
 
     exit(1);
 }

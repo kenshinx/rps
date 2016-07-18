@@ -2,6 +2,7 @@
 #include "util.h"
 #include "log.h"
 #include "array.h"
+#include "string.h"
 
 #include <yaml.h>
 
@@ -53,6 +54,10 @@ config_create(char *filename) {
     struct config *cfg;
     
     cfg = config_open(filename);
+
+
+    rpg_str_t str2 = rpg_string("Hello Kenshin");
+    printf("%s len:%zu\n", str2.data, str2.len);
     
     return cfg;
 }
