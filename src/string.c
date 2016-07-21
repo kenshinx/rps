@@ -5,6 +5,25 @@
 #include <stdint.h>
 #include <string.h>
 
+rpg_str_t *
+string_new() {
+    rpg_str_t *str;
+    
+    str = rpg_malloc(sizeof(*str));
+    if (str == NULL) {
+        return NULL;
+    }
+    
+    string_init(str);
+    
+    return str;
+}
+
+void 
+string_free(rpg_str_t *str) {
+    string_deinit(str);
+    rpg_free(str);
+}
 
 rpg_status_t
 string_dup(rpg_str_t *dst, const char *src, size_t len) {
