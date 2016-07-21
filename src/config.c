@@ -79,6 +79,14 @@ config_pop_scalar(struct config *cfg) {
 
 static rpg_status_t
 config_handler(struct config *cfg, char *section) {
+    rpg_status_t;
+
+    if (!cfg->seq) {
+        log_verb("next event %d depth %d seq %d args.length %d", cfg->event.type,cfg->depth, cfg->seq, array_n(cfg->args));
+        config_pop_scalar(cfg->args);
+        config_pop_scalar(cfg->args);
+    }
+    
     return RPG_OK;
 }
 
@@ -197,7 +205,6 @@ config_parse_core(struct config *cfg, char *section) {
         return status;
     }
 
-    log_verb("next event %d depth %d seq %d args.length %d", cfg->event.type,cfg->depth, cfg->seq, array_n(cfg->args));
 
     done = false;
     leaf = false;
@@ -226,14 +233,18 @@ config_parse_core(struct config *cfg, char *section) {
         if (status != RPG_OK) {
             break;
         }
+
         if (cfg->seq) {
             leaf = true;
-        } else if (cfg->depth == CONFIG_ROOT_PATH) {
-            /* new section */
-            section = (char *)cfg->event.data.scalar.value;
-            
-        } else if (array_n(cfg->args) == cfg->depth + 1) {
-            leaf = true;
+            break;
+        }
+
+        if (cfg->depth == CONFIG_ROOT_PATH) {
+            if (array_n(cfg->args) == cfg->depth + 1) {
+                section = (char *)cfg->event.data.scalar.value;
+                printf("section: %s\n", section);
+                leaf = true;
+            }
         }
         break;
     default:
