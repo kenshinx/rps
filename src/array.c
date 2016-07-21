@@ -69,3 +69,14 @@ array_pop(rpg_array_t *a) {
     return elt;
 }
 
+void *
+array_head(rpg_array_t *a) {
+    void *elt;
+
+    if (a->nelts == 0) {
+        return NULL;
+    }
+
+    elt = (uint8_t *)a->elts + a->size * a->nelts;
+    return elt;
+}

@@ -78,6 +78,46 @@ config_pop_scalar(struct config *cfg) {
 }
 
 static rpg_status_t
+config_set_daemon(struct config *cfg, rpg_str_t *str) {
+    if (rpg_strcmp(str->data, "true") == 0 ) {
+        cfg->daemon = 1;
+    } else if (rpg_strcmp(str->data, "false") == 0 ) {
+        cfg->daemon = 0;
+    } else {
+        return RPG_ERROR;
+    }
+    
+    return RPG_OK;
+}
+
+static rpg_status_t
+config_handler_map(struct config *cfg, rpg_str_t *key, rpg_str_t *val, rpg_str_t *section) {
+    rpg_status_t status;
+    struct config_server *server;
+
+    if (section == NULL) {
+        if (rpg_strcmp(key->data, "title") == 0 ) {
+            status = string_cpy(&cfg->title, val);          
+        } else if(rpg_strcmp(key->data, "pidfile") == 0) {
+            status = string_cpy(&cfg->pidfile, val);
+        } else if(rpg_strcmp(key->data, "daemon") == 0) {
+            status = config_set_daemon(cfg, val);
+        } else {
+            status = RPG_ERROR;
+        }
+    } else if (rpg_strcmp(section->data, "servers") == 0 ) {
+        server = (struct config_server *)array_head(cfg->servers);
+        
+        status = RPG_OK;
+    } else {
+        status = RPG_ERROR;
+    }
+
+    return status;
+}
+
+
+static rpg_status_t
 config_handler(struct config *cfg, rpg_str_t *section) {
     rpg_status_t status;
     rpg_str_t *key, *val;
@@ -85,15 +125,11 @@ config_handler(struct config *cfg, rpg_str_t *section) {
     val = config_pop_scalar(cfg);
     key = config_pop_scalar(cfg);
 
-    if (section != NULL) {
-        printf("section:%s <%s: %s>\n", section->data, key->data, val->data);
-    } else {
-        printf("section:null <%s: %s>\n",key->data, val->data);
-    }
+    status = config_handler_map(cfg, key, val, section);
     
     string_deinit(val);
     string_deinit(key);
-    return RPG_OK;
+    return status;
 }
 
 static struct config *
@@ -122,6 +158,11 @@ config_open(char *filename) {
         goto error;
     }
 
+    cfg->log = rpg_alloc(sizeof(struct config_log));
+    if (cfg->log == NULL) {
+        goto error;
+    }
+
     cfg->fname = filename;
     cfg->fd = fd;
     cfg->depth = 0;
@@ -130,14 +171,21 @@ config_open(char *filename) {
 
 error:
     log_stderr("config: initial configuration failed.");
+
     fclose(fd);
+
     if (cfg->servers != NULL) {
         array_destroy(cfg->servers);
     }
     if (cfg->args !=  NULL) {
         array_destroy(cfg->args);
     }
+    if (cfg->log != NULL) {
+        rpg_free(cfg->log);
+    }
+    
     rpg_free(cfg);
+
     return NULL;
 }
 
@@ -204,6 +252,7 @@ config_begin_parse(struct config *cfg) {
 static rpg_status_t
 config_parse_core(struct config *cfg, rpg_str_t *section) {
     rpg_status_t status;
+    struct config_server *server;
     bool done, leaf;
 
     status = config_event_next(cfg);
@@ -219,6 +268,7 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
     switch (cfg->event.type) {
     case YAML_MAPPING_START_EVENT:
         cfg->depth++;
+
         if (cfg->depth == CONFIG_MAX_PATH && array_n(cfg->args)) {
             ASSERT(array_n(cfg->args) == 1);   
             section = string_new();
@@ -227,7 +277,18 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
                 break;
             }
         } 
+
+        if (cfg->seq) {
+            if (rpg_strcmp(section->data, "servers") == 0 ) {
+                /* new server block */
+                server = (struct config_server *)array_push(cfg->servers);
+                if (server == NULL) {
+                    status = RPG_ENOMEM;
+                }
+            }
+        }
         break;
+
     case YAML_MAPPING_END_EVENT:
         cfg->depth--;
         if (!cfg->seq) {
@@ -240,12 +301,17 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
             done = true;
         }
         break;
+
     case YAML_SEQUENCE_START_EVENT:
         cfg->seq = 1;
         break;
+
     case YAML_SEQUENCE_END_EVENT:
         cfg->seq = 0;
+        ASSERT(section != NULL);
+        string_free(section);
         break;
+
     case YAML_SCALAR_EVENT:
         status = config_push_scalar(cfg);
         
@@ -257,6 +323,7 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
             leaf = true;
         }
         break;
+
     default:
         NOT_REACHED();
     }
@@ -299,6 +366,22 @@ config_parse(struct config *cfg){
     return RPG_OK;
 }
 
+static void
+config_destroy_log(struct config_log *log) {
+    string_deinit(&log->file);
+    string_deinit(&log->level);
+    rpg_free(log);
+}
+
+void
+config_dump(struct config *cfg) {
+    log_notice("[%s Configuration]", cfg->title.data);
+    log_notice("pidfile: %s", cfg->pidfile.data);
+    log_notice("demon: %d", cfg->daemon);
+
+    log_notice("servers len: %d", array_n(cfg->servers));
+}
+
 struct config *
 config_create(char *filename) {
     struct config *cfg;
@@ -316,8 +399,9 @@ config_create(char *filename) {
         cfg->fd = NULL;
         config_destroy(cfg);
         return NULL;
-        
     }
+
+    config_dump(cfg);
     
 
     rpg_str_t str2 = rpg_string("Hello Kenshin");
@@ -333,8 +417,13 @@ void
 config_destroy(struct config *cfg) {
     ASSERT(array_n(cfg->args) == 0);   
 
+    string_deinit(&cfg->title);
+    string_deinit(&cfg->pidfile);
+
     array_destroy(cfg->args);
     array_destroy(cfg->servers);
+
+    config_destroy_log(cfg->log);
 
     rpg_free(cfg);
 }

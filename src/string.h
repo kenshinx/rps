@@ -34,5 +34,9 @@ rpg_status_t string_dup(rpg_str_t *dst, const char *src, size_t len);
 rpg_status_t string_cpy(rpg_str_t *dst, const rpg_str_t *src);
 
 
+
+#define rpg_strcmp(_s1, _s2)        \
+    strcmp((char *)(_s1), (char *)(_s2))
+
 #endif
 

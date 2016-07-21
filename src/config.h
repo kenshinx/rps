@@ -23,17 +23,18 @@ struct config_log {
 
 
 struct config {
-    char            *fname;
-    rpg_str_t       title;
-    rpg_str_t       pidfile;
-    FILE            *fd;
-    unsigned        daemon:1;
-    rpg_array_t     *servers;
-    rpg_array_t     *args;
-    uint32_t        depth;
-    unsigned        seq:1;
-    yaml_parser_t   parser;
-    yaml_event_t    event;
+    char                *fname;
+    rpg_str_t           title;
+    rpg_str_t           pidfile;
+    FILE                *fd;
+    unsigned            daemon:1;
+    struct config_log   *log;
+    rpg_array_t         *servers;
+    rpg_array_t         *args;
+    uint32_t            depth;
+    unsigned            seq:1;
+    yaml_parser_t       parser;
+    yaml_event_t        event;
     
 };
 
