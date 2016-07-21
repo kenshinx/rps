@@ -1,6 +1,8 @@
 #include "array.h"
 #include "util.h"
 
+#include <stdint.h>
+
 rpg_array_t *
 array_create(uint32_t n, size_t size) {
     rpg_array_t *a;
@@ -59,7 +61,7 @@ void *
 array_pop(rpg_array_t *a) {
     void *elt;
     
-    if (a->nelts == 0) {
+    if (array_is_empty(a)) {
         return NULL;
     }
 
@@ -70,13 +72,24 @@ array_pop(rpg_array_t *a) {
 }
 
 void *
-array_head(rpg_array_t *a) {
+array_get(rpg_array_t *a, uint32_t idx) {
     void *elt;
 
-    if (a->nelts == 0) {
+    if (array_is_empty(a)) {
+        return NULL;
+    }
+    
+    elt = (uint8_t *)a->elts + a->size * idx;
+    
+    return elt;
+}
+
+void *
+array_head(rpg_array_t *a) {
+
+    if (array_is_empty(a)) {
         return NULL;
     }
 
-    elt = (uint8_t *)a->elts + a->size * a->nelts;
-    return elt;
+    return array_get(a, a->nelts-1);
 }
