@@ -12,6 +12,8 @@
 struct config_server {
     rpg_str_t       listen;
     uint16_t        port;
+    rpg_str_t       username;
+    rpg_str_t       password;
 };
 
 struct config_log {
@@ -32,7 +34,6 @@ struct config {
     unsigned        seq:1;
     yaml_parser_t   parser;
     yaml_event_t    event;
-    yaml_token_t    token;
     
 };
 

@@ -9,7 +9,7 @@ rpg_str_t *
 string_new() {
     rpg_str_t *str;
     
-    str = rpg_malloc(sizeof(*str));
+    str = rpg_alloc(sizeof(*str));
     if (str == NULL) {
         return NULL;
     }

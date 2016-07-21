@@ -68,25 +68,31 @@ config_push_scalar(struct config *cfg) {
     return RPG_OK;   
 }
 
-static void
+static rpg_str_t *
 config_pop_scalar(struct config *cfg) {
     rpg_str_t *value;
 
-    value = array_pop(cfg->args);
+    value = (rpg_str_t *)array_pop(cfg->args);
     log_verb("pop '%.*s'", value->len, value->data);
-    string_deinit(value);
+    return value;
 }
 
 static rpg_status_t
-config_handler(struct config *cfg, char *section) {
-    rpg_status_t;
+config_handler(struct config *cfg, rpg_str_t *section) {
+    rpg_status_t status;
+    rpg_str_t *key, *val;
 
-    if (!cfg->seq) {
-        log_verb("next event %d depth %d seq %d args.length %d", cfg->event.type,cfg->depth, cfg->seq, array_n(cfg->args));
-        config_pop_scalar(cfg->args);
-        config_pop_scalar(cfg->args);
+    val = config_pop_scalar(cfg);
+    key = config_pop_scalar(cfg);
+
+    if (section != NULL) {
+        printf("section:%s <%s: %s>\n", section->data, key->data, val->data);
+    } else {
+        printf("section:null <%s: %s>\n",key->data, val->data);
     }
     
+    string_deinit(val);
+    string_deinit(key);
     return RPG_OK;
 }
 
@@ -196,7 +202,7 @@ config_begin_parse(struct config *cfg) {
 }
 
 static rpg_status_t
-config_parse_core(struct config *cfg, char *section) {
+config_parse_core(struct config *cfg, rpg_str_t *section) {
     rpg_status_t status;
     bool done, leaf;
 
@@ -205,6 +211,7 @@ config_parse_core(struct config *cfg, char *section) {
         return status;
     }
 
+    log_verb("next event %d depth %d seq %d args.length %d", cfg->event.type,cfg->depth, cfg->seq, array_n(cfg->args));
 
     done = false;
     leaf = false;
@@ -212,12 +219,24 @@ config_parse_core(struct config *cfg, char *section) {
     switch (cfg->event.type) {
     case YAML_MAPPING_START_EVENT:
         cfg->depth++;
+        if (cfg->depth == CONFIG_MAX_PATH && array_n(cfg->args)) {
+            ASSERT(array_n(cfg->args) == 1);   
+            section = string_new();
+            status = string_cpy(section, config_pop_scalar(cfg));
+            if (status != RPG_OK) {
+                break;
+            }
+        } 
         break;
     case YAML_MAPPING_END_EVENT:
         cfg->depth--;
-        if (cfg->depth == 1) {
-            config_pop_scalar(cfg);
-        } else if (cfg->depth == 0) {
+        if (!cfg->seq) {
+            if(section != NULL) {
+                string_free(section);
+                section = NULL;
+            }
+        }
+        if (cfg->depth == 0) {
             done = true;
         }
         break;
@@ -225,26 +244,17 @@ config_parse_core(struct config *cfg, char *section) {
         cfg->seq = 1;
         break;
     case YAML_SEQUENCE_END_EVENT:
-        config_pop_scalar(cfg);
         cfg->seq = 0;
         break;
     case YAML_SCALAR_EVENT:
         status = config_push_scalar(cfg);
+        
         if (status != RPG_OK) {
             break;
         }
 
-        if (cfg->seq) {
+        if (array_n(cfg->args) == CONFIG_MAX_PATH) {
             leaf = true;
-            break;
-        }
-
-        if (cfg->depth == CONFIG_ROOT_PATH) {
-            if (array_n(cfg->args) == cfg->depth + 1) {
-                section = (char *)cfg->event.data.scalar.value;
-                printf("section: %s\n", section);
-                leaf = true;
-            }
         }
         break;
     default:
@@ -321,7 +331,10 @@ config_create(char *filename) {
 
 void
 config_destroy(struct config *cfg) {
-    array_destroy(cfg->servers);
+    ASSERT(array_n(cfg->args) == 0);   
+
     array_destroy(cfg->args);
+    array_destroy(cfg->servers);
+
     rpg_free(cfg);
 }
