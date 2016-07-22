@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 struct config_server {
+    rpg_str_t       protocol;
     rpg_str_t       listen;
     uint16_t        port;
     rpg_str_t       username;

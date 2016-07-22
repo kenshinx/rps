@@ -77,6 +77,35 @@ config_pop_scalar(struct config *cfg) {
     return value;
 }
 
+static void
+config_log_init(struct config_log *log) {
+    string_init(&log->file);
+    string_init(&log->level);
+}
+
+static void
+config_log_deinit(struct config_log *log) {
+    string_deinit(&log->file);
+    string_deinit(&log->level);
+}
+
+static void
+config_server_init(struct config_server *server) {
+    string_init(&server->protocol);
+    string_init(&server->listen);
+    server->port = 0;
+    string_init(&server->username);
+    string_init(&server->password);
+}
+
+static void
+config_server_deinit(struct config_server *server) {
+    string_deinit(&server->protocol);
+    string_deinit(&server->listen);
+    string_deinit(&server->username);
+    string_deinit(&server->password);
+}
+
 static rpg_status_t
 config_set_daemon(struct config *cfg, rpg_str_t *str) {
     if (rpg_strcmp(str->data, "true") == 0 ) {
@@ -95,6 +124,8 @@ config_handler_map(struct config *cfg, rpg_str_t *key, rpg_str_t *val, rpg_str_t
     rpg_status_t status;
     struct config_server *server;
 
+    status = RPG_OK;
+
     if (section == NULL) {
         if (rpg_strcmp(key->data, "title") == 0 ) {
             status = string_cpy(&cfg->title, val);          
@@ -107,8 +138,27 @@ config_handler_map(struct config *cfg, rpg_str_t *key, rpg_str_t *val, rpg_str_t
         }
     } else if (rpg_strcmp(section->data, "servers") == 0 ) {
         server = (struct config_server *)array_head(cfg->servers);
-        
-        status = RPG_OK;
+        if (rpg_strcmp(key->data, "protocol") == 0) {
+            status = string_cpy(&server->protocol, val);
+        } else if (rpg_strcmp(key->data, "listen") == 0) {
+            status = string_cpy(&server->listen, val);
+        } else if (rpg_strcmp(key->data, "port") == 0) {
+            server->port = atoi((char *)val->data);
+        } else if (rpg_strcmp(key->data, "username") == 0) {
+            status = string_cpy(&server->username, val);
+        } else if (rpg_strcmp(key->data, "password") == 0) {
+            status = string_cpy(&server->password, val);
+        } else {
+            status = RPG_ERROR;
+        }
+    } else if (rpg_strcmp(section->data, "log") == 0) {
+        if(rpg_strcmp(key->data, "file") == 0) {
+            status = string_cpy(&cfg->log->file, val);
+        } else if (rpg_strcmp(key->data, "level") == 0) {
+            status = string_cpy(&cfg->log->level, val);
+        } else {
+            status = RPG_ERROR;
+        }
     } else {
         status = RPG_ERROR;
     }
@@ -162,11 +212,15 @@ config_open(char *filename) {
     if (cfg->log == NULL) {
         goto error;
     }
+    config_log_init(cfg->log);
 
     cfg->fname = filename;
     cfg->fd = fd;
     cfg->depth = 0;
     cfg->seq = 0;
+    cfg->daemon= 0;
+    string_init(&cfg->title);
+    string_init(&cfg->pidfile);
     return cfg;
 
 error:
@@ -210,6 +264,11 @@ config_yaml_init(struct config *cfg) {
     yaml_parser_set_input_file(&cfg->parser, cfg->fd);
 
     return RPG_OK;
+}
+
+void
+config_yaml_deinit(struct config *cfg) {
+     yaml_parser_delete(&cfg->parser);
 }
 
 static rpg_status_t
@@ -285,6 +344,7 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
                 if (server == NULL) {
                     status = RPG_ENOMEM;
                 }
+                config_server_init(server);
             }
         }
         break;
@@ -343,7 +403,41 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
     }
 
     return config_parse_core(cfg, section);
+}
+
+static rpg_status_t
+config_end_parse(struct config *cfg) {
+    rpg_status_t status;
+    bool done;
+
+    ASSERT(cfg->depth == 0);
     
+    done = false;
+    while(!done) {
+        status = config_event_next(cfg);
+        if (status != RPG_OK) {
+            return status;
+        }
+
+        log_verb("next end event %d", cfg->event.type);
+        
+        switch (cfg->event.type) {
+        case YAML_STREAM_END_EVENT:
+            done = true;
+            break;
+        
+        case YAML_DOCUMENT_END_EVENT:
+            break;
+        default:
+            NOT_REACHED();
+
+        config_event_done(cfg);
+        }
+    }
+
+    config_yaml_deinit(cfg);
+
+    return RPG_OK;
 }
 
 static rpg_status_t
@@ -363,14 +457,24 @@ config_parse(struct config *cfg){
         return status;
     }
     
+    status = config_end_parse(cfg);
+    if (status != RPG_OK) {
+        return status;
+    }
+    
     return RPG_OK;
 }
 
 static void
-config_destroy_log(struct config_log *log) {
-    string_deinit(&log->file);
-    string_deinit(&log->level);
-    rpg_free(log);
+config_dump_server(void *data) {
+    struct config_server *server = data;    
+
+    log_notice("\t - protocol: %s", server->protocol.data);
+    log_notice("\t listen: %s", server->listen.data);
+    log_notice("\t port: %d", server->port);
+    log_notice("\t username: %s", server->username.data);
+    log_notice("\t password: %s", server->password.data);
+    log_notice("");
 }
 
 void
@@ -379,7 +483,13 @@ config_dump(struct config *cfg) {
     log_notice("pidfile: %s", cfg->pidfile.data);
     log_notice("demon: %d", cfg->daemon);
 
-    log_notice("servers len: %d", array_n(cfg->servers));
+    log_notice("[servers]");
+    array_foreach(cfg->servers, config_dump_server);
+    
+    log_notice("[log]");
+    log_notice("\t file: %s", cfg->log->file.data);
+    log_notice("\t level: %s", cfg->log->level.data);
+   
 }
 
 struct config *
@@ -404,8 +514,7 @@ config_create(char *filename) {
     config_dump(cfg);
     
 
-    rpg_str_t str2 = rpg_string("Hello Kenshin");
-    printf("%s len:%zu\n", str2.data, str2.len);
+    config_destroy(cfg);
 
     fclose(cfg->fd);
     cfg->fd = NULL;
@@ -420,10 +529,15 @@ config_destroy(struct config *cfg) {
     string_deinit(&cfg->title);
     string_deinit(&cfg->pidfile);
 
+    ASSERT(array_n(cfg->args) == 0);
     array_destroy(cfg->args);
+
+    while (array_n(cfg->servers)) {
+        config_server_deinit((struct config_server *)array_pop(cfg->servers));
+    }
     array_destroy(cfg->servers);
 
-    config_destroy_log(cfg->log);
-
+    config_log_deinit(cfg->log);
+    rpg_free(cfg->log);
     rpg_free(cfg);
 }

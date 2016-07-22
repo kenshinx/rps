@@ -1,7 +1,10 @@
+#include "core.h"
 #include "array.h"
 #include "util.h"
 
+
 #include <stdint.h>
+
 
 rpg_array_t *
 array_create(uint32_t n, size_t size) {
@@ -92,4 +95,14 @@ array_head(rpg_array_t *a) {
     }
 
     return array_get(a, a->nelts-1);
+}
+
+void
+array_foreach(rpg_array_t *a, array_foreach_t func) {
+    uint32_t i, nelts;
+ 
+    for(i=0, nelts= a->nelts; i< nelts;  i++) {
+        void *elt = array_get(a, i);
+        func(elt);
+    }   
 }
