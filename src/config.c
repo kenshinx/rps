@@ -512,9 +512,6 @@ config_create(char *filename) {
     }
 
     config_dump(cfg);
-    
-
-    config_destroy(cfg);
 
     fclose(cfg->fd);
     cfg->fd = NULL;
@@ -524,12 +521,14 @@ config_create(char *filename) {
 
 void
 config_destroy(struct config *cfg) {
-    ASSERT(array_n(cfg->args) == 0);   
 
     string_deinit(&cfg->title);
     string_deinit(&cfg->pidfile);
 
-    ASSERT(array_n(cfg->args) == 0);
+    while (array_n(cfg->args)) {
+        rpg_str_t *arg = config_pop_scalar(cfg);
+        string_deinit(arg);
+    }
     array_destroy(cfg->args);
 
     while (array_n(cfg->servers)) {
@@ -539,5 +538,6 @@ config_destroy(struct config *cfg) {
 
     config_log_deinit(cfg->log);
     rpg_free(cfg->log);
+
     rpg_free(cfg);
 }

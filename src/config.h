@@ -42,5 +42,6 @@ struct config {
 
 struct config *config_create(char *config_file);
 void config_destroy(struct config *cfg);
+void config_dump(struct config *cfg);
 
 #endif
