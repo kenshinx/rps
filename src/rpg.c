@@ -110,12 +110,14 @@ rpg_get_options(int argc, char **argv, struct application *app) {
 
 static rpg_status_t 
 rpg_load_config(struct application *app) {
-    struct config *conf;
+    struct config *cfg;
 
-    conf = config_create(app->config_filename);
-    if (conf == NULL) {
+    cfg = config_create(app->config_filename);
+    if (cfg == NULL) {
         return RPG_ERROR;
     }
+
+    config_destroy(cfg);
     
     return RPG_OK;
 }

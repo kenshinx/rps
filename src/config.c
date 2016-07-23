@@ -172,6 +172,8 @@ config_handler(struct config *cfg, rpg_str_t *section) {
     rpg_status_t status;
     rpg_str_t *key, *val;
 
+    ASSERT(array_n(cfg->args) == 2);
+
     val = config_pop_scalar(cfg);
     key = config_pop_scalar(cfg);
 
