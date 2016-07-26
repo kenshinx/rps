@@ -313,6 +313,7 @@ config_begin_parse(struct config *cfg) {
 static rpg_status_t
 config_parse_core(struct config *cfg, rpg_str_t *section) {
     rpg_status_t status;
+    rpg_str_t *node;
     struct config_server *server;
     bool done, leaf;
 
@@ -333,7 +334,9 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
         if (cfg->depth == CONFIG_MAX_PATH && array_n(cfg->args)) {
             ASSERT(array_n(cfg->args) == 1);   
             section = string_new();
-            status = string_cpy(section, config_pop_scalar(cfg));
+            node = config_pop_scalar(cfg);
+            status = string_cpy(section, node);
+            string_deinit(node);
             if (status != RPG_OK) {
                 break;
             }
