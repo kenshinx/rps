@@ -22,7 +22,12 @@ src/.*.swp
 *.o
 /src/rpg
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> Better protocols directory designs
 =======
 /src/tags
 >>>>>>> Configure file load function
+=======
+/src/tags
+/src/rpg.dSYM/
+>>>>>>> Print configuration in debug mode.

@@ -65,7 +65,7 @@ rpg_set_default_options(struct application *app) {
     app->pid = (pid_t)-1;
     
     app->config_filename = RPG_DEFAULT_CONFIG_FILE;
-    app->conf = NULL;
+    app->cfg = NULL;
 }
 
 static rpg_status_t
@@ -90,6 +90,7 @@ rpg_get_options(int argc, char **argv, struct application *app) {
                 break;
             case 'v':
                 app->verbose = 1;
+                app->log_level = MAX(LOG_DEBUG, RPG_DEFAULT_LOG_LEVEL);
                 break;
             case 'c':
                 app->config_filename = optarg;
@@ -117,8 +118,10 @@ rpg_load_config(struct application *app) {
         return RPG_ERROR;
     }
 
-    config_destroy(cfg);
-    
+    config_dump(cfg);
+
+    app->cfg = cfg;
+
     return RPG_OK;
 }
 
@@ -128,8 +131,6 @@ main(int argc, char **argv) {
     struct application app;
     rpg_status_t status;
 
-    log_init(RPG_DEFAULT_LOG_LEVEL, RPG_DEFAULT_LOG_FILE);
-
     rpg_set_default_options(&app);
 
     status = rpg_get_options(argc, argv, &app);
@@ -137,10 +138,13 @@ main(int argc, char **argv) {
         rpg_show_usage();
     }
 
+    log_init(app.log_level, app.log_filename);
+
     status = rpg_load_config(&app);
     if (status != RPG_OK) {
         exit(1);
     }
+
 
     exit(1);
 }

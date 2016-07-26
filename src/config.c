@@ -474,26 +474,26 @@ static void
 config_dump_server(void *data) {
     struct config_server *server = data;    
 
-    log_notice("\t - protocol: %s", server->protocol.data);
-    log_notice("\t listen: %s", server->listen.data);
-    log_notice("\t port: %d", server->port);
-    log_notice("\t username: %s", server->username.data);
-    log_notice("\t password: %s", server->password.data);
-    log_notice("");
+    log_debug("\t - protocol: %s", server->protocol.data);
+    log_debug("\t listen: %s", server->listen.data);
+    log_debug("\t port: %d", server->port);
+    log_debug("\t username: %s", server->username.data);
+    log_debug("\t password: %s", server->password.data);
+    log_debug("");
 }
 
 void
 config_dump(struct config *cfg) {
-    log_notice("[%s Configuration]", cfg->title.data);
-    log_notice("pidfile: %s", cfg->pidfile.data);
-    log_notice("demon: %d", cfg->daemon);
+    log_debug("[%s Configuration]", cfg->title.data);
+    log_debug("pidfile: %s", cfg->pidfile.data);
+    log_debug("demon: %d", cfg->daemon);
 
-    log_notice("[servers]");
+    log_debug("[servers]");
     array_foreach(cfg->servers, config_dump_server);
     
-    log_notice("[log]");
-    log_notice("\t file: %s", cfg->log->file.data);
-    log_notice("\t level: %s", cfg->log->level.data);
+    log_debug("[log]");
+    log_debug("\t file: %s", cfg->log->file.data);
+    log_debug("\t level: %s", cfg->log->level.data);
    
 }
 
@@ -515,8 +515,6 @@ config_create(char *filename) {
         config_destroy(cfg);
         return NULL;
     }
-
-    config_dump(cfg);
 
     fclose(cfg->fd);
     cfg->fd = NULL;

@@ -5,6 +5,8 @@
 
 #define CRLF    "\x0d\x0a"
 
+#define MAX(_a, _b)     ((_a) > (_b) ? (_a):(_b))
+
 #define rpg_alloc(_s)                                               \
     _rpg_alloc((size_t)(_s), __FILE__, __LINE__)                    \
 
