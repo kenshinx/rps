@@ -89,8 +89,8 @@ rpg_get_options(int argc, char **argv, struct application *app) {
                 app->daemon = 1;
                 break;
             case 'v':
-                app->verbose = 1;
                 app->log_level = MAX(LOG_DEBUG, RPG_DEFAULT_LOG_LEVEL);
+                app->verbose = 1;
                 break;
             case 'c':
                 app->config_filename = optarg;
@@ -118,10 +118,23 @@ rpg_load_config(struct application *app) {
         return RPG_ERROR;
     }
 
-    config_dump(cfg);
-
     app->cfg = cfg;
 
+    return RPG_OK;
+}
+
+static rpg_status_t
+rpg_set_log(struct application *app) {
+    rpg_status_t status;
+    log_level level;
+
+    level = log_level_to_int((char *)app->cfg->log->level.data);
+    app->log_level = MAX(app->log_level, level);   
+
+    
+    printf("log level: %d\n", app->log_level);
+
+    
     return RPG_OK;
 }
 
@@ -131,6 +144,8 @@ main(int argc, char **argv) {
     struct application app;
     rpg_status_t status;
 
+    log_init(RPG_DEFAULT_LOG_LEVEL, RPG_DEFAULT_LOG_FILE);
+
     rpg_set_default_options(&app);
 
     status = rpg_get_options(argc, argv, &app);
@@ -138,12 +153,18 @@ main(int argc, char **argv) {
         rpg_show_usage();
     }
 
-    log_init(app.log_level, app.log_filename);
-
     status = rpg_load_config(&app);
     if (status != RPG_OK) {
         exit(1);
     }
+    
+    status = rpg_set_log(&app);
+    if (status != RPG_OK) {
+        exit(1);
+    }
+
+    config_dump(cfg);
+
 
 
     exit(1);

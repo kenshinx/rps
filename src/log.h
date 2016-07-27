@@ -4,6 +4,7 @@
 #include "core.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #define LOG_MAX_LEN 256
 
@@ -15,6 +16,7 @@ typedef enum {
     LOG_INFO,
     LOG_DEBUG,
     LOG_VERBOSE,
+    LOG_LEVEL_UNDEFINED = -1,
 } log_level;
 
 static const char *LOG_LEVEL_TEXT[] = {
@@ -65,6 +67,24 @@ static const char *LOG_LEVEL_TEXT[] = {
 } while(0)                                                      \
 
 #define log_level_to_text(level)    (LOG_LEVEL_TEXT[level])
+
+static inline log_level
+log_level_to_int(const char *level) {
+    int i = 0;
+    for(;;) {
+        if (LOG_LEVEL_TEXT[i] == NULL) {
+            break;
+        }
+
+        if (strcmp(LOG_LEVEL_TEXT[i], level) == 0) {
+            return i;
+        }
+
+        i++;
+    }
+
+    return LOG_LEVEL_UNDEFINED;
+}
 
 
 struct logger {

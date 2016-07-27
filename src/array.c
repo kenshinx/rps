@@ -101,7 +101,7 @@ void
 array_foreach(rpg_array_t *a, array_foreach_t func) {
     uint32_t i, nelts;
  
-    for(i=0, nelts= a->nelts; i< nelts;  i++) {
+    for(i = 0, nelts = a->nelts; i < nelts;  i++) {
         void *elt = array_get(a, i);
         func(elt);
     }   

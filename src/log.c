@@ -98,7 +98,7 @@ log_deinit() {
     fclose(l->fd);
 }
 
-#ifdef LOG_TEST_MAIN
+#ifdef LOG_TEST
 int
 main(int argc, char **argv) {
     rpg_status_t stat;
