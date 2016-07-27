@@ -125,17 +125,18 @@ rpg_load_config(struct application *app) {
 
 static rpg_status_t
 rpg_set_log(struct application *app) {
-    rpg_status_t status;
     log_level level;
 
     level = log_level_to_int((char *)app->cfg->log->level.data);
+    if (level == LOG_LEVEL_UNDEFINED) {
+        log_stderr("invalid log level: %s", app->cfg->log->level.data);
+        return RPG_ERROR;
+    }
     app->log_level = MAX(app->log_level, level);   
 
-    
-    printf("log level: %d\n", app->log_level);
+    log_deinit();
 
-    
-    return RPG_OK;
+    return log_init(app->log_level, app->log_filename);
 }
 
 
@@ -163,7 +164,7 @@ main(int argc, char **argv) {
         exit(1);
     }
 
-    config_dump(cfg);
+    config_dump(app.cfg);
 
 
 

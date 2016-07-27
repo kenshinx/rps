@@ -70,17 +70,13 @@ static const char *LOG_LEVEL_TEXT[] = {
 
 static inline log_level
 log_level_to_int(const char *level) {
-    int i = 0;
-    for(;;) {
-        if (LOG_LEVEL_TEXT[i] == NULL) {
-            break;
-        }
+    int i;
+    int n = sizeof(LOG_LEVEL_TEXT) / sizeof(LOG_LEVEL_TEXT[0]);
 
+    for(i = 0; i < n; i++) {
         if (strcmp(LOG_LEVEL_TEXT[i], level) == 0) {
             return i;
         }
-
-        i++;
     }
 
     return LOG_LEVEL_UNDEFINED;
@@ -96,6 +92,8 @@ struct logger {
 
 void _log_stream(FILE *stream, const char *fmt, ...);
 void _log(log_level level, const char *file, int line, const char *fmt, ...);
+rpg_status_t log_set_level(log_level level);
+rpg_status_t log_set_output(char *fname);
 rpg_status_t log_init(log_level level, char *fname);
 void log_deinit();
 
