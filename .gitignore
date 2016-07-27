@@ -30,4 +30,8 @@ src/.*.swp
 =======
 /src/tags
 /src/rpg.dSYM/
+<<<<<<< HEAD
 >>>>>>> Print configuration in debug mode.
+=======
+/logs/rpg.log
+>>>>>>> Redirect log to stdout if running in un-daemon mode.

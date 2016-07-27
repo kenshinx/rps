@@ -134,11 +134,19 @@ rpg_set_log(struct application *app) {
     }
     app->log_level = MAX(app->log_level, level);   
 
+    app->log_filename = strdup((char *)app->cfg->log->file.data);
+    if (app->log_filename == NULL) {
+        return RPG_ERROR;
+    }
+
     log_deinit();
 
-    return log_init(app->log_level, app->log_filename);
+    if (!app->daemon) {
+        return log_init(app->log_level, NULL);
+    } else {
+        return log_init(app->log_level, app->log_filename);
+    }
 }
-
 
 int
 main(int argc, char **argv) {
@@ -158,6 +166,8 @@ main(int argc, char **argv) {
     if (status != RPG_OK) {
         exit(1);
     }
+
+    app.daemon = app.daemon ||  app.cfg->daemon;
     
     status = rpg_set_log(&app);
     if (status != RPG_OK) {
@@ -165,8 +175,6 @@ main(int argc, char **argv) {
     }
 
     config_dump(app.cfg);
-
-
 
     exit(1);
 }

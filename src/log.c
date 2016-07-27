@@ -81,7 +81,6 @@ rpg_status_t
 log_set_output(char *fname) {
     struct logger *l = &logger;
        
-    l->fname = fname;
     if (fname == NULL || !(strlen(fname))) {
         l->fd = stdout;
     } else {
