@@ -15,11 +15,13 @@ OPT=$(OPTIMIZATION)
 DEBUG=-g -ggdb
 RPG_DEBUG = $(RPG_DEBUG_OPEN)
 
-DEPENDENCY_TARGETS=yaml
+DEPENDENCY_TARGETS=yaml libuv
 LIBYAML=yaml-0.1.5
+LIBUV=libuv-v1.9.1
 
 FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(RPG_DEBUG) $(CFLAGS)
 FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
+FINAL_CFLAGS+= -I../contrib/$(LIBUV)/include 
 
 FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG)
 
@@ -32,6 +34,7 @@ endif
 endif
 
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
+FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
 
 CC?=gcc
 RPG_CC=$(CC) $(FINAL_CFLAGS)
