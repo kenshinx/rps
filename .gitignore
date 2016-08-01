@@ -1,6 +1,4 @@
-/rpg.sublime-workspace
 /logs/rps.log
-<<<<<<< HEAD
 /rps.sublime-workspace
 /rps.sublime-project
 /tags
@@ -8,30 +6,3 @@
 /src/rps
 src/*.o
 src/.*.swp
-=======
-/tags
-*.lo
-/contrib/yaml-0.1.5/config.log
-/contrib/yaml-0.1.5/config.status
-/contrib/yaml-0.1.5/include/Makefile
-/contrib/yaml-0.1.5/Makefile
-/contrib/yaml-0.1.5/src/Makefile
-/contrib/yaml-0.1.5/tests/Makefile
-/contrib/yaml-0.1.5/win32/Makefile
-*.swp
-*.o
-/src/rpg
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> Better protocols directory designs
-=======
-/src/tags
->>>>>>> Configure file load function
-=======
-/src/tags
-/src/rpg.dSYM/
-<<<<<<< HEAD
->>>>>>> Print configuration in debug mode.
-=======
-/logs/rpg.log
->>>>>>> Redirect log to stdout if running in un-daemon mode.
