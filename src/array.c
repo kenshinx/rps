@@ -20,7 +20,8 @@ array_init(rpg_array_t *a, uint32_t n, size_t size) {
     a->nelts = 0;
     a->size = size;
     a->nalloc = n;
-    
+
+    return RPG_OK;
 }
 
 
