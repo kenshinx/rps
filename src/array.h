@@ -8,12 +8,14 @@
 
 typedef void (*array_foreach_t)(void *);
 
-typedef struct rpg_array {
+struct rpg_array {
     void            *elts;
     uint32_t        nelts;
     size_t          size;
     uint32_t        nalloc;
-} rpg_array_t;
+};
+
+typedef struct rpg_array rpg_array_t;
 
 static inline uint32_t
 array_n(rpg_array_t *a) {
@@ -26,6 +28,7 @@ array_n(rpg_array_t *a) {
 #define array_is_full(_a)                              \
     ((_a)->nelts == (_a)->nalloc)
 
+rpg_status_t array_init(rpg_array_t *a, uint32_t n, size_t size);
 rpg_array_t *array_create(uint32_t n, size_t size);
 void array_destroy(rpg_array_t *a);
 void *array_push(rpg_array_t *a);

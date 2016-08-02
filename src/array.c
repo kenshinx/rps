@@ -6,26 +6,39 @@
 #include <stdint.h>
 
 
-rpg_array_t *
-array_create(uint32_t n, size_t size) {
-    rpg_array_t *a;
-    
+rpg_status_t
+array_init(rpg_array_t *a, uint32_t n, size_t size) {
+    ASSERT(a !=  NULL);
     ASSERT( n !=0 && size != 0);
-    
-    a = rpg_alloc(sizeof(*a));
-    if (a == NULL) {
-        return NULL;
-    }
-    
+
     a->elts = rpg_calloc(n,  size);
     if (a->elts == NULL) {
         rpg_free(a);
-        return NULL;
+        return RPG_ENOMEM;
     }
 
     a->nelts = 0;
     a->size = size;
     a->nalloc = n;
+    
+}
+
+
+rpg_array_t *
+array_create(uint32_t n, size_t size) {
+    rpg_array_t *a;
+    rpg_status_t status;
+    
+    a = rpg_alloc(sizeof(*a));
+    if (a == NULL) {
+        return NULL;
+    }
+
+    status = array_init(a, n, size);
+    if (status != RPG_OK) {
+        return NULL;
+    }
+    
 
     return a;
 }
