@@ -64,7 +64,7 @@ single: $(RPG_BIN)
 .PHONY: single
 
 clean:
-	$(RM) $(RPG_BIN) *.o *.gch *.swp
+	$(RM) $(RPG_BIN) *.o *.gch \.*.swp *.i
 .PHONY: clean
 
 distclean: clean
