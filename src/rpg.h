@@ -20,7 +20,7 @@
 
 struct application {
     rpg_array_t         servers;
-    rpg_array_t    upstreams;
+    rpg_array_t         upstreams;
 
     int                 log_level;
     char                *log_filename;

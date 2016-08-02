@@ -1,5 +1,5 @@
-#include "core.h"
 #include "rpg.h"
+#include "core.h"
 #include "log.h" 
 #include "config.h"
 #include "util.h"
@@ -141,12 +141,46 @@ rpg_set_log(struct application *app) {
 }
 
 static rpg_status_t
-rpg_setup_servers(struct application *app) {
+rpg_pre_run(struct application *app) {
+    uint32_t i, n;
     rpg_status_t status;
+    struct config_server *cs;
+    struct server *s;
 
-    status = array_init(&app->servers, array_n(app->cfg->servers), sizeof(struct server));   
+    n = array_n(app->cfg->servers);
 
+    status = array_init(&app->servers, n , sizeof(struct server));   
+    if (status != RPG_OK) {
+        return status;
+    }
+    
+    for (i = 0; i < n; i++) {
+        cs = (struct config_server *)array_get(app->cfg->servers, i);
+        printf("%s listen on %s:%d\n", cs->proxy.data, cs->listen.data, cs->port);
+        s = (struct server *)array_push(&app->servers);
+        if (s == NULL) {
+            return RPG_ERROR;
+        }
+        
+        status = server_init(s, cs);
+        if (status != RPG_OK) {
+            return status;
+        }
+    }
+
+    
+    
     return status;
+}
+
+static rpg_status_t
+rpg_run(struct application *app) {
+    return RPG_OK;
+}
+
+static rpg_status_t
+rpg_post_run(struct application *app) {
+    return RPG_OK;
 }
 
 int
@@ -177,7 +211,9 @@ main(int argc, char **argv) {
 
     config_dump(app.cfg);
 
-    rpg_setup_servers(&app);
+    rpg_pre_run(&app);
+    rpg_run(&app);
+    rpg_post_run(&app);
 
     exit(1);
 }
