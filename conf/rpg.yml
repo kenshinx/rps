@@ -6,14 +6,14 @@ daemon: false
 pidfile: /var/run/rpg.log
 
 servers:
-    - protocol: socks5
+    - proxy: socks5
       listen: 0.0.0.0
       port: 9890
       username: rpg
       password: secret
       
 
-    - protocol: http
+    - proxy: http
       listen: 0.0.0.0
       port: 9891
 

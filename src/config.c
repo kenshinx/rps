@@ -91,7 +91,7 @@ config_log_deinit(struct config_log *log) {
 
 static void
 config_server_init(struct config_server *server) {
-    string_init(&server->protocol);
+    string_init(&server->proxy);
     string_init(&server->listen);
     server->port = 0;
     string_init(&server->username);
@@ -100,7 +100,7 @@ config_server_init(struct config_server *server) {
 
 static void
 config_server_deinit(struct config_server *server) {
-    string_deinit(&server->protocol);
+    string_deinit(&server->proxy);
     string_deinit(&server->listen);
     string_deinit(&server->username);
     string_deinit(&server->password);
@@ -138,8 +138,8 @@ config_handler_map(struct config *cfg, rpg_str_t *key, rpg_str_t *val, rpg_str_t
         }
     } else if (rpg_strcmp(section->data, "servers") == 0 ) {
         server = (struct config_server *)array_head(cfg->servers);
-        if (rpg_strcmp(key->data, "protocol") == 0) {
-            status = string_cpy(&server->protocol, val);
+        if (rpg_strcmp(key->data, "proxy") == 0) {
+            status = string_cpy(&server->proxy, val);
         } else if (rpg_strcmp(key->data, "listen") == 0) {
             status = string_cpy(&server->listen, val);
         } else if (rpg_strcmp(key->data, "port") == 0) {
@@ -474,7 +474,7 @@ static void
 config_dump_server(void *data) {
     struct config_server *server = data;    
 
-    log_debug("\t - protocol: %s", server->protocol.data);
+    log_debug("\t - proxy: %s", server->proxy.data);
     log_debug("\t listen: %s", server->listen.data);
     log_debug("\t port: %d", server->port);
     log_debug("\t username: %s", server->username.data);
