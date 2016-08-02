@@ -1,21 +1,13 @@
+#include "core.h"
+#include "rpg.h"
 #include "log.h" 
 #include "config.h"
 #include "util.h"
-#include "version.h"
+#include "server.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-
-
-#ifdef RPG_DEBUG_OPEN
-#define RPG_DEFAULT_LOG_LEVEL       LOG_VERBOSE
-#else
-#define RPG_DEFAULT_LOG_LEVEL       LOG_NOTICE
-#endif
-#define RPG_DEFAULT_LOG_FILE        NULL
-#define RPG_DEFAULT_CONFIG_FILE     "../conf/rpg.yml"
-#define RPG_DEFAULT_PID_FILE        NULL
 
 
 static struct option long_options[] = {
@@ -148,6 +140,15 @@ rpg_set_log(struct application *app) {
     }
 }
 
+static rpg_status_t
+rpg_setup_servers(struct application *app) {
+    rpg_status_t status;
+
+    status = array_init(&app->servers, array_n(app->cfg->servers), sizeof(struct server));   
+
+    return status;
+}
+
 int
 main(int argc, char **argv) {
     struct application app;
@@ -175,6 +176,8 @@ main(int argc, char **argv) {
     }
 
     config_dump(app.cfg);
+
+    rpg_setup_servers(&app);
 
     exit(1);
 }
