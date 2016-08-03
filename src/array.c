@@ -24,6 +24,13 @@ array_init(rpg_array_t *a, uint32_t n, size_t size) {
     return RPG_OK;
 }
 
+void
+array_deinit(rpg_array_t *a) {
+    if (a->elts != NULL) {
+        rpg_free(a->elts);
+    }
+}
+
 
 rpg_array_t *
 array_create(uint32_t n, size_t size) {
@@ -47,9 +54,7 @@ array_create(uint32_t n, size_t size) {
 
 void
 array_destroy(rpg_array_t *a) {
-    if (a->elts != NULL) {
-        rpg_free(a->elts);
-    }
+    array_deinit(a);
     rpg_free(a);
 }
 
