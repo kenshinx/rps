@@ -201,6 +201,8 @@ rpg_run(struct application *app) {
     uint32_t i, n;
     struct server *s;
     rpg_status_t status;
+    uv_thread_t *tid;
+    rpg_array_t threads;
 
     status = rpg_server_setup(app);
     if (status != RPG_OK) {
@@ -212,11 +214,23 @@ rpg_run(struct application *app) {
      */
 
     n = array_n(&app->servers);
-    for (i = 0; i < n; i++) {
-        uv_thread_t tid;
-        s = (struct server *)array_get(&app->servers, i);
-        uv_thread_create(&tid, server_run, s);
+    
+    status = array_init(&threads, n , sizeof(uv_thread_t));   
+    if (status != RPG_OK) {
+        return;
     }
+    
+    for (i = 0; i < n; i++) {
+        tid = (uv_thread_t *)array_push(&threads);
+        s = (struct server *)array_get(&app->servers, i);
+        uv_thread_create(tid, server_run, s);
+    }
+
+    while(array_n(&threads)) {
+        uv_thread_join((uv_thread_t *)array_pop(&threads));
+    }   
+
+    array_deinit(&threads);
 
     rpg_teardown(app);
 }

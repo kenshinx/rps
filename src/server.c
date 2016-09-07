@@ -3,6 +3,8 @@
 #include "string.h"
 #include "util.h"
 
+#define HTTP_DEFAULT_BACKLOG  65536
+
 rpg_status_t
 server_init(struct server *s, struct config_server *cfg) {
     uv_tcp_t *us;
@@ -51,9 +53,30 @@ server_init(struct server *s, struct config_server *cfg) {
 
 void
 server_deinit(struct server *s) {
-    log_notice("%s proxy run on %s:%d", s->cfg->proxy.data, s->cfg->listen.data, s->cfg->port);
+}
+
+static void
+server_on_new_connect(uv_stream_t *server, int status) {
+
 }
 
 void 
 server_run(struct server *s) {
+    int err;
+
+    err = uv_tcp_bind(&s->us, &s->listen, 0);
+    if (err !=0 ) {
+        UV_SHOW_ERROR(err, "uv bind");
+        return;
+    }
+    
+    err = uv_listen((uv_stream_t*)&s->us, HTTP_DEFAULT_BACKLOG, server_on_new_connect);
+    if (err) {
+        UV_SHOW_ERROR(err, "uv listen");
+        return;
+    }
+
+    log_notice("%s proxy run on %s:%d", s->cfg->proxy.data, s->cfg->listen.data, s->cfg->port);
+
+    uv_run(&s->loop, UV_RUN_DEFAULT);
 }
