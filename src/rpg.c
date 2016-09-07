@@ -5,6 +5,8 @@
 #include "util.h"
 #include "server.h"
 
+#include <uv.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -141,10 +143,10 @@ rpg_set_log(struct application *app) {
 }
 
 static rpg_status_t
-rpg_setup(struct application *app) {
+rpg_server_setup(struct application *app) {
     uint32_t i, n;
     rpg_status_t status;
-    struct config_server *cs;
+    struct config_server *cfg;
     struct server *s;
 
     n = array_n(app->cfg->servers);
@@ -155,48 +157,78 @@ rpg_setup(struct application *app) {
     }
     
     for (i = 0; i < n; i++) {
-        cs = (struct config_server *)array_get(app->cfg->servers, i);
+        cfg = (struct config_server *)array_get(app->cfg->servers, i);
         s = (struct server *)array_push(&app->servers);
         if (s == NULL) {
-            return RPG_ERROR;
+            goto error;
         }
         
-        status = server_init(s, cs);
+        status = server_init(s, cfg);
         if (status != RPG_OK) {
-            return status;
+            goto error;
         }
 
     }
     
     return RPG_OK;
+
+error:
+    while (array_n(&app->servers)) {
+        server_deinit((struct server *)array_pop(&app->servers));
+    }
+    array_deinit(&app->servers);
+
+    return RPG_ERROR;
 }
+
+static void
+rpg_teardown(struct application *app) {
+    while (array_n(&app->servers)) {
+        server_deinit((struct server *)array_pop(&app->servers));
+    }
+    array_deinit(&app->servers);
+}
+
 
 static rpg_status_t
 rpg_pre_run(struct application *app) {
-    rpg_status_t status;
-
-    status = rpg_setup(app);
-    if (status != RPG_OK) {
-        return status;
-    }
 
     return RPG_OK;
 }
 
 static void
 rpg_run(struct application *app) {
+    uint32_t i, n;
+    struct server *s;
+    rpg_status_t status;
 
+    status = rpg_server_setup(app);
+    if (status != RPG_OK) {
+        return;
+    }
+
+    /*
+     * rpg_upstream_setup();
+     */
+
+    n = array_n(&app->servers);
+    for (i = 0; i < n; i++) {
+        uv_thread_t tid;
+        s = (struct server *)array_get(&app->servers, i);
+        uv_thread_create(&tid, server_run, s);
+    }
+
+    rpg_teardown(app);
 }
 
 static void
 rpg_post_run(struct application *app) {
-    while (array_n(&app->servers)) {
-        server_deinit((struct server *)array_pop(&app->servers));
-    }
-    array_deinit(&app->servers);
-
+    /*
+     * remove pidfile, signal_deinit
+     */
     log_deinit();
     config_destroy(app->cfg);
+    
 }
 
 int

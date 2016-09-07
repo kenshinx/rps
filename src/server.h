@@ -14,17 +14,15 @@ struct server {
     uv_tcp_t        us; /* libuv tcp server */
 
     rpg_proxy_t     proxy;
-
-    struct listen {
-        rpg_str_t           host;
-        uint16_t            port;
-        struct sockaddr     addr;
-    };        
     
+    struct sockaddr         listen;
+    
+    struct config_server    *cfg;
 };
 
 rpg_status_t server_init(struct server *s, struct config_server *cs);
 void server_deinit(struct server *s);
+void server_run(struct server *s);
 
 /*
  * server_init
