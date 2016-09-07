@@ -30,8 +30,8 @@ string_deinit(rpg_str_t *str) {
 
 rpg_str_t *string_new();
 void string_free(rpg_str_t *str);
-rpg_status_t string_dup(rpg_str_t *dst, const char *src, size_t len);
-rpg_status_t string_cpy(rpg_str_t *dst, const rpg_str_t *src);
+rpg_status_t string_duplicate(rpg_str_t *dst, const char *src, size_t len);
+rpg_status_t string_copy(rpg_str_t *dst, const rpg_str_t *src);
 
 
 

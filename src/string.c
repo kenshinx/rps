@@ -26,7 +26,7 @@ string_free(rpg_str_t *str) {
 }
 
 rpg_status_t
-string_dup(rpg_str_t *dst, const char *src, size_t len) {
+string_duplicate(rpg_str_t *dst, const char *src, size_t len) {
     ASSERT(dst->data == NULL && dst->len == 0);
     ASSERT(src != NULL && len != 0 );
     
@@ -43,7 +43,7 @@ string_dup(rpg_str_t *dst, const char *src, size_t len) {
 
 
 rpg_status_t
-string_cpy(rpg_str_t *dst, const rpg_str_t *src) {
+string_copy(rpg_str_t *dst, const rpg_str_t *src) {
     ASSERT(dst->data == NULL && dst->len == 0);
     ASSERT(src->data != NULL && src->len != 0);
 

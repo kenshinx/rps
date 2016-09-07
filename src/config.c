@@ -59,7 +59,7 @@ config_push_scalar(struct config *cfg) {
     }
     string_init(value);
 
-    status = string_dup(value, scalar, length);
+    status = string_duplicate(value, scalar, length);
     if (status != RPG_OK) {
         array_pop(cfg->args);
         return status;
@@ -128,9 +128,9 @@ config_handler_map(struct config *cfg, rpg_str_t *key, rpg_str_t *val, rpg_str_t
 
     if (section == NULL) {
         if (rpg_strcmp(key->data, "title") == 0 ) {
-            status = string_cpy(&cfg->title, val);          
+            status = string_copy(&cfg->title, val);          
         } else if(rpg_strcmp(key->data, "pidfile") == 0) {
-            status = string_cpy(&cfg->pidfile, val);
+            status = string_copy(&cfg->pidfile, val);
         } else if(rpg_strcmp(key->data, "daemon") == 0) {
             status = config_set_daemon(cfg, val);
         } else {
@@ -139,23 +139,23 @@ config_handler_map(struct config *cfg, rpg_str_t *key, rpg_str_t *val, rpg_str_t
     } else if (rpg_strcmp(section->data, "servers") == 0 ) {
         server = (struct config_server *)array_head(cfg->servers);
         if (rpg_strcmp(key->data, "proxy") == 0) {
-            status = string_cpy(&server->proxy, val);
+            status = string_copy(&server->proxy, val);
         } else if (rpg_strcmp(key->data, "listen") == 0) {
-            status = string_cpy(&server->listen, val);
+            status = string_copy(&server->listen, val);
         } else if (rpg_strcmp(key->data, "port") == 0) {
             server->port = atoi((char *)val->data);
         } else if (rpg_strcmp(key->data, "username") == 0) {
-            status = string_cpy(&server->username, val);
+            status = string_copy(&server->username, val);
         } else if (rpg_strcmp(key->data, "password") == 0) {
-            status = string_cpy(&server->password, val);
+            status = string_copy(&server->password, val);
         } else {
             status = RPG_ERROR;
         }
     } else if (rpg_strcmp(section->data, "log") == 0) {
         if(rpg_strcmp(key->data, "file") == 0) {
-            status = string_cpy(&cfg->log->file, val);
+            status = string_copy(&cfg->log->file, val);
         } else if (rpg_strcmp(key->data, "level") == 0) {
-            status = string_cpy(&cfg->log->level, val);
+            status = string_copy(&cfg->log->level, val);
         } else {
             status = RPG_ERROR;
         }
@@ -335,7 +335,7 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
             ASSERT(array_n(cfg->args) == 1);   
             section = string_new();
             node = config_pop_scalar(cfg);
-            status = string_cpy(section, node);
+            status = string_copy(section, node);
             string_deinit(node);
             if (status != RPG_OK) {
                 break;

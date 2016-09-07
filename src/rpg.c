@@ -158,66 +158,45 @@ rpg_setup(struct application *app) {
         cs = (struct config_server *)array_get(app->cfg->servers, i);
         s = (struct server *)array_push(&app->servers);
         if (s == NULL) {
-            goto error;
+            return RPG_ERROR;
         }
         
         status = server_init(s, cs);
         if (status != RPG_OK) {
-            goto error;
+            return status;
         }
 
     }
     
     return RPG_OK;
-
-error:
-    while (array_n(&app->servers)) {
-        server_deinit((struct server *)array_pop(&app->servers));
-    }
-    array_deinit(&app->servers);
-    
-    return RPG_ERROR;
-}
-
-static void 
-rpg_teardown(struct application *app) {
-    while (array_n(&app->servers)) {
-        server_deinit((struct server *)array_pop(&app->servers));
-    }
-    array_deinit(&app->servers);
-    
-
 }
 
 static rpg_status_t
 rpg_pre_run(struct application *app) {
     rpg_status_t status;
 
-    status = rpg_set_log(app);
+    status = rpg_setup(app);
     if (status != RPG_OK) {
         return status;
     }
-
-    config_dump(app->cfg);
 
     return RPG_OK;
 }
 
 static void
 rpg_run(struct application *app) {
-    rpg_status_t status;
 
-    status = rpg_setup(app);
-    if (status != RPG_OK) {
-        return;
-    }
-
-    rpg_teardown(app);
 }
 
 static void
 rpg_post_run(struct application *app) {
+    while (array_n(&app->servers)) {
+        server_deinit((struct server *)array_pop(&app->servers));
+    }
+    array_deinit(&app->servers);
+
     log_deinit();
+    config_destroy(app->cfg);
 }
 
 int
@@ -239,12 +218,19 @@ main(int argc, char **argv) {
         exit(1);
     }
 
+    status = rpg_set_log(&app);
+    if (status != RPG_OK) {
+        exit(1);
+    }
+
+    config_dump(app.cfg);
+
     app.daemon = app.daemon ||  app.cfg->daemon;
 
     status = rpg_pre_run(&app);
     if (status != RPG_OK) {
         rpg_post_run(&app);
-        exit(1); 
+        exit(1);
     }
 
     rpg_run(&app);
