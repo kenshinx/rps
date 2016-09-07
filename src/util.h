@@ -1,6 +1,10 @@
 #ifndef _RPG_UTIL_H
 #define _RPG_UTIL_H
 
+#include "log.h"
+
+#include "uv.h"
+
 #include <stdlib.h>
 
 #define CRLF    "\x0d\x0a"
@@ -28,6 +32,11 @@ void * _rpg_zalloc(size_t size, const char *name, int line);
 void *_rpg_calloc(size_t nmemb, size_t size, const char *name, int line);
 void *_rpg_realloc(void *ptr, size_t size, const char *name, int line);
 void _rpg_free(void *ptr, const char *name, int line);
+
+
+#define UV_SHOW_ERROR(err, why) do {                                \
+    log_error("libuv %s:%s", why, uv_strerror(err));                 \
+} while(0)
 
 
 #define NOT_REACHED() rpg_assert("not reached", __FILE__, __LINE__);                                      

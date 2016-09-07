@@ -141,7 +141,7 @@ rpg_set_log(struct application *app) {
 }
 
 static rpg_status_t
-rpg_pre_run(struct application *app) {
+rpg_setup(struct application *app) {
     uint32_t i, n;
     rpg_status_t status;
     struct config_server *cs;
@@ -156,31 +156,68 @@ rpg_pre_run(struct application *app) {
     
     for (i = 0; i < n; i++) {
         cs = (struct config_server *)array_get(app->cfg->servers, i);
-        printf("%s listen on %s:%d\n", cs->proxy.data, cs->listen.data, cs->port);
         s = (struct server *)array_push(&app->servers);
         if (s == NULL) {
-            return RPG_ERROR;
+            goto error;
         }
         
         status = server_init(s, cs);
         if (status != RPG_OK) {
-            return status;
+            goto error;
         }
+
+    }
+    
+    return RPG_OK;
+
+error:
+    while (array_n(&app->servers)) {
+        server_deinit((struct server *)array_pop(&app->servers));
+    }
+    array_deinit(&app->servers);
+    
+    return RPG_ERROR;
+}
+
+static void 
+rpg_teardown(struct application *app) {
+    while (array_n(&app->servers)) {
+        server_deinit((struct server *)array_pop(&app->servers));
+    }
+    array_deinit(&app->servers);
+    
+
+}
+
+static rpg_status_t
+rpg_pre_run(struct application *app) {
+    rpg_status_t status;
+
+    status = rpg_set_log(app);
+    if (status != RPG_OK) {
+        return status;
     }
 
-    
-    
-    return status;
+    config_dump(app->cfg);
+
+    return RPG_OK;
 }
 
-static rpg_status_t
+static void
 rpg_run(struct application *app) {
-    return RPG_OK;
+    rpg_status_t status;
+
+    status = rpg_setup(app);
+    if (status != RPG_OK) {
+        return;
+    }
+
+    rpg_teardown(app);
 }
 
-static rpg_status_t
+static void
 rpg_post_run(struct application *app) {
-    return RPG_OK;
+    log_deinit();
 }
 
 int
@@ -203,16 +240,15 @@ main(int argc, char **argv) {
     }
 
     app.daemon = app.daemon ||  app.cfg->daemon;
-    
-    status = rpg_set_log(&app);
+
+    status = rpg_pre_run(&app);
     if (status != RPG_OK) {
-        exit(1);
+        rpg_post_run(&app);
+        exit(1); 
     }
 
-    config_dump(app.cfg);
-
-    rpg_pre_run(&app);
     rpg_run(&app);
+
     rpg_post_run(&app);
 
     exit(1);
