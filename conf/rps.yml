@@ -1,15 +1,15 @@
 
-title: Rotating Proxy Gateway
+title: Rotating Proxy Server
 
 daemon: false
 
-pidfile: /var/run/rpg.log
+pidfile: /var/run/rps.log
 
 servers:
     - proxy: socks5
       listen: 0.0.0.0
       port: 9890
-      username: rpg
+      username: rps
       password: secret
       
 
@@ -18,6 +18,6 @@ servers:
       port: 9891
 
 log:
-    file: ../logs/rpg.log
+    file: ../logs/rps.log
     level: NOTICE #DEBUG| INFO| NOTICE| WARN| ERROR| CRIT
 

@@ -64,20 +64,20 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     fwrite(buf, 1, len, l->fd);
 }
 
-rpg_status_t
+rps_status_t
 log_set_level(log_level level) {
     struct logger *l = &logger;
     
     if (level < LOG_CRITICAL || level > LOG_VERBOSE) {
         log_stderr("invalid log level <%d>", level);
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
     l->level = level;
     
-    return RPG_OK;
+    return RPS_OK;
 }
 
-rpg_status_t
+rps_status_t
 log_set_output(char *fname) {
     struct logger *l = &logger;
        
@@ -87,28 +87,28 @@ log_set_output(char *fname) {
         l->fd = fopen(fname, "a");
         if (l->fd == NULL) {
             log_stderr("opening log file '%s' failed: %s", fname, strerror(errno));
-            return RPG_ERROR;
+            return RPS_ERROR;
         }
     }
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
-rpg_status_t
+rps_status_t
 log_init(log_level level, char *fname) {
-    rpg_status_t status;
+    rps_status_t status;
     
     status = log_set_level(level);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
 
     status = log_set_output(fname);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
 void
@@ -125,13 +125,13 @@ log_deinit() {
 #ifdef LOG_TEST
 int
 main(int argc, char **argv) {
-    rpg_status_t stat;
+    rps_status_t stat;
     log_level level;
 
     level = log_level_to_int("DEBUG");
     
     stat = log_init(level, NULL);
-    if (stat != RPG_OK) {
+    if (stat != RPS_OK) {
         log_stderr("init log failed.");
         exit(1);
     }

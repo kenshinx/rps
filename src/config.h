@@ -1,5 +1,5 @@
-#ifndef _RPG_CONFIG_H
-#define _RPG_CONFIG_H
+#ifndef _RPS_CONFIG_H
+#define _RPS_CONFIG_H
 
 #include "array.h"
 #include "string.h"
@@ -10,28 +10,28 @@
 #include <stdint.h>
 
 struct config_server {
-    rpg_str_t       proxy;
-    rpg_str_t       listen;
+    rps_str_t       proxy;
+    rps_str_t       listen;
     uint16_t        port;
-    rpg_str_t       username;
-    rpg_str_t       password;
+    rps_str_t       username;
+    rps_str_t       password;
 };
 
 struct config_log {
-    rpg_str_t       file;
-    rpg_str_t       level;
+    rps_str_t       file;
+    rps_str_t       level;
 };
 
 
 struct config {
     char                *fname;
-    rpg_str_t           title;
-    rpg_str_t           pidfile;
+    rps_str_t           title;
+    rps_str_t           pidfile;
     FILE                *fd;
     unsigned            daemon:1;
     struct config_log   *log;
-    rpg_array_t         *servers;
-    rpg_array_t         *args;
+    rps_array_t         *servers;
+    rps_array_t         *args;
     uint32_t            depth;
     unsigned            seq:1;
     yaml_parser_t       parser;

@@ -1,5 +1,5 @@
-#ifndef _RPG_ARRAY_H
-#define _RPG_ARRAY_H
+#ifndef _RPS_ARRAY_H
+#define _RPS_ARRAY_H
 
 #include "core.h"
 
@@ -8,17 +8,17 @@
 
 typedef void (*array_foreach_t)(void *);
 
-struct rpg_array {
+struct rps_array {
     void            *elts;
     uint32_t        nelts;
     size_t          size;
     uint32_t        nalloc;
 };
 
-typedef struct rpg_array rpg_array_t;
+typedef struct rps_array rps_array_t;
 
 static inline uint32_t
-array_n(rpg_array_t *a) {
+array_n(rps_array_t *a) {
     return a->nelts;
 }
 
@@ -28,15 +28,15 @@ array_n(rpg_array_t *a) {
 #define array_is_full(_a)                              \
     ((_a)->nelts == (_a)->nalloc)
 
-rpg_status_t array_init(rpg_array_t *a, uint32_t n, size_t size);
-rpg_array_t *array_create(uint32_t n, size_t size);
-void array_deinit(rpg_array_t *a);
-void array_destroy(rpg_array_t *a);
-void *array_push(rpg_array_t *a);
-void *array_pop(rpg_array_t *a);
-void *array_get(rpg_array_t *a, uint32_t idx);
-void *array_head(rpg_array_t *a);
-void array_foreach(rpg_array_t *a, array_foreach_t func);
+rps_status_t array_init(rps_array_t *a, uint32_t n, size_t size);
+rps_array_t *array_create(uint32_t n, size_t size);
+void array_deinit(rps_array_t *a);
+void array_destroy(rps_array_t *a);
+void *array_push(rps_array_t *a);
+void *array_pop(rps_array_t *a);
+void *array_get(rps_array_t *a, uint32_t idx);
+void *array_head(rps_array_t *a);
+void array_foreach(rps_array_t *a, array_foreach_t func);
 
 
 #endif

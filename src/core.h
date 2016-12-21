@@ -1,11 +1,11 @@
-#ifndef _RPG_CORE_H
-#define _RPG_CORE_H
+#ifndef _RPS_CORE_H
+#define _RPS_CORE_H
 
-#define RPG_OK      0
-#define RPG_ERROR   -1
-#define RPG_ENOMEM  -2
+#define RPS_OK      0
+#define RPS_ERROR   -1
+#define RPS_ENOMEM  -2
 
-typedef int rpg_status_t;
+typedef int rps_status_t;
 
 /*
  * socks5 proxy:
@@ -23,6 +23,6 @@ typedef enum {
     SOCKS4,
 #endif
 
-} rpg_proxy_t;
+} rps_proxy_t;
 
 #endif

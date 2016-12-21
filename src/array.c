@@ -6,44 +6,44 @@
 #include <stdint.h>
 
 
-rpg_status_t
-array_init(rpg_array_t *a, uint32_t n, size_t size) {
+rps_status_t
+array_init(rps_array_t *a, uint32_t n, size_t size) {
     ASSERT(a !=  NULL);
     ASSERT( n !=0 && size != 0);
 
-    a->elts = rpg_calloc(n,  size);
+    a->elts = rps_calloc(n,  size);
     if (a->elts == NULL) {
-        rpg_free(a);
-        return RPG_ENOMEM;
+        rps_free(a);
+        return RPS_ENOMEM;
     }
 
     a->nelts = 0;
     a->size = size;
     a->nalloc = n;
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
 void
-array_deinit(rpg_array_t *a) {
+array_deinit(rps_array_t *a) {
     if (a->elts != NULL) {
-        rpg_free(a->elts);
+        rps_free(a->elts);
     }
 }
 
 
-rpg_array_t *
+rps_array_t *
 array_create(uint32_t n, size_t size) {
-    rpg_array_t *a;
-    rpg_status_t status;
+    rps_array_t *a;
+    rps_status_t status;
     
-    a = rpg_alloc(sizeof(*a));
+    a = rps_alloc(sizeof(*a));
     if (a == NULL) {
         return NULL;
     }
 
     status = array_init(a, n, size);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return NULL;
     }
     
@@ -53,19 +53,19 @@ array_create(uint32_t n, size_t size) {
 
 
 void
-array_destroy(rpg_array_t *a) {
+array_destroy(rps_array_t *a) {
     array_deinit(a);
-    rpg_free(a);
+    rps_free(a);
 }
 
 void *
-array_push(rpg_array_t *a) {
+array_push(rps_array_t *a) {
     size_t size;
     void *new, *elt;
         
     if (a->nelts == a->nalloc) {
         size = a->size * a->nalloc;
-        new = rpg_realloc(a->elts, 2 * size);
+        new = rps_realloc(a->elts, 2 * size);
         if (new == NULL) {
             return NULL;
         }
@@ -80,7 +80,7 @@ array_push(rpg_array_t *a) {
 }
 
 void *
-array_pop(rpg_array_t *a) {
+array_pop(rps_array_t *a) {
     void *elt;
     
     if (array_is_empty(a)) {
@@ -94,7 +94,7 @@ array_pop(rpg_array_t *a) {
 }
 
 void *
-array_get(rpg_array_t *a, uint32_t idx) {
+array_get(rps_array_t *a, uint32_t idx) {
     void *elt;
 
     if (array_is_empty(a)) {
@@ -107,7 +107,7 @@ array_get(rpg_array_t *a, uint32_t idx) {
 }
 
 void *
-array_head(rpg_array_t *a) {
+array_head(rps_array_t *a) {
 
     if (array_is_empty(a)) {
         return NULL;
@@ -117,7 +117,7 @@ array_head(rpg_array_t *a) {
 }
 
 void
-array_foreach(rpg_array_t *a, array_foreach_t func) {
+array_foreach(rps_array_t *a, array_foreach_t func) {
     uint32_t i, nelts;
  
     for(i = 0, nelts = a->nelts; i < nelts;  i++) {

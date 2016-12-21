@@ -1,5 +1,5 @@
-#ifndef _RPG_SERVER_H
-#define _RPG_SERVER_H
+#ifndef _RPS_SERVER_H
+#define _RPS_SERVER_H
 
 #include "core.h"
 #include "string.h"
@@ -13,14 +13,14 @@ struct server {
     uv_loop_t       loop;   
     uv_tcp_t        us; /* libuv tcp server */
 
-    rpg_proxy_t     proxy;
+    rps_proxy_t     proxy;
     
     struct sockaddr         listen;
     
     struct config_server    *cfg;
 };
 
-rpg_status_t server_init(struct server *s, struct config_server *cs);
+rps_status_t server_init(struct server *s, struct config_server *cs);
 void server_deinit(struct server *s);
 void server_run(struct server *s);
 

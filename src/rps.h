@@ -1,26 +1,26 @@
-#ifndef _RPG_H
-#define _RPG_H
+#ifndef _RPS_H
+#define _RPS_H
 
 #include "array.h"
 #include "config.h"
 
 #include <sys/types.h>
 
-#define RPG_VERSION "0.1.2"
+#define RPS_VERSION "0.1.2"
 
-#ifdef RPG_DEBUG_OPEN
-#define RPG_DEFAULT_LOG_LEVEL       LOG_VERBOSE
+#ifdef RPS_DEBUG_OPEN
+#define RPS_DEFAULT_LOG_LEVEL       LOG_VERBOSE
 #else
-#define RPG_DEFAULT_LOG_LEVEL       LOG_NOTICE
+#define RPS_DEFAULT_LOG_LEVEL       LOG_NOTICE
 #endif
-#define RPG_DEFAULT_LOG_FILE        NULL
-#define RPG_DEFAULT_CONFIG_FILE     "../conf/rpg.yml"
-#define RPG_DEFAULT_PID_FILE        NULL
+#define RPS_DEFAULT_LOG_FILE        NULL
+#define RPS_DEFAULT_CONFIG_FILE     "../conf/rps.yml"
+#define RPS_DEFAULT_PID_FILE        NULL
 
 
 struct application {
-    rpg_array_t         servers;
-    rpg_array_t         upstreams;
+    rps_array_t         servers;
+    rps_array_t         upstreams;
 
     int                 log_level;
     char                *log_filename;

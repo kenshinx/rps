@@ -6,7 +6,7 @@
 
 
 void *
-_rpg_alloc(size_t size, const char *name, int line) {
+_rps_alloc(size_t size, const char *name, int line) {
     void *p;
     
     ASSERT(size != 0);
@@ -23,10 +23,10 @@ _rpg_alloc(size_t size, const char *name, int line) {
 }
 
 void *
-_rpg_zalloc(size_t size, const char *name, int line) {
+_rps_zalloc(size_t size, const char *name, int line) {
     void *p;
 
-    p = _rpg_alloc(size, name, line);\
+    p = _rps_alloc(size, name, line);\
     if (p != NULL) {
         memset(p, 0, size);
     }
@@ -35,12 +35,12 @@ _rpg_zalloc(size_t size, const char *name, int line) {
 }
 
 void *
-_rpg_calloc(size_t nmemb, size_t size, const char *name, int line) {
-    return _rpg_alloc(nmemb * size, name, line);
+_rps_calloc(size_t nmemb, size_t size, const char *name, int line) {
+    return _rps_alloc(nmemb * size, name, line);
 }
 
 void *
-_rpg_realloc(void *ptr, size_t size, const char *name, int line) {
+_rps_realloc(void *ptr, size_t size, const char *name, int line) {
     void *p;
     
     ASSERT(size != 0);
@@ -57,14 +57,14 @@ _rpg_realloc(void *ptr, size_t size, const char *name, int line) {
 }
 
 void 
-_rpg_free(void *ptr, const char *name, int line) {
+_rps_free(void *ptr, const char *name, int line) {
     ASSERT(ptr != NULL);
     log_verb("free(%p) @ %s:%d", ptr, name, line);
     free(ptr);
 }
 
 void
-rpg_assert(const char *cond, const char *file, int line) {
+rps_assert(const char *cond, const char *file, int line) {
     log_error("assert '%s' failed @ (%s, %d)", cond, file, line);
     abort();
 }

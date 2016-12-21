@@ -19,17 +19,17 @@
 #define CONFIG_MAX_PATH     CONFIG_ROOT_PATH + 1
 
 
-static  rpg_status_t
+static  rps_status_t
 config_event_next(struct config *cfg) {
     int rv;
     
     rv = yaml_parser_parse(&cfg->parser, &cfg->event);
     if (!rv) {
         log_stderr("config: failed (err %d) to get next event");
-        return RPG_ERROR;
+        return RPS_ERROR;
     }   
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
 static void
@@ -37,10 +37,10 @@ config_event_done(struct config *cfg) {
     yaml_event_delete(&cfg->event);
 }
 
-static rpg_status_t
+static rps_status_t
 config_push_scalar(struct config *cfg) {
-    rpg_status_t status;
-    rpg_str_t   *value;
+    rps_status_t status;
+    rps_str_t   *value;
 
     char *scalar;
     size_t length;
@@ -48,31 +48,31 @@ config_push_scalar(struct config *cfg) {
     scalar = (char *)cfg->event.data.scalar.value;
     length = cfg->event.data.scalar.length;
     if (length == 0) {
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
 
     log_verb("push '%.*s'", length, scalar);
 
     value = array_push(cfg->args);
     if (value == NULL) {
-        return RPG_ENOMEM;
+        return RPS_ENOMEM;
     }
     string_init(value);
 
     status = string_duplicate(value, scalar, length);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         array_pop(cfg->args);
         return status;
     }
 
-    return RPG_OK;   
+    return RPS_OK;   
 }
 
-static rpg_str_t *
+static rps_str_t *
 config_pop_scalar(struct config *cfg) {
-    rpg_str_t *value;
+    rps_str_t *value;
 
-    value = (rpg_str_t *)array_pop(cfg->args);
+    value = (rps_str_t *)array_pop(cfg->args);
     log_verb("pop '%.*s'", value->len, value->data);
     return value;
 }
@@ -106,71 +106,71 @@ config_server_deinit(struct config_server *server) {
     string_deinit(&server->password);
 }
 
-static rpg_status_t
-config_set_daemon(struct config *cfg, rpg_str_t *str) {
-    if (rpg_strcmp(str->data, "true") == 0 ) {
+static rps_status_t
+config_set_daemon(struct config *cfg, rps_str_t *str) {
+    if (rps_strcmp(str->data, "true") == 0 ) {
         cfg->daemon = 1;
-    } else if (rpg_strcmp(str->data, "false") == 0 ) {
+    } else if (rps_strcmp(str->data, "false") == 0 ) {
         cfg->daemon = 0;
     } else {
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
     
-    return RPG_OK;
+    return RPS_OK;
 }
 
-static rpg_status_t
-config_handler_map(struct config *cfg, rpg_str_t *key, rpg_str_t *val, rpg_str_t *section) {
-    rpg_status_t status;
+static rps_status_t
+config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t *section) {
+    rps_status_t status;
     struct config_server *server;
 
-    status = RPG_OK;
+    status = RPS_OK;
 
     if (section == NULL) {
-        if (rpg_strcmp(key->data, "title") == 0 ) {
+        if (rps_strcmp(key->data, "title") == 0 ) {
             status = string_copy(&cfg->title, val);          
-        } else if(rpg_strcmp(key->data, "pidfile") == 0) {
+        } else if(rps_strcmp(key->data, "pidfile") == 0) {
             status = string_copy(&cfg->pidfile, val);
-        } else if(rpg_strcmp(key->data, "daemon") == 0) {
+        } else if(rps_strcmp(key->data, "daemon") == 0) {
             status = config_set_daemon(cfg, val);
         } else {
-            status = RPG_ERROR;
+            status = RPS_ERROR;
         }
-    } else if (rpg_strcmp(section->data, "servers") == 0 ) {
+    } else if (rps_strcmp(section->data, "servers") == 0 ) {
         server = (struct config_server *)array_head(cfg->servers);
-        if (rpg_strcmp(key->data, "proxy") == 0) {
+        if (rps_strcmp(key->data, "proxy") == 0) {
             status = string_copy(&server->proxy, val);
-        } else if (rpg_strcmp(key->data, "listen") == 0) {
+        } else if (rps_strcmp(key->data, "listen") == 0) {
             status = string_copy(&server->listen, val);
-        } else if (rpg_strcmp(key->data, "port") == 0) {
+        } else if (rps_strcmp(key->data, "port") == 0) {
             server->port = atoi((char *)val->data);
-        } else if (rpg_strcmp(key->data, "username") == 0) {
+        } else if (rps_strcmp(key->data, "username") == 0) {
             status = string_copy(&server->username, val);
-        } else if (rpg_strcmp(key->data, "password") == 0) {
+        } else if (rps_strcmp(key->data, "password") == 0) {
             status = string_copy(&server->password, val);
         } else {
-            status = RPG_ERROR;
+            status = RPS_ERROR;
         }
-    } else if (rpg_strcmp(section->data, "log") == 0) {
-        if(rpg_strcmp(key->data, "file") == 0) {
+    } else if (rps_strcmp(section->data, "log") == 0) {
+        if(rps_strcmp(key->data, "file") == 0) {
             status = string_copy(&cfg->log->file, val);
-        } else if (rpg_strcmp(key->data, "level") == 0) {
+        } else if (rps_strcmp(key->data, "level") == 0) {
             status = string_copy(&cfg->log->level, val);
         } else {
-            status = RPG_ERROR;
+            status = RPS_ERROR;
         }
     } else {
-        status = RPG_ERROR;
+        status = RPS_ERROR;
     }
 
     return status;
 }
 
 
-static rpg_status_t
-config_handler(struct config *cfg, rpg_str_t *section) {
-    rpg_status_t status;
-    rpg_str_t *key, *val;
+static rps_status_t
+config_handler(struct config *cfg, rps_str_t *section) {
+    rps_status_t status;
+    rps_str_t *key, *val;
 
     ASSERT(array_n(cfg->args) == 2);
 
@@ -195,7 +195,7 @@ config_open(char *filename) {
         return NULL;
     }
 
-    cfg= rpg_alloc(sizeof(*cfg));
+    cfg= rps_alloc(sizeof(*cfg));
     if (cfg == NULL) {
         goto error;
     }
@@ -205,12 +205,12 @@ config_open(char *filename) {
         goto error;
     }
 
-    cfg->args = array_create(CONFIG_DEFAULT_ARGS, sizeof(rpg_str_t));
+    cfg->args = array_create(CONFIG_DEFAULT_ARGS, sizeof(rps_str_t));
     if (cfg->args == NULL) {
         goto error;
     }
 
-    cfg->log = rpg_alloc(sizeof(struct config_log));
+    cfg->log = rps_alloc(sizeof(struct config_log));
     if (cfg->log == NULL) {
         goto error;
     }
@@ -237,15 +237,15 @@ error:
         array_destroy(cfg->args);
     }
     if (cfg->log != NULL) {
-        rpg_free(cfg->log);
+        rps_free(cfg->log);
     }
     
-    rpg_free(cfg);
+    rps_free(cfg);
 
     return NULL;
 }
 
-static rpg_status_t
+static rps_status_t
 config_yaml_init(struct config *cfg) {
     int rv;
     
@@ -253,19 +253,19 @@ config_yaml_init(struct config *cfg) {
     if (rv < 0) {
         log_stderr("config: failed to seek to the beginning of file '%s': %s",
                 cfg->fname, strerror(errno));
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
 
     rv = yaml_parser_initialize(&cfg->parser);
     if (!rv) {
         log_stderr("config: failed (err %d) to initialize yaml parser",
                 cfg->parser.error);
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
     
     yaml_parser_set_input_file(&cfg->parser, cfg->fd);
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
 void
@@ -273,20 +273,20 @@ config_yaml_deinit(struct config *cfg) {
      yaml_parser_delete(&cfg->parser);
 }
 
-static rpg_status_t
+static rps_status_t
 config_begin_parse(struct config *cfg) {
-    rpg_status_t status;
+    rps_status_t status;
     bool done;
     
     status = config_yaml_init(cfg);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
 
     done = false;
     while (!done) {
         status = config_event_next(cfg);
-        if (status != RPG_OK) {
+        if (status != RPS_OK) {
             return status;
         }
         
@@ -307,18 +307,18 @@ config_begin_parse(struct config *cfg) {
         config_event_done(cfg);
     }
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
-static rpg_status_t
-config_parse_core(struct config *cfg, rpg_str_t *section) {
-    rpg_status_t status;
-    rpg_str_t *node;
+static rps_status_t
+config_parse_core(struct config *cfg, rps_str_t *section) {
+    rps_status_t status;
+    rps_str_t *node;
     struct config_server *server;
     bool done, leaf;
 
     status = config_event_next(cfg);
-    if(status != RPG_OK) {
+    if(status != RPS_OK) {
         return status;
     }
 
@@ -337,17 +337,17 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
             node = config_pop_scalar(cfg);
             status = string_copy(section, node);
             string_deinit(node);
-            if (status != RPG_OK) {
+            if (status != RPS_OK) {
                 break;
             }
         } 
 
         if (cfg->seq) {
-            if (rpg_strcmp(section->data, "servers") == 0 ) {
+            if (rps_strcmp(section->data, "servers") == 0 ) {
                 /* new server block */
                 server = (struct config_server *)array_push(cfg->servers);
                 if (server == NULL) {
-                    status = RPG_ENOMEM;
+                    status = RPS_ENOMEM;
                 }
                 config_server_init(server);
             }
@@ -380,7 +380,7 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
     case YAML_SCALAR_EVENT:
         status = config_push_scalar(cfg);
         
-        if (status != RPG_OK) {
+        if (status != RPS_OK) {
             break;
         }
 
@@ -395,12 +395,12 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
 
     config_event_done(cfg);
     
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
 
     if (done) {
-        return RPG_OK;
+        return RPS_OK;
     }
 
     if (leaf) {
@@ -410,9 +410,9 @@ config_parse_core(struct config *cfg, rpg_str_t *section) {
     return config_parse_core(cfg, section);
 }
 
-static rpg_status_t
+static rps_status_t
 config_end_parse(struct config *cfg) {
-    rpg_status_t status;
+    rps_status_t status;
     bool done;
 
     ASSERT(cfg->depth == 0);
@@ -420,7 +420,7 @@ config_end_parse(struct config *cfg) {
     done = false;
     while(!done) {
         status = config_event_next(cfg);
-        if (status != RPG_OK) {
+        if (status != RPS_OK) {
             return status;
         }
 
@@ -442,32 +442,32 @@ config_end_parse(struct config *cfg) {
 
     config_yaml_deinit(cfg);
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
-static rpg_status_t
+static rps_status_t
 config_parse(struct config *cfg){
-    rpg_status_t status;
+    rps_status_t status;
     
     ASSERT(array_n(cfg->servers) == 0);   
 
     status = config_begin_parse(cfg);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
 
 
     status = config_parse_core(cfg, NULL);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
     
     status = config_end_parse(cfg);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
     
-    return RPG_OK;
+    return RPS_OK;
 }
 
 static void
@@ -500,7 +500,7 @@ config_dump(struct config *cfg) {
 struct config *
 config_create(char *filename) {
     struct config *cfg;
-    rpg_status_t status;
+    rps_status_t status;
     
     cfg = config_open(filename);
     if (cfg == NULL) {
@@ -508,7 +508,7 @@ config_create(char *filename) {
     }
 
     status = config_parse(cfg);
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         log_stderr("config: configuration file '%s' syntax is invalid", filename);
         fclose(cfg->fd);
         cfg->fd = NULL;
@@ -529,7 +529,7 @@ config_destroy(struct config *cfg) {
     string_deinit(&cfg->pidfile);
 
     while (array_n(cfg->args)) {
-        rpg_str_t *arg = config_pop_scalar(cfg);
+        rps_str_t *arg = config_pop_scalar(cfg);
         string_deinit(arg);
     }
     array_destroy(cfg->args);
@@ -540,7 +540,7 @@ config_destroy(struct config *cfg) {
     array_destroy(cfg->servers);
 
     config_log_deinit(cfg->log);
-    rpg_free(cfg->log);
+    rps_free(cfg->log);
 
-    rpg_free(cfg);
+    rps_free(cfg);
 }

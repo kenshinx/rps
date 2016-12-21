@@ -1,4 +1,4 @@
-#include "rpg.h"
+#include "rps.h"
 #include "core.h"
 #include "log.h" 
 #include "config.h"
@@ -24,9 +24,9 @@ static struct option long_options[] = {
 static char short_options[] = "hVdvc:p:";
 
 static void
-rpg_show_usage() {
+rps_show_usage() {
     log_stderr(
-        "Usage: ./rpg -c conf/rpg.yaml" CRLF
+        "Usage: ./rps -c conf/rps.yaml" CRLF
         ""
     );
     log_stderr(
@@ -39,31 +39,31 @@ rpg_show_usage() {
         "   -d, --daemon         :run as daemonize" CRLF
         "   -c, --config=S       :set configuration file (default: %s)" CRLF
         "",
-        RPG_DEFAULT_CONFIG_FILE, 
-        RPG_DEFAULT_PID_FILE == NULL ? "off" : RPG_DEFAULT_PID_FILE
+        RPS_DEFAULT_CONFIG_FILE, 
+        RPS_DEFAULT_PID_FILE == NULL ? "off" : RPS_DEFAULT_PID_FILE
     );
     exit(1);
 }
 
 static void
-rpg_show_version() {
-    log_stdout("rpg %s", RPG_VERSION);
+rps_show_version() {
+    log_stdout("rps %s", RPS_VERSION);
     exit(0);
 } 
 
 static void
-rpg_set_default_options(struct application *app) {
-    app->log_level = RPG_DEFAULT_LOG_LEVEL;
-    app->log_filename = RPG_DEFAULT_LOG_FILE;
+rps_set_default_options(struct application *app) {
+    app->log_level = RPS_DEFAULT_LOG_LEVEL;
+    app->log_filename = RPS_DEFAULT_LOG_FILE;
     
     app->pid = (pid_t)-1;
     
-    app->config_filename = RPG_DEFAULT_CONFIG_FILE;
+    app->config_filename = RPS_DEFAULT_CONFIG_FILE;
     app->cfg = NULL;
 }
 
-static rpg_status_t
-rpg_get_options(int argc, char **argv, struct application *app) {
+static rps_status_t
+rps_get_options(int argc, char **argv, struct application *app) {
 
     char c;
 
@@ -76,14 +76,14 @@ rpg_get_options(int argc, char **argv, struct application *app) {
 
         switch (c) {
             case 'h':
-                rpg_show_usage();
+                rps_show_usage();
             case 'V':
-                rpg_show_version();
+                rps_show_version();
             case 'd':
                 app->daemon = 1;
                 break;
             case 'v':
-                app->log_level = MAX(LOG_DEBUG, RPG_DEFAULT_LOG_LEVEL);
+                app->log_level = MAX(LOG_DEBUG, RPS_DEFAULT_LOG_LEVEL);
                 app->verbose = 1;
                 break;
             case 'c':
@@ -94,43 +94,43 @@ rpg_get_options(int argc, char **argv, struct application *app) {
                 break;
             case '?':
                 /* getopt_long already printed an error message. */
-                return RPG_ERROR;
+                return RPS_ERROR;
             default:
-                return RPG_ERROR;
+                return RPS_ERROR;
         }
         
     }
-    return RPG_OK;
+    return RPS_OK;
 }
 
-static rpg_status_t 
-rpg_load_config(struct application *app) {
+static rps_status_t 
+rps_load_config(struct application *app) {
     struct config *cfg;
 
     cfg = config_create(app->config_filename);
     if (cfg == NULL) {
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
 
     app->cfg = cfg;
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
-static rpg_status_t
-rpg_set_log(struct application *app) {
+static rps_status_t
+rps_set_log(struct application *app) {
     log_level level;
 
     level = log_level_to_int((char *)app->cfg->log->level.data);
     if (level == LOG_LEVEL_UNDEFINED) {
         log_stderr("invalid log level: %s", app->cfg->log->level.data);
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
     app->log_level = MAX(app->log_level, level);   
 
     app->log_filename = strdup((char *)app->cfg->log->file.data);
     if (app->log_filename == NULL) {
-        return RPG_ERROR;
+        return RPS_ERROR;
     }
 
     log_deinit();
@@ -142,17 +142,17 @@ rpg_set_log(struct application *app) {
     }
 }
 
-static rpg_status_t
-rpg_server_setup(struct application *app) {
+static rps_status_t
+rps_server_setup(struct application *app) {
     uint32_t i, n;
-    rpg_status_t status;
+    rps_status_t status;
     struct config_server *cfg;
     struct server *s;
 
     n = array_n(app->cfg->servers);
 
     status = array_init(&app->servers, n , sizeof(struct server));   
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return status;
     }
     
@@ -164,13 +164,13 @@ rpg_server_setup(struct application *app) {
         }
         
         status = server_init(s, cfg);
-        if (status != RPG_OK) {
+        if (status != RPS_OK) {
             goto error;
         }
 
     }
     
-    return RPG_OK;
+    return RPS_OK;
 
 error:
     while (array_n(&app->servers)) {
@@ -178,11 +178,11 @@ error:
     }
     array_deinit(&app->servers);
 
-    return RPG_ERROR;
+    return RPS_ERROR;
 }
 
 static void
-rpg_teardown(struct application *app) {
+rps_teardown(struct application *app) {
     while (array_n(&app->servers)) {
         server_deinit((struct server *)array_pop(&app->servers));
     }
@@ -190,33 +190,33 @@ rpg_teardown(struct application *app) {
 }
 
 
-static rpg_status_t
-rpg_pre_run(struct application *app) {
+static rps_status_t
+rps_pre_run(struct application *app) {
 
-    return RPG_OK;
+    return RPS_OK;
 }
 
 static void
-rpg_run(struct application *app) {
+rps_run(struct application *app) {
     uint32_t i, n;
     struct server *s;
-    rpg_status_t status;
+    rps_status_t status;
     uv_thread_t *tid;
-    rpg_array_t threads;
+    rps_array_t threads;
 
-    status = rpg_server_setup(app);
-    if (status != RPG_OK) {
+    status = rps_server_setup(app);
+    if (status != RPS_OK) {
         return;
     }
 
     /*
-     * rpg_upstream_setup();
+     * rps_upstream_setup();
      */
 
     n = array_n(&app->servers);
     
     status = array_init(&threads, n , sizeof(uv_thread_t));   
-    if (status != RPG_OK) {
+    if (status != RPS_OK) {
         return;
     }
     
@@ -232,11 +232,11 @@ rpg_run(struct application *app) {
 
     array_deinit(&threads);
 
-    rpg_teardown(app);
+    rps_teardown(app);
 }
 
 static void
-rpg_post_run(struct application *app) {
+rps_post_run(struct application *app) {
     /*
      * remove pidfile, signal_deinit
      */
@@ -248,24 +248,24 @@ rpg_post_run(struct application *app) {
 int
 main(int argc, char **argv) {
     struct application app;
-    rpg_status_t status;
+    rps_status_t status;
 
-    log_init(RPG_DEFAULT_LOG_LEVEL, RPG_DEFAULT_LOG_FILE);
+    log_init(RPS_DEFAULT_LOG_LEVEL, RPS_DEFAULT_LOG_FILE);
 
-    rpg_set_default_options(&app);
+    rps_set_default_options(&app);
 
-    status = rpg_get_options(argc, argv, &app);
-    if (status != RPG_OK) {
-        rpg_show_usage();
+    status = rps_get_options(argc, argv, &app);
+    if (status != RPS_OK) {
+        rps_show_usage();
     }
 
-    status = rpg_load_config(&app);
-    if (status != RPG_OK) {
+    status = rps_load_config(&app);
+    if (status != RPS_OK) {
         exit(1);
     }
 
-    status = rpg_set_log(&app);
-    if (status != RPG_OK) {
+    status = rps_set_log(&app);
+    if (status != RPS_OK) {
         exit(1);
     }
 
@@ -273,15 +273,15 @@ main(int argc, char **argv) {
 
     app.daemon = app.daemon ||  app.cfg->daemon;
 
-    status = rpg_pre_run(&app);
-    if (status != RPG_OK) {
-        rpg_post_run(&app);
+    status = rps_pre_run(&app);
+    if (status != RPS_OK) {
+        rps_post_run(&app);
         exit(1);
     }
 
-    rpg_run(&app);
+    rps_run(&app);
 
-    rpg_post_run(&app);
+    rps_post_run(&app);
 
     exit(1);
 }

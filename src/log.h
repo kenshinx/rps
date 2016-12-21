@@ -91,9 +91,9 @@ struct logger {
 
 void _log_stream(FILE *stream, const char *fmt, ...);
 void _log(log_level level, const char *file, int line, const char *fmt, ...);
-rpg_status_t log_set_level(log_level level);
-rpg_status_t log_set_output(char *fname);
-rpg_status_t log_init(log_level level, char *fname);
+rps_status_t log_set_level(log_level level);
+rps_status_t log_set_output(char *fname);
+rps_status_t log_init(log_level level, char *fname);
 void log_deinit();
 
 #endif
