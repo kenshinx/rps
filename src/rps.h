@@ -27,7 +27,7 @@ struct application {
     pid_t               pid;
     char                *pid_filename;
     char                *config_filename;
-    struct config       *cfg;
+    struct config       cfg;
     unsigned            daemon:1;
     unsigned            verbose:1;
 };

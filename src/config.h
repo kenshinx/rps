@@ -40,8 +40,8 @@ struct config {
 };
 
 
-struct config *config_create(char *config_file);
-void config_destroy(struct config *cfg);
+rps_status_t config_init(char *config_file, struct config *cfg);
+void config_deinit(struct config *cfg);
 void config_dump(struct config *cfg);
 
 #endif

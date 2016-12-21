@@ -184,20 +184,14 @@ config_handler(struct config *cfg, rps_str_t *section) {
     return status;
 }
 
-static struct config *
-config_open(char *filename) {
-    struct config *cfg;
+static rps_status_t
+config_load(char *filename, struct config *cfg) {
     FILE *fd;
 
     fd = fopen(filename, "r");
     if (fd == NULL) {
         log_stderr("config: failed to open configuration: '%s': '%s'", filename, strerror(errno));
-        return NULL;
-    }
-
-    cfg= rps_alloc(sizeof(*cfg));
-    if (cfg == NULL) {
-        goto error;
+        return RPS_ERROR;
     }
     
     cfg->servers = array_create(CONFIG_SERVERS_NUM, sizeof(struct config_server));
@@ -223,7 +217,7 @@ config_open(char *filename) {
     cfg->daemon= 0;
     string_init(&cfg->title);
     string_init(&cfg->pidfile);
-    return cfg;
+    return RPS_OK;
 
 error:
     log_stderr("config: initial configuration failed.");
@@ -239,10 +233,8 @@ error:
     if (cfg->log != NULL) {
         rps_free(cfg->log);
     }
-    
-    rps_free(cfg);
 
-    return NULL;
+    return RPS_ERROR;
 }
 
 static rps_status_t
@@ -497,14 +489,13 @@ config_dump(struct config *cfg) {
    
 }
 
-struct config *
-config_create(char *filename) {
-    struct config *cfg;
+rps_status_t
+config_init(char *filename, struct config *cfg) {
     rps_status_t status;
     
-    cfg = config_open(filename);
-    if (cfg == NULL) {
-        return NULL;
+    status = config_load(filename, cfg);
+    if (status != RPS_OK) {
+        return status;
     }
 
     status = config_parse(cfg);
@@ -512,18 +503,18 @@ config_create(char *filename) {
         log_stderr("config: configuration file '%s' syntax is invalid", filename);
         fclose(cfg->fd);
         cfg->fd = NULL;
-        config_destroy(cfg);
-        return NULL;
+        config_deinit(cfg);
+        return status;
     }
 
     fclose(cfg->fd);
     cfg->fd = NULL;
     
-    return cfg;
+    return RPS_OK;
 }
 
 void
-config_destroy(struct config *cfg) {
+config_deinit(struct config *cfg) {
 
     string_deinit(&cfg->title);
     string_deinit(&cfg->pidfile);
@@ -541,6 +532,4 @@ config_destroy(struct config *cfg) {
 
     config_log_deinit(cfg->log);
     rps_free(cfg->log);
-
-    rps_free(cfg);
 }

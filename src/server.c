@@ -9,7 +9,6 @@ rps_status_t
 server_init(struct server *s, struct config_server *cfg) {
     uv_tcp_t *us;
     int err;
-    rps_status_t status;
 
     err = uv_loop_init(&s->loop);
     if (err != 0) {

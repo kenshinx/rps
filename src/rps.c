@@ -59,7 +59,6 @@ rps_set_default_options(struct application *app) {
     app->pid = (pid_t)-1;
     
     app->config_filename = RPS_DEFAULT_CONFIG_FILE;
-    app->cfg = NULL;
 }
 
 static rps_status_t
@@ -103,32 +102,18 @@ rps_get_options(int argc, char **argv, struct application *app) {
     return RPS_OK;
 }
 
-static rps_status_t 
-rps_load_config(struct application *app) {
-    struct config *cfg;
-
-    cfg = config_create(app->config_filename);
-    if (cfg == NULL) {
-        return RPS_ERROR;
-    }
-
-    app->cfg = cfg;
-
-    return RPS_OK;
-}
-
 static rps_status_t
 rps_set_log(struct application *app) {
     log_level level;
 
-    level = log_level_to_int((char *)app->cfg->log->level.data);
+    level = log_level_to_int((char *)app->cfg.log->level.data);
     if (level == LOG_LEVEL_UNDEFINED) {
-        log_stderr("invalid log level: %s", app->cfg->log->level.data);
+        log_stderr("invalid log level: %s", app->cfg.log->level.data);
         return RPS_ERROR;
     }
     app->log_level = MAX(app->log_level, level);   
 
-    app->log_filename = strdup((char *)app->cfg->log->file.data);
+    app->log_filename = strdup((char *)app->cfg.log->file.data);
     if (app->log_filename == NULL) {
         return RPS_ERROR;
     }
@@ -149,7 +134,7 @@ rps_server_setup(struct application *app) {
     struct config_server *cfg;
     struct server *s;
 
-    n = array_n(app->cfg->servers);
+    n = array_n(app->cfg.servers);
 
     status = array_init(&app->servers, n , sizeof(struct server));   
     if (status != RPS_OK) {
@@ -157,7 +142,7 @@ rps_server_setup(struct application *app) {
     }
     
     for (i = 0; i < n; i++) {
-        cfg = (struct config_server *)array_get(app->cfg->servers, i);
+        cfg = (struct config_server *)array_get(app->cfg.servers, i);
         s = (struct server *)array_push(&app->servers);
         if (s == NULL) {
             goto error;
@@ -223,7 +208,7 @@ rps_run(struct application *app) {
     for (i = 0; i < n; i++) {
         tid = (uv_thread_t *)array_push(&threads);
         s = (struct server *)array_get(&app->servers, i);
-        uv_thread_create(tid, server_run, s);
+        uv_thread_create(tid, (uv_thread_cb)server_run, s);
     }
 
     while(array_n(&threads)) {
@@ -241,7 +226,7 @@ rps_post_run(struct application *app) {
      * remove pidfile, signal_deinit
      */
     log_deinit();
-    config_destroy(app->cfg);
+    config_deinit(&app->cfg);
     
 }
 
@@ -259,7 +244,7 @@ main(int argc, char **argv) {
         rps_show_usage();
     }
 
-    status = rps_load_config(&app);
+    status = config_init(app.config_filename, &app.cfg);
     if (status != RPS_OK) {
         exit(1);
     }
@@ -269,9 +254,9 @@ main(int argc, char **argv) {
         exit(1);
     }
 
-    config_dump(app.cfg);
+    config_dump(&app.cfg);
 
-    app.daemon = app.daemon ||  app.cfg->daemon;
+    app.daemon = app.daemon ||  app.cfg.daemon;
 
     status = rps_pre_run(&app);
     if (status != RPS_OK) {

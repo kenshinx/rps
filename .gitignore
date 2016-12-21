@@ -4,5 +4,7 @@
 /tags
 /src/.gdbinit
 /src/rps
+<<<<<<< HEAD
 src/*.o
 src/.*.swp
+/src/rps.dSYM/
