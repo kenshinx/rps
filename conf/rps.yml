@@ -19,5 +19,5 @@ servers:
 
 log:
     file: ../logs/rps.log
-    level: NOTICE #DEBUG| INFO| NOTICE| WARN| ERROR| CRIT
+    level: INFO #DEBUG| INFO| NOTICE| WARN| ERROR| CRIT
 
