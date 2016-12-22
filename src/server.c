@@ -3,7 +3,6 @@
 #include "string.h"
 #include "util.h"
 
-#define HTTP_DEFAULT_BACKLOG  65536
 
 rps_status_t
 server_init(struct server *s, struct config_server *cfg) {
@@ -21,6 +20,8 @@ server_init(struct server *s, struct config_server *cfg) {
         UV_SHOW_ERROR(err, "tcp init");
         return RPS_ERROR;
     }
+
+    s->us.data = s;
 
     if (rps_strcmp(cfg->proxy.data, "socks5") == 0 ) {
         s->proxy = SOCKS5;
@@ -40,7 +41,7 @@ server_init(struct server *s, struct config_server *cfg) {
     
     err = uv_ip4_addr((const char *)cfg->listen.data, cfg->port, (struct sockaddr_in *)&s->listen);
     if (err !=0 ) {
-        UV_SHOW_ERROR(err, "uv ip4 addr");
+        UV_SHOW_ERROR(err, "ip4 addr");
         return RPS_ERROR;
     }
 
@@ -52,11 +53,70 @@ server_init(struct server *s, struct config_server *cfg) {
 
 void
 server_deinit(struct server *s) {
+    uv_loop_close(&s->loop);
 }
 
-static void
-server_on_new_connect(uv_stream_t *server, int status) {
+static rps_status_t 
+server_context_init(rps_ctx_t *ctx) {
+    return RPS_OK;
+}
 
+
+/*
+ *         request            forward
+ * Client  ------->    RPS  ----------> Upstream ----> Remote
+ *         session            session
+ *  |                                      |
+ *  |  ---          context          ---   |
+ */
+
+static void
+server_on_new_connect(uv_stream_t *us, int err) {
+    struct server *s;
+    rps_ctx_t *ctx;
+    rps_sess_t *request; /* client -> rps */
+    rps_sess_t *forward; /* rps -> upstream */
+    rps_status_t status;
+
+    if (err) {
+        UV_SHOW_ERROR(err, "on new connect");
+        return;
+    }
+
+    s = (struct server*)us->data;
+    
+    ctx = (struct context*)rps_alloc(sizeof(struct context));
+    if (ctx == NULL) {
+        return;
+    }
+
+    status = server_context_init(ctx);
+    if (status != RPS_OK) {
+        rps_free(ctx);
+        return;
+    }
+
+    request =  &ctx->request;
+
+    uv_tcp_init(us->loop, &request->handler);
+    uv_timer_init(us->loop, &request->timer);
+
+    err = uv_accept(us, (uv_stream_t *)&request->handler);
+    if (err) {
+        UV_SHOW_ERROR(err, "accept");
+        uv_close((uv_handle_t *)&request->handler, NULL);
+        rps_free(ctx);
+    }
+
+    #ifdef REQUEST_TCP_KEEPALIVE
+    err = uv_tcp_keepalive(&request->handle, 1, TCP_KEEPALIVE_DELAY);
+    if (err) {
+        UV_SHOW_ERROR(err, "set tcp keepalive");
+        uv_close((uv_handle_t *)&request->handler, NULL);
+        rps_free(ctx);
+    }
+    #endif
+    
 }
 
 void 
@@ -64,14 +124,14 @@ server_run(struct server *s) {
     int err;
 
     err = uv_tcp_bind(&s->us, &s->listen, 0);
-    if (err !=0 ) {
-        UV_SHOW_ERROR(err, "uv bind");
+    if (err) {
+        UV_SHOW_ERROR(err, "bind");
         return;
     }
     
     err = uv_listen((uv_stream_t*)&s->us, HTTP_DEFAULT_BACKLOG, server_on_new_connect);
     if (err) {
-        UV_SHOW_ERROR(err, "uv listen");
+        UV_SHOW_ERROR(err, "listen");
         return;
     }
 
