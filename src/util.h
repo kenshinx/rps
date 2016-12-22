@@ -48,5 +48,16 @@ void _rps_free(void *ptr, const char *name, int line);
 
 void rps_assert(const char *cond, const char *file, int line);
 
+typedef struct sockinfo {
+    uint16_t        family;
+    unsigned int    addrlen;
+    union {
+        struct sockaddr_in  in;
+        struct sockaddr_in6 in6;
+        struct sockaddr_un  un;     /* unix domain address*/
+    } addr;
+} rps_addr_t;
+
+
 #endif
 
