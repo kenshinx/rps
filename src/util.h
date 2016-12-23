@@ -33,6 +33,7 @@ void *_rps_calloc(size_t nmemb, size_t size, const char *name, int line);
 void *_rps_realloc(void *ptr, size_t size, const char *name, int line);
 void _rps_free(void *ptr, const char *name, int line);
 
+typedef enum { false, true } bool;
 
 #define UV_SHOW_ERROR(err, why) do {                                \
     log_error("libuv %s:%s", why, uv_strerror(err));                 \
@@ -48,13 +49,17 @@ void _rps_free(void *ptr, const char *name, int line);
 
 void rps_assert(const char *cond, const char *file, int line);
 
+static inline bool 
+rps_valid_port(uint16_t port) {
+    return (port > 1 && port < UINT16_MAX);  
+}
+
 typedef struct sockinfo {
     uint16_t        family;
     unsigned int    addrlen;
     union {
         struct sockaddr_in  in;
         struct sockaddr_in6 in6;
-        struct sockaddr_un  un;     /* unix domain address*/
     } addr;
 } rps_addr_t;
 
