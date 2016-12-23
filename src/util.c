@@ -72,11 +72,11 @@ rps_assert(const char *cond, const char *file, int line) {
 }
 
 int
-rps_resolve_inet(const char *ip, uint16_t port, struct sockinfo *si) { 
+rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si) { 
     struct addrinfo hints;
     struct addrinfo *res, *rp;
     int status;
-    char *service;
+    char service[16];
     bool found;
 
     ASSERT(rps_valid_port(port));

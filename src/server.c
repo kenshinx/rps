@@ -8,6 +8,7 @@ rps_status_t
 server_init(struct server *s, struct config_server *cfg) {
     uv_tcp_t *us;
     int err;
+    int status;
 
     err = uv_loop_init(&s->loop);
     if (err != 0) {
@@ -38,10 +39,10 @@ server_init(struct server *s, struct config_server *cfg) {
         log_error("unsupport proxy type: %s", cfg->proxy.data);
         return RPS_ERROR;
     }
-    
-    err = uv_ip4_addr((const char *)cfg->listen.data, cfg->port, (struct sockaddr_in *)&s->listen);
-    if (err !=0 ) {
-        UV_SHOW_ERROR(err, "ip4 addr");
+     
+    status = rps_resolve_inet((const char *)cfg->listen.data, cfg->port, &s->listen);
+    if (status < 0) {
+        log_error("resolve inet %s:%d failed", cfg->listen.data, cfg->port);
         return RPS_ERROR;
     }
 
@@ -116,6 +117,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
         rps_free(ctx);
     }
     #endif
+
+    
     
 }
 
@@ -123,7 +126,7 @@ void
 server_run(struct server *s) {
     int err;
 
-    err = uv_tcp_bind(&s->us, &s->listen, 0);
+    err = uv_tcp_bind(&s->us, (struct sockaddr *)&s->listen.addr, 0);
     if (err) {
         UV_SHOW_ERROR(err, "bind");
         return;

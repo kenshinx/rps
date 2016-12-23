@@ -22,9 +22,9 @@ struct server {
 
     rps_proxy_t             proxy;
     
-    struct rps_addr_t       listen;
+    rps_addr_t             listen;
     
-    struct config_server   *cfg;
+    struct config_server    *cfg;
 };
 
 rps_status_t server_init(struct server *s, struct config_server *cs);
