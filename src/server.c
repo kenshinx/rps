@@ -78,6 +78,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_sess_t *request; /* client -> rps */
     rps_sess_t *forward; /* rps -> upstream */
     rps_status_t status;
+    struct sockaddr client;
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");
@@ -118,6 +119,15 @@ server_on_new_connect(uv_stream_t *us, int err) {
     }
     #endif
 
+    socklen_t len = sizeof(ctx->client.addr);
+    err = uv_tcp_getpeername(&request->handler, &ctx->client.addr, &len);
+    if (err) {
+        UV_SHOW_ERROR(err, "getpeername");
+        uv_close((uv_handle_t *)&request->handler, NULL);
+        rps_free(ctx);
+    }
+    ctx->client.family = s->listen.family;
+    ctx->client.addrlen = len;
     
     
 }

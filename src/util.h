@@ -49,11 +49,6 @@ typedef enum { false, true } bool;
 
 void rps_assert(const char *cond, const char *file, int line);
 
-static inline bool 
-rps_valid_port(uint16_t port) {
-    return (port > 1 && port < UINT16_MAX);  
-}
-
 typedef struct sockinfo {
     uint16_t        family;
     unsigned int    addrlen;
@@ -63,6 +58,20 @@ typedef struct sockinfo {
     } addr;
 } rps_addr_t;
 
+static inline bool 
+rps_valid_port(uint16_t port) {
+    return (port > 1 && port < UINT16_MAX);  
+}
+
+static inline void
+rps_addrinfo(struct sockaddr *addr, struct sockinfo *info, unsigned int addrlen) {
+    info->family = addr->sa_family;
+    info->addrlen = addrlen;
+    memcpy(&info->addr, addr, addrlen);
+}
+
+
+int rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si); 
 
 #endif
 

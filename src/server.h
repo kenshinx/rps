@@ -44,11 +44,9 @@ typedef struct session {
 } rps_sess_t;
 
 typedef struct context {
-    /*
     rps_addr_t client;
     rps_addr_t upstream;
     rps_addr_t remote;
-    */
 
     rps_sess_t request;
     rps_sess_t forward;
