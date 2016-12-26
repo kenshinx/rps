@@ -108,18 +108,14 @@ server_on_new_connect(uv_stream_t *us, int err) {
     err = uv_accept(us, (uv_stream_t *)&request->handler);
     if (err) {
         UV_SHOW_ERROR(err, "accept");
-        uv_close((uv_handle_t *)&request->handler, NULL);
-        rps_free(sess);
-        return;
+        goto error;
     }
 
     #ifdef REQUEST_TCP_KEEPALIVE
     err = uv_tcp_keepalive(&request->handle, 1, TCP_KEEPALIVE_DELAY);
     if (err) {
         UV_SHOW_ERROR(err, "set tcp keepalive");
-        uv_close((uv_handle_t *)&request->handler, NULL);
-        rps_free(sess);
-        return;
+        goto error;
     }
     #endif
 
@@ -132,9 +128,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     err = uv_tcp_getpeername(&request->handler, (struct sockaddr *)&sess->client.addr, &len);
     if (err) {
         UV_SHOW_ERROR(err, "getpeername");
-        uv_close((uv_handle_t *)&request->handler, NULL);
-        rps_free(sess);
-        return;
+        goto error;
     }
     sess->client.family = s->listen.family;
     sess->client.addrlen = len;
@@ -142,9 +136,14 @@ server_on_new_connect(uv_stream_t *us, int err) {
     err = rps_unresolve_addr(&sess->client, clientip);
     if (err < 0) {
         log_error("unresolve peername failer.");
+        goto error;
     }
-    printf("%s\n", clientip);
-    
+    log_debug("Accept connect from %s", clientip);
+
+error:
+    uv_close((uv_handle_t *)&request->handler, NULL);
+    rps_free(sess);
+    return;
 }
 
 void 
