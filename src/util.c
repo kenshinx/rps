@@ -1,11 +1,12 @@
-#include "util.h"
-#include "log.h"
-
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
 
+#include <uv.h>
+
+#include "util.h"
+#include "log.h"
 
 void *
 _rps_alloc(size_t size, const char *name, int line) {
@@ -113,3 +114,27 @@ rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si) {
     return !found ? -1 : 0;
 }
 
+
+int 
+rps_unresolve_addr(rps_addr_t *addr, char *name) {
+    int err;
+    
+    if (addr->family == AF_INET) {
+        err = uv_ip4_name((struct sockaddr_in *)&addr->addr, name, INET_ADDRSTRLEN);
+        if (err) {
+            UV_SHOW_ERROR(err, "uv_ip4_name");
+            return -1;
+        }
+    } else if (addr->family == AF_INET6) {
+        err = uv_ip6_name((struct sockaddr_in6 *)&addr->addr, name, INET6_ADDRSTRLEN);
+        if (err) {
+            UV_SHOW_ERROR(err, "uv_ip6_name");
+            return -1;
+        }
+    } else {
+        log_error("Unknow inet family:%d", addr->family);
+        return -1;
+    }
+
+    return 1;
+}
