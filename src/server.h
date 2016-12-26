@@ -36,20 +36,20 @@ void server_run(struct server *s);
  */
 
 
-typedef struct session {
-    struct context  *ctx;
+typedef struct context {
+    struct session  *sess;
     uv_tcp_t        handler;
     uv_timer_t      timer;
     uv_write_t      write_req;
-} rps_sess_t;
+} rps_ctx_t;
 
-typedef struct context {
+typedef struct session {
     rps_addr_t client;
     rps_addr_t upstream;
     rps_addr_t remote;
 
-    rps_sess_t request;
-    rps_sess_t forward;
-} rps_ctx_t;
+    rps_ctx_t request;
+    rps_ctx_t forward;
+} rps_sess_t;
 
 #endif

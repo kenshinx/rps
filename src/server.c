@@ -58,7 +58,7 @@ server_deinit(struct server *s) {
 }
 
 static rps_status_t 
-server_context_init(rps_ctx_t *ctx) {
+server_session_init(rps_sess_t *sess) {
     return RPS_OK;
 }
 
@@ -66,19 +66,19 @@ server_context_init(rps_ctx_t *ctx) {
 /*
  *         request            forward
  * Client  ------->    RPS  ----------> Upstream ----> Remote
- *         session            session
+ *         context            context
  *  |                                      |
- *  |  ---          context          ---   |
+ *  |  ---          session          ---   |
  */
 
 static void
 server_on_new_connect(uv_stream_t *us, int err) {
     struct server *s;
-    rps_ctx_t *ctx;
-    rps_sess_t *request; /* client -> rps */
-    rps_sess_t *forward; /* rps -> upstream */
+    rps_sess_t *sess;
+    rps_ctx_t *request; /* client -> rps */
+    rps_ctx_t *forward; /* rps -> upstream */
     rps_status_t status;
-    struct sockaddr client;
+    socklen_t len;
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");
@@ -87,18 +87,18 @@ server_on_new_connect(uv_stream_t *us, int err) {
 
     s = (struct server*)us->data;
     
-    ctx = (struct context*)rps_alloc(sizeof(struct context));
-    if (ctx == NULL) {
+    sess = (struct session*)rps_alloc(sizeof(struct session));
+    if (sess == NULL) {
         return;
     }
 
-    status = server_context_init(ctx);
+    status = server_session_init(sess);
     if (status != RPS_OK) {
-        rps_free(ctx);
+        rps_free(sess);
         return;
     }
 
-    request =  &ctx->request;
+    request =  &sess->request;
 
     uv_tcp_init(us->loop, &request->handler);
     uv_timer_init(us->loop, &request->timer);
@@ -107,7 +107,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     if (err) {
         UV_SHOW_ERROR(err, "accept");
         uv_close((uv_handle_t *)&request->handler, NULL);
-        rps_free(ctx);
+        rps_free(sess);
     }
 
     #ifdef REQUEST_TCP_KEEPALIVE
@@ -115,19 +115,28 @@ server_on_new_connect(uv_stream_t *us, int err) {
     if (err) {
         UV_SHOW_ERROR(err, "set tcp keepalive");
         uv_close((uv_handle_t *)&request->handler, NULL);
-        rps_free(ctx);
+        rps_free(sess);
     }
     #endif
 
-    socklen_t len = sizeof(ctx->client.addr);
-    err = uv_tcp_getpeername(&request->handler, &ctx->client.addr, &len);
+    
+    /*
+     * Get client address info.
+     */
+    len = s->listen.addrlen;
+    err = uv_tcp_getpeername(&request->handler, (struct sockaddr *)&sess->client.addr, &len);
     if (err) {
         UV_SHOW_ERROR(err, "getpeername");
         uv_close((uv_handle_t *)&request->handler, NULL);
-        rps_free(ctx);
+        rps_free(sess);
     }
-    ctx->client.family = s->listen.family;
-    ctx->client.addrlen = len;
+    sess->client.family = s->listen.family;
+    sess->client.addrlen = len;
+    
+    char clientip[INET6_ADDRSTRLEN];
+    rps_unresolve_addr(&sess->client, &clientip);
+
+    printf("%s\n", clientip);
     
     
 }
