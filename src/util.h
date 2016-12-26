@@ -72,7 +72,7 @@ rps_addrinfo(struct sockaddr *addr, struct sockinfo *info, unsigned int addrlen)
 
 
 int rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si); 
-int rps_unresolve_addr(rps_addr_t *addr, char *name);
+char *rps_unresolve_addr(rps_addr_t *addr);
 
 #endif
 

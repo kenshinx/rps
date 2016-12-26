@@ -78,7 +78,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_ctx_t *request; /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
     rps_status_t status;
-    socklen_t len;
+    int len;
+    char *clientip;
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");
@@ -123,7 +124,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
     /*
      * Get client address info.
      */
-    len = s->listen.addrlen;
+    
+    len = (int)s->listen.addrlen;
     err = uv_tcp_getpeername(&request->handler, (struct sockaddr *)&sess->client.addr, &len);
     if (err) {
         UV_SHOW_ERROR(err, "getpeername");
@@ -133,11 +135,11 @@ server_on_new_connect(uv_stream_t *us, int err) {
     sess->client.family = s->listen.family;
     sess->client.addrlen = len;
     
-    char clientip[INET6_ADDRSTRLEN];
-    rps_unresolve_addr(&sess->client, &clientip);
-
-    printf("%s\n", clientip);
-    
+    clientip = rps_unresolve_addr(&sess->client);
+    if (clientip != NULL) {
+        printf("%s\n", clientip);
+        rps_free(clientip);
+    }
     
 }
 

@@ -77,7 +77,7 @@ rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si) {
     struct addrinfo hints;
     struct addrinfo *res, *rp;
     int status;
-    char service[16];
+    char service[NI_MAXSERV];
     bool found;
 
     ASSERT(rps_valid_port(port));
@@ -115,26 +115,38 @@ rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si) {
 }
 
 
-int 
-rps_unresolve_addr(rps_addr_t *addr, char *name) {
+char *  
+rps_unresolve_addr(rps_addr_t *addr) {
     int err;
+    char *name;
     
     if (addr->family == AF_INET) {
+        name = rps_alloc(INET_ADDRSTRLEN);
+        if (name == NULL) {
+            return NULL;
+        }
         err = uv_ip4_name((struct sockaddr_in *)&addr->addr, name, INET_ADDRSTRLEN);
         if (err) {
+            rps_free(name);
             UV_SHOW_ERROR(err, "uv_ip4_name");
-            return -1;
+            return NULL;
         }
     } else if (addr->family == AF_INET6) {
+        name = rps_alloc(INET6_ADDRSTRLEN);
+        if (name == NULL) {
+            return NULL;
+        }
         err = uv_ip6_name((struct sockaddr_in6 *)&addr->addr, name, INET6_ADDRSTRLEN);
         if (err) {
+            rps_free(name);
             UV_SHOW_ERROR(err, "uv_ip6_name");
-            return -1;
+            return NULL;
         }
     } else {
         log_error("Unknow inet family:%d", addr->family);
-        return -1;
+        return NULL;
     }
 
-    return 1;
+    return name;
 }
+
