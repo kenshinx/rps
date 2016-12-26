@@ -79,7 +79,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_ctx_t *forward; /* rps -> upstream */
     rps_status_t status;
     int len;
-    char *clientip;
+    /* INET6_ADDRSTRLEN = 46 , potential memroy wasting when working on IPv4 protocol */
+    char clientip[INET6_ADDRSTRLEN]; 
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");
@@ -109,6 +110,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
         UV_SHOW_ERROR(err, "accept");
         uv_close((uv_handle_t *)&request->handler, NULL);
         rps_free(sess);
+        return;
     }
 
     #ifdef REQUEST_TCP_KEEPALIVE
@@ -117,6 +119,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
         UV_SHOW_ERROR(err, "set tcp keepalive");
         uv_close((uv_handle_t *)&request->handler, NULL);
         rps_free(sess);
+        return;
     }
     #endif
 
@@ -131,15 +134,16 @@ server_on_new_connect(uv_stream_t *us, int err) {
         UV_SHOW_ERROR(err, "getpeername");
         uv_close((uv_handle_t *)&request->handler, NULL);
         rps_free(sess);
+        return;
     }
     sess->client.family = s->listen.family;
     sess->client.addrlen = len;
     
-    clientip = rps_unresolve_addr(&sess->client);
-    if (clientip != NULL) {
-        printf("%s\n", clientip);
-        rps_free(clientip);
+    err = rps_unresolve_addr(&sess->client, clientip);
+    if (err < 0) {
+        log_error("unresolve peername failer.");
     }
+    printf("%s\n", clientip);
     
 }
 
