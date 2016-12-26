@@ -92,7 +92,7 @@ rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si) {
     hints.ai_next = NULL;
     hints.ai_canonname = NULL;
 
-    sprintf(service, "%d", port);
+    snprintf(service, sizeof(service), "%d", port);
 
     status = getaddrinfo(ip, service, &hints, &res); 
     if (status != 0) {
