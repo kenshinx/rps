@@ -14,24 +14,28 @@ WARN=-Wall -W -Wno-missing-field-initializers
 OPT=$(OPTIMIZATION)
 DEBUG=-g -ggdb
 RPS_DEBUG = $(RPS_DEBUG_OPEN)
+GNU_SOURCE=-D_GNU_SOURCE #libuv need this declaration in linux platform.
 
 DEPENDENCY_TARGETS=yaml libuv
 LIBYAML=yaml-0.1.5
 LIBUV=libuv-v1.9.1
 
-FINAL_CFLAGS=$(STD) $(WARN) $(OPT) $(DEBUG) $(RPS_DEBUG) $(CFLAGS)
-FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
-FINAL_CFLAGS+= -I../contrib/$(LIBUV)/include 
+FINAL_CFLAGS=$(WARN) $(OPT) $(DEBUG) $(RPS_DEBUG) $(CFLAGS)
 
 FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG)
 
 ifeq ($(OS), Linux)
+	FINAL_CFLAGS+=$(GNU_SOURCE) 
 	FINAL_LIBS+= -lm -lrt -lpthread
 else
 ifeq ($(OS), Darwin)
+	FINAL_CFLAGS+=$(STD) 
 	FINAL_LIBS+= -lm
 endif
 endif
+
+FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
+FINAL_CFLAGS+= -I../contrib/$(LIBUV)/include 
 
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
 FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
@@ -58,7 +62,7 @@ make-contrib:
 .PHONY: make-contrib
 
 $(RPS_BIN): $(RPS_OBJ) 
-	$(RPS_LD) $(FINAL_LIBS) $^  -o $@ 
+	$(RPS_LD) $^  -o $@ $(FINAL_LIBS)
 
 single: $(RPS_BIN)
 .PHONY: single
