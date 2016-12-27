@@ -35,7 +35,6 @@ server_init(struct server *s, struct config_server *cfg) {
      }
 #endif
     else{
-
         log_error("unsupport proxy type: %s", cfg->proxy.data);
         return RPS_ERROR;
     }

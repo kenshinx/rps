@@ -7,14 +7,14 @@ pidfile: /var/run/rps.log
 
 servers:
     - proxy: socks5
-      listen: "::"
+      listen: 127.0.0.1
       port: 9890
       username: rps
       password: secret
       
 
     - proxy: http
-      listen: 0.0.0.0
+      listen: "::"
       port: 9891
 
 log:
