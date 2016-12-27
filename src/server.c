@@ -80,7 +80,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_status_t status;
     int len;
     /* INET6_ADDRSTRLEN = 46 , potential memroy wasting when working on IPv4 protocol */
-    char clientip[INET6_ADDRSTRLEN]; 
+    char clientip[MAX_INET_ADDRSTRLEN]; 
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");

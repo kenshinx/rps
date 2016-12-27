@@ -49,6 +49,8 @@ typedef enum { false, true } bool;
 
 void rps_assert(const char *cond, const char *file, int line);
 
+#define MAX_INET_ADDRSTRLEN INET6_ADDRSTRLEN
+
 typedef struct sockinfo {
     uint16_t        family;
     unsigned int    addrlen;
