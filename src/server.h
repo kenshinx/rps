@@ -4,14 +4,11 @@
 #include "core.h"
 #include "string.h"
 #include "config.h"
+#include "util.h"
 
 #include <uv.h>
 
 #include <unistd.h>
-
-#include "util.h"
-#include "core.h"
-
 
 #define HTTP_DEFAULT_BACKLOG  65536
 #define TCP_KEEPALIVE_DELAY 120
@@ -41,7 +38,13 @@ void server_run(struct server *s);
 
 typedef struct context {
     struct session  *sess;
-    uv_tcp_t        handle;
+
+    union {
+        uv_handle_t handle;
+        uv_stream_t stream;
+        uv_tcp_t    tcp;
+    } handle;
+
     uv_timer_t      timer;
     uv_write_t      write_req;
 } rps_ctx_t;
