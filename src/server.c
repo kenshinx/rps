@@ -142,6 +142,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
     }
     log_debug("Accept connect from %s", clientip);
 
+    return;
+
 error:
     uv_close((uv_handle_t *)&request->handler, NULL);
     rps_free(sess);
