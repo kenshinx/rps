@@ -67,7 +67,7 @@ _rps_free(void *ptr, const char *name, int line) {
 }
 
 void
-rps_assert(const char *cond, const char *file, int line) {
+_rps_assert(const char *cond, const char *file, int line) {
     log_error("assert '%s' failed @ (%s, %d)", cond, file, line);
     abort();
 }

@@ -39,15 +39,16 @@ typedef enum { false, true } bool;
     log_error("libuv %s:%s", why, uv_strerror(err));                 \
 } while(0)
 
+void _rps_assert(const char *cond, const char *file, int line);
 
-#define NOT_REACHED() rps_assert("not reached", __FILE__, __LINE__);                                      
+#define NOT_REACHED() _rps_assert("not reached", __FILE__, __LINE__);                                      
+
 #define ASSERT(_x) do {                                             \
     if (!(_x)) {                                                    \
-        rps_assert(#_x, __FILE__, __LINE__);                        \
+        _rps_assert(#_x, __FILE__, __LINE__);                        \
     }                                                               \
 } while(0)
 
-void rps_assert(const char *cond, const char *file, int line);
 
 #define MAX_INET_ADDRSTRLEN INET6_ADDRSTRLEN
 
