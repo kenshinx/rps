@@ -61,7 +61,33 @@ server_deinit(struct server *s) {
 
 static rps_status_t 
 server_session_init(rps_sess_t *sess) {
+    sess->request.sess = sess;
+    sess->forward.sess = sess;
     return RPS_OK;
+}
+
+
+static void 
+server_on_request_timer_expire(uv_timer_t *handle) {
+    rps_ctx_t *request;
+    rps_sess_t *sess;
+    char clientip[INET6_ADDRSTRLEN];
+    int err;
+
+    request = handle->data;
+    sess = request->sess;
+
+    err = rps_unresolve_addr(&sess->client, clientip);
+    if (err < 0) {
+        log_error("unresolve peername failer.");
+    } else {
+        log_debug("Close connect from %s timeout", clientip);
+    }
+
+    uv_close((uv_handle_t *)&request->handle, NULL);
+    rps_free(sess);
+
+    return;
 }
 
 
@@ -104,10 +130,10 @@ server_on_new_connect(uv_stream_t *us, int err) {
 
     request =  &sess->request;
 
-    uv_tcp_init(us->loop, &request->handler);
+    uv_tcp_init(us->loop, &request->handle);
     uv_timer_init(us->loop, &request->timer);
 
-    err = uv_accept(us, (uv_stream_t *)&request->handler);
+    err = uv_accept(us, (uv_stream_t *)&request->handle);
     if (err) {
         UV_SHOW_ERROR(err, "accept");
         goto error;
@@ -127,7 +153,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
      */
     
     len = (int)s->listen.addrlen;
-    err = uv_tcp_getpeername(&request->handler, (struct sockaddr *)&sess->client.addr, &len);
+    err = uv_tcp_getpeername(&request->handle, (struct sockaddr *)&sess->client.addr, &len);
     if (err) {
         UV_SHOW_ERROR(err, "getpeername");
         goto error;
@@ -142,10 +168,21 @@ server_on_new_connect(uv_stream_t *us, int err) {
     }
     log_debug("Accept connect from %s", clientip);
 
+
+    /*
+     * Set request context timer
+     */
+    request->timer.data = request;
+    err = uv_timer_start(&request->timer, (uv_timer_cb)server_on_request_timer_expire, REQUEST_CONTEXT_TIMEOUT, 0);
+    if (err) {
+        UV_SHOW_ERROR(err, "set request timer");
+        goto error;
+    }
+    
     return;
 
 error:
-    uv_close((uv_handle_t *)&request->handler, NULL);
+    uv_close((uv_handle_t *)&request->handle, NULL);
     rps_free(sess);
     return;
 }
