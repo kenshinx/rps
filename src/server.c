@@ -54,6 +54,9 @@ server_init(struct server *s, struct config_server *cfg) {
 void
 server_deinit(struct server *s) {
     uv_loop_close(&s->loop);
+
+    /*Make valgrind happy*/
+    uv_loop_delete(&s->loop);
 }
 
 static rps_status_t 
