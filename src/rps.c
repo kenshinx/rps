@@ -59,6 +59,9 @@ rps_set_default_options(struct application *app) {
     app->pid = (pid_t)-1;
     
     app->config_filename = RPS_DEFAULT_CONFIG_FILE;
+
+    app->daemon = 0;
+    app->verbose = 0;
 }
 
 static rps_status_t
@@ -249,14 +252,14 @@ main(int argc, char **argv) {
         exit(1);
     }
 
+    app.daemon = app.daemon ||  app.cfg.daemon;
+
     status = rps_set_log(&app);
     if (status != RPS_OK) {
         exit(1);
     }
 
     config_dump(&app.cfg);
-
-    app.daemon = app.daemon ||  app.cfg.daemon;
 
     status = rps_pre_run(&app);
     if (status != RPS_OK) {
