@@ -88,8 +88,10 @@ server_on_ctx_close(uv_handle_t* handle) {
 
 static void
 server_ctx_close(rps_ctx_t *ctx) {
+    ASSERT((ctx->state & c_connect));
     ctx->state = c_closing;
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
+    uv_timer_stop(&ctx->timer);
 }
 
 
@@ -171,7 +173,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     forward = &sess->forward;
     server_ctx_init(request, sess);
     server_ctx_init(forward, sess);
-
+    
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
 
