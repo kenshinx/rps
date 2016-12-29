@@ -71,9 +71,10 @@ server_sess_free(rps_sess_t *sess) {
 }
 
 static void
-server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess) {
+server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag) {
     ctx->sess = sess;
     ctx->handle.handle.data  = ctx;
+    ctx->flag = flag;
     ctx->state = c_init;
     return;
 }
@@ -84,6 +85,16 @@ server_on_ctx_close(uv_handle_t* handle) {
     rps_ctx_t *ctx;
     ctx = handle->data;
     ctx->state = c_closed;
+    switch (ctx->flag) {
+        case c_request:
+            log_debug("Request from %s be closed", ctx->peername);
+            break;
+        case c_forward:
+            log_debug("Forward to %s be closed.", ctx->peername);
+            break;
+        default:
+            NOT_REACHED();
+    }
 }
 
 static void
@@ -118,18 +129,12 @@ static void
 server_on_request_timer_expire(uv_timer_t *handle) {
     rps_ctx_t *request;
     rps_sess_t *sess;
-    char clientip[INET6_ADDRSTRLEN];
     int err;
 
     request = handle->data;
     sess = request->sess;
 
-    err = rps_unresolve_addr(&sess->client, clientip);
-    if (err < 0) {
-        log_error("unresolve peername failer.");
-    } else {
-        log_debug("Close connect with %s timeout", clientip);
-    }
+    log_debug("Request from %s timeout", request->peername);
 
     server_ctx_close(request);
     //server_sess_free(sess);
@@ -154,7 +159,6 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_ctx_t *forward; /* rps -> upstream */
     rps_status_t status;
     int len;
-    char clientip[MAX_INET_ADDRSTRLEN]; 
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");
@@ -171,8 +175,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
 
     request =  &sess->request;
     forward = &sess->forward;
-    server_ctx_init(request, sess);
-    server_ctx_init(forward, sess);
+    server_ctx_init(request, sess, c_request);
+    server_ctx_init(forward, sess, c_forward);
     
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
@@ -206,12 +210,13 @@ server_on_new_connect(uv_stream_t *us, int err) {
     sess->client.family = s->listen.family;
     sess->client.addrlen = len;
     
-    err = rps_unresolve_addr(&sess->client, clientip);
+    err = rps_unresolve_addr(&sess->client, request->peername);
     if (err < 0) {
         log_error("unresolve peername failer.");
         goto error;
     }
-    log_debug("Accept connect from %s", clientip);
+
+    log_debug("Accept request from %s", request->peername);
 
     /*
      * Beigin receive data

@@ -13,7 +13,7 @@
 #define HTTP_DEFAULT_BACKLOG  65536
 #define TCP_KEEPALIVE_DELAY 120
 
-#define REQUEST_CONTEXT_TIMEOUT 30000 // 30 seconds
+#define REQUEST_CONTEXT_TIMEOUT 5000 // 30 seconds
 #define FORWARD_CONTEXT_TIMEOUT 30000 // 30 seconds
 
 struct server {
@@ -36,6 +36,11 @@ void server_run(struct server *s);
  */
 
 enum {
+    c_request,
+    c_forward
+};
+
+enum {
     c_init = (1 << 1),
     c_connect = (1 << 2),
     c_closing = (1 << 3),
@@ -54,6 +59,9 @@ typedef struct context {
     uv_timer_t      timer;
     uv_write_t      write_req;
 
+    char            peername[MAX_INET_ADDRSTRLEN];
+
+    uint8_t         flag;
     uint8_t         state;
 } rps_ctx_t;
 
