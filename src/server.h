@@ -35,6 +35,12 @@ void server_run(struct server *s);
  * server_stop
  */
 
+enum {
+    c_init = (1 << 1),
+    c_connect = (1 << 2),
+    c_closing = (1 << 3),
+    c_closed = (1 << 4)
+};
 
 typedef struct context {
     struct session  *sess;
@@ -47,6 +53,8 @@ typedef struct context {
 
     uv_timer_t      timer;
     uv_write_t      write_req;
+
+    uint8_t         state;
 } rps_ctx_t;
 
 typedef struct session {

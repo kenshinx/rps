@@ -6,7 +6,6 @@
 
 rps_status_t
 server_init(struct server *s, struct config_server *cfg) {
-    uv_tcp_t *us;
     int err;
     int status;
 
@@ -55,15 +54,61 @@ void
 server_deinit(struct server *s) {
     uv_loop_close(&s->loop);
 
-    /*Make valgrind happy*/
+    /* Make valgrind happy */
     uv_loop_delete(&s->loop);
 }
 
-static rps_status_t 
-server_session_init(rps_sess_t *sess) {
-    sess->request.sess = sess;
-    sess->forward.sess = sess;
-    return RPS_OK;
+static void
+server_sess_init(rps_sess_t *sess) {
+    return;
+}
+
+static void
+server_sess_free(rps_sess_t *sess) {
+    ASSERT((sess->request.state &  (c_closed | c_init)));
+    ASSERT((sess->forward.state &  (c_closed | c_init)));
+    rps_free(sess);
+}
+
+static void
+server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess) {
+    ctx->sess = sess;
+    ctx->handle.handle.data  = ctx;
+    ctx->state = c_init;
+    return;
+}
+
+static void 
+server_on_ctx_close(uv_handle_t* handle) {
+    //Set flag be closed and 
+    rps_ctx_t *ctx;
+    ctx = handle->data;
+    ctx->state = c_closed;
+}
+
+static void
+server_ctx_close(rps_ctx_t *ctx) {
+    ctx->state = c_closing;
+    uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
+}
+
+
+static uv_buf_t *
+server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+    rps_ctx_t *ctx;
+    ctx = handle->data;
+
+    buf->base = (char *)rps_alloc(suggested_size);
+    ASSERT(buf->base != NULL);
+
+    buf->len = suggested_size;
+
+    return buf;
+}
+
+static void
+server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+
 }
 
 
@@ -84,8 +129,8 @@ server_on_request_timer_expire(uv_timer_t *handle) {
         log_debug("Close connect with %s timeout", clientip);
     }
 
-    uv_close(&request->handle.handle, NULL);
-    rps_free(sess);
+    server_ctx_close(request);
+    //server_sess_free(sess);
 
     return;
 }
@@ -107,7 +152,6 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_ctx_t *forward; /* rps -> upstream */
     rps_status_t status;
     int len;
-    /* INET6_ADDRSTRLEN = 46 , potential memroy wasting when working on IPv4 protocol */
     char clientip[MAX_INET_ADDRSTRLEN]; 
 
     if (err) {
@@ -121,14 +165,12 @@ server_on_new_connect(uv_stream_t *us, int err) {
     if (sess == NULL) {
         return;
     }
-
-    status = server_session_init(sess);
-    if (status != RPS_OK) {
-        rps_free(sess);
-        return;
-    }
+    server_sess_init(sess);
 
     request =  &sess->request;
+    forward = &sess->forward;
+    server_ctx_init(request, sess);
+    server_ctx_init(forward, sess);
 
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
@@ -138,6 +180,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
         UV_SHOW_ERROR(err, "accept");
         goto error;
     }
+    request->state = c_connect;
 
     #ifdef REQUEST_TCP_KEEPALIVE
     err = uv_tcp_keepalive(&request->handle, 1, TCP_KEEPALIVE_DELAY);
@@ -151,7 +194,6 @@ server_on_new_connect(uv_stream_t *us, int err) {
     /*
      * Get client address info.
      */
-    
     len = (int)s->listen.addrlen;
     err = uv_tcp_getpeername(&request->handle.tcp, 
             (struct sockaddr *)&sess->client.addr, &len);
@@ -172,9 +214,11 @@ server_on_new_connect(uv_stream_t *us, int err) {
     /*
      * Beigin receive data
      */
-
-    //err = uv_read_start((uv_stream_t *)&request->handle, 
-    //        (uv_alloc_cb)server_on_alloc_cb, (uv_read_cb)server_on_read_done)
+    err = uv_read_start(&request->handle.stream, 
+            (uv_alloc_cb)server_alloc, (uv_read_cb)server_on_request_read);
+    if (err < 0) {
+        goto error;
+    }
 
     /*
      * Set request context timer
@@ -190,8 +234,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
     return;
 
 error:
-    uv_close(&request->handle.handle, NULL);
-    rps_free(sess);
+    server_ctx_close(request);
+    //server_sess_free(sess);
     return;
 }
 
