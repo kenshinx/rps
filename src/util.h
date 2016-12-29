@@ -49,8 +49,11 @@ void _rps_assert(const char *cond, const char *file, int line);
     }                                                               \
 } while(0)
 
-
+#ifdef MAKE_IPV6_ENABLE
 #define MAX_INET_ADDRSTRLEN INET6_ADDRSTRLEN
+#else
+#define MAX_INET_ADDRSTRLEN INET_ADDRSTRLEN
+#endif
 
 typedef struct sockinfo {
     uint16_t        family;
