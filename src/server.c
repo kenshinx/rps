@@ -128,11 +128,8 @@ server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) 
 static void 
 server_on_request_timer_expire(uv_timer_t *handle) {
     rps_ctx_t *request;
-    rps_sess_t *sess;
-    int err;
 
     request = handle->data;
-    sess = request->sess;
 
     log_debug("Request from %s timeout", request->peername);
 
@@ -156,8 +153,6 @@ server_on_new_connect(uv_stream_t *us, int err) {
     struct server *s;
     rps_sess_t *sess;
     rps_ctx_t *request; /* client -> rps */
-    rps_ctx_t *forward; /* rps -> upstream */
-    rps_status_t status;
     int len;
 
     if (err) {
@@ -174,9 +169,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     server_sess_init(sess);
 
     request =  &sess->request;
-    forward = &sess->forward;
     server_ctx_init(request, sess, c_request);
-    server_ctx_init(forward, sess, c_forward);
     
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
