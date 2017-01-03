@@ -35,12 +35,12 @@ void server_run(struct server *s);
  * server_stop
  */
 
-enum {
+enum context_flag {
     c_request,
     c_forward
 };
 
-enum {
+enum context_state {
     c_init = (1 << 1),
     c_connect = (1 << 2),
     c_closing = (1 << 3),
@@ -70,8 +70,8 @@ typedef struct session {
     rps_addr_t upstream;
     rps_addr_t remote;
 
-    rps_ctx_t request;
-    rps_ctx_t forward;
+    rps_ctx_t *request;
+    rps_ctx_t *forward;
 } rps_sess_t;
 
 #endif

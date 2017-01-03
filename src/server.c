@@ -60,13 +60,16 @@ server_deinit(struct server *s) {
 
 static void
 server_sess_init(rps_sess_t *sess) {
-    return;
 }
 
 static void
 server_sess_free(rps_sess_t *sess) {
-    ASSERT((sess->request.state &  (c_closed | c_init)));
-    ASSERT((sess->forward.state &  (c_closed | c_init)));
+    if (sess->request != NULL) {
+        ASSERT(!(sess->request->state &  c_connect));
+    }
+    if (sess->forward != NULL) {
+        ASSERT(!(sess->forward->state &  c_connect));
+    }
     rps_free(sess);
 }
 
@@ -85,6 +88,7 @@ server_on_ctx_close(uv_handle_t* handle) {
     rps_ctx_t *ctx;
     ctx = handle->data;
     ctx->state = c_closed;
+
     switch (ctx->flag) {
         case c_request:
             log_debug("Request from %s be closed", ctx->peername);
@@ -95,6 +99,8 @@ server_on_ctx_close(uv_handle_t* handle) {
         default:
             NOT_REACHED();
     }
+
+    rps_free(ctx);
 }
 
 static void
@@ -134,7 +140,7 @@ server_on_request_timer_expire(uv_timer_t *handle) {
     log_debug("Request from %s timeout", request->peername);
 
     server_ctx_close(request);
-    //server_sess_free(sess);
+    server_sess_free(request->sess);
 
     return;
 }
@@ -168,7 +174,11 @@ server_on_new_connect(uv_stream_t *us, int err) {
     }
     server_sess_init(sess);
 
-    request =  &sess->request;
+    request = (struct context *)rps_alloc(sizeof(struct context));
+    if (request == NULL) {
+        return;
+    }
+    sess->request = request;
     server_ctx_init(request, sess, c_request);
     
     uv_tcp_init(us->loop, &request->handle.tcp);
@@ -235,7 +245,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
 
 error:
     server_ctx_close(request);
-    //server_sess_free(sess);
+    server_sess_free(sess);
     return;
 }
 
