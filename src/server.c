@@ -113,7 +113,7 @@ server_ctx_close(rps_ctx_t *ctx) {
 
 
 static uv_buf_t *
-server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+server_on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     rps_ctx_t *ctx;
     ctx = handle->data;
 
@@ -127,6 +127,21 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 
 static void
 server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+    rps_ctx_t *request;   
+    
+    request = stream->data;
+    ASSERT(&request->handle.stream == stream);
+
+    if (nread <0 ) {
+        if (nread != UV_EOF) {
+            UV_SHOW_ERROR(nread, "read error");
+            server_ctx_close(request);
+            return ;
+        }
+    }
+
+    printf("<<read:%zd>> %s\n",nread, buf->base);
+    
 
 }
 
@@ -225,7 +240,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
      * Beigin receive data
      */
     err = uv_read_start(&request->handle.stream, 
-            (uv_alloc_cb)server_alloc, (uv_read_cb)server_on_request_read);
+            (uv_alloc_cb)server_on_alloc, (uv_read_cb)server_on_request_read);
     if (err < 0) {
         goto error;
     }
