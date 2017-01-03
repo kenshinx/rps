@@ -47,6 +47,8 @@ enum context_state {
     c_closed = (1 << 4)
 };
 
+typedef void (* do_parse_t)(struct context *ctx, const char *data, ssize_t nread);
+
 typedef struct context {
     struct session  *sess;
 
@@ -58,6 +60,8 @@ typedef struct context {
 
     uv_timer_t      timer;
     uv_write_t      write_req;
+
+    do_parse_t      do_parse;
 
     char            peername[MAX_INET_ADDRSTRLEN];
 

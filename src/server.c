@@ -2,6 +2,7 @@
 #include "core.h"
 #include "string.h"
 #include "util.h"
+#include "proto/s5.h"
 
 
 rps_status_t
