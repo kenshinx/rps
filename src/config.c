@@ -2,7 +2,7 @@
 #include "util.h"
 #include "log.h"
 #include "array.h"
-#include "string.h"
+#include "_string.h"
 
 #include <yaml.h>
 

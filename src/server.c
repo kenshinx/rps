@@ -1,6 +1,6 @@
 #include "server.h"
 #include "core.h"
-#include "string.h"
+#include "_string.h"
 #include "util.h"
 #include "proto/s5.h"
 

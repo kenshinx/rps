@@ -2,7 +2,7 @@
 #define _RPS_CONFIG_H
 
 #include "array.h"
-#include "string.h"
+#include "_string.h"
 
 #include <yaml.h>
 

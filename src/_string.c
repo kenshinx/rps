@@ -1,5 +1,5 @@
+#include "_string.h"
 #include "core.h"
-#include "string.h"
 #include "util.h"
 
 #include <stdint.h>

@@ -2,9 +2,9 @@
 #define _RPS_SERVER_H
 
 #include "core.h"
-#include "string.h"
 #include "config.h"
 #include "util.h"
+#include "_string.h"
 
 #include <uv.h>
 

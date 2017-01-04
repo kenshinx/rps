@@ -20,6 +20,8 @@ DEPENDENCY_TARGETS=yaml libuv
 LIBYAML=yaml-0.1.5
 LIBUV=libuv-v1.9.1
 
+
+
 FINAL_CFLAGS=$(WARN) $(OPT) $(DEBUG) $(RPS_DEBUG) $(CFLAGS)
 
 FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG)
@@ -37,6 +39,8 @@ endif
 FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
 FINAL_CFLAGS+= -I../contrib/$(LIBUV)/include 
 
+FINAL_CFLAGS+= -Iproto
+
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
 FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
 
@@ -45,11 +49,12 @@ RPS_CC=$(CC) $(FINAL_CFLAGS)
 RPS_LD=$(CC) $(FINAL_LDFLAGS)
 RPS_INSTALL=$(INSTALL)
 
+
 RPS_BIN=rps
-RPS_OBJ=rps.o log.o config.o util.o array.o string.o server.o
+RPS_OBJ=rps.o log.o config.o util.o array.o _string.o server.o 
 
 %.o: %.c
-	$(RPS_CC) -c $<
+	$(RPS_CC) -c $< -o $@ 
 
 default: single
 
