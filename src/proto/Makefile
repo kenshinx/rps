@@ -10,7 +10,6 @@ WARN=-Wall -W -Wno-missing-field-initializers
 OPT=$(OPTIMIZATION)
 DEBUG=-g -ggdb
 RPS_DEBUG = $(RPS_DEBUG_OPEN)
-GNU_SOURCE=-D_GNU_SOURCE #libuv need this declaration in linux platform.
 
 
 LIBUV=libuv-v1.9.1
@@ -43,11 +42,14 @@ PROTO_LIB=proto.a
 %.o: %.c
 	$(RPS_CC) -c $< -o $@ 
 
-default:$(PROTO_OBJS)
+$(PROTO_LIB): $(PROTO_OBJS)
+	$(RPS_AR) rcs  $@ $^ 
+
+default:$(PROTO_LIB)
 
 
 clean:
-	$(RM) *.o
+	$(RM) *.o *.a
 .PHONY: clean
 
 noopt:

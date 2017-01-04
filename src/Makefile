@@ -36,13 +36,15 @@ ifeq ($(OS), Darwin)
 endif
 endif
 
+FINAL_CFLAGS+= -I.
+FINAL_CFLAGS+= -Iproto
 FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
 FINAL_CFLAGS+= -I../contrib/$(LIBUV)/include 
 
-FINAL_CFLAGS+= -Iproto
-
+FINAL_LIBS+= ./proto/proto.a
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
 FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
+
 
 CC?=gcc
 RPS_CC=$(CC) $(FINAL_CFLAGS)
@@ -66,13 +68,20 @@ make-contrib:
 	-(cd ../contrib && $(MAKE) $(DEPENDENCY_TARGETS)) 
 .PHONY: make-contrib
 
-$(RPS_BIN): $(RPS_OBJ) 
+make-proto:
+	-(cd proto && $(MAKE))
+.PHONY: make-proto
+
+$(RPS_BIN): $(RPS_OBJ)
 	$(RPS_LD) $^  -o $@ $(FINAL_LIBS)
 
-single: $(RPS_BIN)
+single: make-proto $(RPS_BIN)
 .PHONY: single
 
-clean:
+protoclean:
+	-(cd proto && $(MAKE) clean)
+
+clean: protoclean
 	$(RM) $(RPS_BIN) *.o *.gch \.*.swp *.i
 .PHONY: clean
 

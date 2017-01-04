@@ -1,4 +1,5 @@
 #include "http.h"
+#include "server.h"
 
 #include <uv.h>
 

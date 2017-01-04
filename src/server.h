@@ -47,9 +47,12 @@ enum context_state {
     c_closed = (1 << 4)
 };
 
-typedef void (* do_parse_t)(struct context *ctx, const char *data, ssize_t nread);
+typedef struct context rps_ctx_t;
+typedef struct session rps_sess_t;
 
-typedef struct context {
+typedef void (* do_parse_t)(struct context *, const char *, ssize_t);
+
+struct context {
     struct session  *sess;
 
     union {
@@ -67,15 +70,15 @@ typedef struct context {
 
     uint8_t         flag;
     uint8_t         state;
-} rps_ctx_t;
+};
 
-typedef struct session {
+struct session {
     rps_addr_t client;
     rps_addr_t upstream;
     rps_addr_t remote;
 
-    rps_ctx_t *request;
-    rps_ctx_t *forward;
-} rps_sess_t;
+    struct context *request;
+    struct context *forward;
+};
 
 #endif
