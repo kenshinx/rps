@@ -64,6 +64,8 @@ struct context {
     uv_timer_t      timer;
     uv_write_t      write_req;
 
+    rps_proxy_t     proxy;
+
     do_parse_t      do_parse;
 
     char            peername[MAX_INET_ADDRSTRLEN];

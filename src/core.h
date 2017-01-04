@@ -23,6 +23,10 @@ typedef enum {
     SOCKS4,
 #endif
 
+#ifdef PRIVATE_PROXY_SUPPORT
+    PRIVATE,
+#endif
+
 } rps_proxy_t;
 
 #endif

@@ -3,6 +3,7 @@
 #include "_string.h"
 #include "util.h"
 #include "proto/s5.h"
+#include "proto/http.h"
 
 
 rps_status_t
@@ -34,6 +35,11 @@ server_init(struct server *s, struct config_server *cfg) {
         s->proxy = SOCKS4;
      }
 #endif
+#ifdef PRIVATE_PROXY_SUPPORT
+     else if (rps_strcmp(cfg->proxy.data, "private") == 0 ) {
+        s->proxy = PRIVATE;
+     }
+#endif
     else{
         log_error("unsupport proxy type: %s", cfg->proxy.data);
         return RPS_ERROR;
@@ -61,6 +67,8 @@ server_deinit(struct server *s) {
 
 static void
 server_sess_init(rps_sess_t *sess) {
+    sess->request = NULL;
+    sess->forward = NULL;
 }
 
 static void
@@ -75,11 +83,34 @@ server_sess_free(rps_sess_t *sess) {
 }
 
 static void
-server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag) {
+server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t proxy) {
     ctx->sess = sess;
     ctx->handle.handle.data  = ctx;
     ctx->flag = flag;
     ctx->state = c_init;
+    ctx->proxy = proxy;
+
+    switch (ctx->proxy) {
+        case SOCKS5:
+            ctx->do_parse = s5_do_parse;
+            break;
+        case HTTP:
+            ctx->do_parse = http_do_parse;
+            break;
+        #ifdef SOCKS4_PROXY_SUPPORT
+        case SOCKS4:
+           ctx->do_parse = s4_do_parse; 
+           break;
+        #endif
+        #if PRIVATE_PROXY_SUPPORT
+        case PRIVATE:
+           ctx->do_parse = private_do_parse;
+           break;
+        #endif
+        default:
+           NOT_REACHED();
+    }
+
     return;
 }
 
@@ -136,14 +167,16 @@ server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) 
     if (nread <0 ) {
         if (nread != UV_EOF) {
             UV_SHOW_ERROR(nread, "read error");
-            server_ctx_close(request);
-            return ;
         }
+
+        //Client close connect
+        server_ctx_close(request);
+        server_sess_free(request->sess);
+        return;
+
     }
 
-    printf("<<read:%zd>> %s\n",nread, buf->base);
-    
-
+    request->do_parse(request, buf->base, nread);
 }
 
 
@@ -157,8 +190,6 @@ server_on_request_timer_expire(uv_timer_t *handle) {
 
     server_ctx_close(request);
     server_sess_free(request->sess);
-
-    return;
 }
 
 
@@ -195,7 +226,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
         return;
     }
     sess->request = request;
-    server_ctx_init(request, sess, c_request);
+    server_ctx_init(request, sess, c_request, s->proxy);
     
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
