@@ -10,3 +10,4 @@ src/.*.swp
 .Makefile.swp
 /contrib/yaml-0.1.5/*
 /src/proto/http/.client.c.swp
+src/proto/*.o
