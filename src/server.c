@@ -118,15 +118,20 @@ static void
 server_on_ctx_close(uv_handle_t* handle) {
     //Set flag be closed and 
     rps_ctx_t *ctx;
+    rps_sess_t *sess;
+
     ctx = handle->data;
+    sess = ctx->sess;
     ctx->state = c_closed;
 
     switch (ctx->flag) {
         case c_request:
             log_debug("Request from %s be closed", ctx->peername);
+            sess->request = NULL;       
             break;
         case c_forward:
             log_debug("Forward to %s be closed.", ctx->peername);
+            sess->forward = NULL;       
             break;
         default:
             NOT_REACHED();
