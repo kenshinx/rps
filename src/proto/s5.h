@@ -1,7 +1,7 @@
 #ifndef _RPS_S5_H
 #define _RPS_S5_H
 
-#include "server.h"
+#include "core.h"
 
 #include <uv.h>
 
@@ -74,11 +74,39 @@ typedef enum {
 #undef S5_ERR_GEN
 } s5_err_t;
 
-
 typedef enum {
-	S5_VERSION,
+	s5_version,
+	s5_nmethods,
+	s5_methods,
+	s5_auth_pw_version,
+	s5_auth_pw_userlen,
+	s5_auth_pw_username,
+	s5_auth_pw_passlen,
+	s5_auth_pw_password,
+	s5_req_version,
+	s5_req_cmd,
+	s5_req_reserved,
+	s5_req_atyp,
+	s5_req_atyp_host,
+	s5_req_daddr,
+	s5_req_dport0,
+	s5_req_dport1,
+	s5_dead
+} s5_state_t;
 
-} s5_phase_t;
+typedef struct s5_handle_s  s5_handle_t;
+
+struct s5_handle_s {
+	uint32_t	arg0;
+	uint32_t	arg1;
+
+	s5_state_t	state;
+	uint8_t		methods;
+	uint8_t		cmd;
+
+};
+
+
 
 void s5_do_next(struct context *ctx, const char *data, ssize_t nread);
 uint16_t s5_server_handshake(struct context *ctx);
