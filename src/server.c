@@ -204,7 +204,7 @@ server_do_next(rps_ctx_t *ctx) {
 }
 
 static void
-server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     rps_ctx_t *request;   
     
     request = stream->data;
@@ -225,8 +225,6 @@ server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) 
 	
 	request->nread = nread;
 
-	request->state = c_handshake;
-	
 	server_do_next(request);
 }
 
@@ -287,7 +285,6 @@ server_on_new_connect(uv_stream_t *us, int err) {
         UV_SHOW_ERROR(err, "accept");
         goto error;
     }
-    request->state = c_connect;
 
     #ifdef REQUEST_TCP_KEEPALIVE
     err = uv_tcp_keepalive(&request->handle, 1, TCP_KEEPALIVE_DELAY);
@@ -318,6 +315,8 @@ server_on_new_connect(uv_stream_t *us, int err) {
     }
 
     log_debug("Accept request from %s", request->peername);
+
+	request->state = c_handshake;
 
     /*
      * Beigin receive data

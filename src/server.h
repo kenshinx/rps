@@ -44,12 +44,11 @@ enum context_flag {
 
 enum context_state {
     c_init = (1 << 1),
-    c_connect = (1 << 2),
-	c_handshake = (1 << 3),
-	c_auth = (1 << 4),
-	c_established = (1 << 5),
-    c_closing = (1 << 6),
-    c_closed = (1 << 7)
+	c_handshake = (1 << 2),
+	c_auth = (1 << 3),
+	c_established = (1 << 4),
+    c_closing = (1 << 5),
+    c_closed = (1 << 6)
 };
 
 
