@@ -43,14 +43,18 @@ enum context_flag {
 enum context_state {
     c_init = (1 << 1),
     c_connect = (1 << 2),
-    c_closing = (1 << 3),
-    c_closed = (1 << 4)
+	c_handshake = (1 << 3),
+	c_auth = (1 << 4),
+	c_established = (1 << 5),
+    c_closing = (1 << 6),
+    c_closed = (1 << 7)
 };
+
 
 typedef struct context rps_ctx_t;
 typedef struct session rps_sess_t;
 
-typedef void (* do_parse_t)(struct context *, const char *, ssize_t);
+typedef void (* rps_next_t)(struct context *, const char *, ssize_t);
 
 struct context {
     struct session  *sess;
@@ -66,7 +70,7 @@ struct context {
 
     rps_proxy_t     proxy;
 
-    do_parse_t      do_parse;
+    rps_next_t      do_next;
 
     char            peername[MAX_INET_ADDRSTRLEN];
 
