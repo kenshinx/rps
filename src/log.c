@@ -1,5 +1,4 @@
 #include "log.h"
-#include "core.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,20 +64,20 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     fwrite(buf, 1, len, l->fd);
 }
 
-rps_status_t
+int
 log_set_level(log_level level) {
     struct logger *l = &logger;
     
     if (level < LOG_CRITICAL || level > LOG_VERBOSE) {
         log_stderr("invalid log level <%d>", level);
-        return RPS_ERROR;
+        return -1;
     }
     l->level = level;
     
-    return RPS_OK;
+    return 0;
 }
 
-rps_status_t
+int
 log_set_output(char *fname) {
     struct logger *l = &logger;
        
@@ -88,28 +87,28 @@ log_set_output(char *fname) {
         l->fd = fopen(fname, "a");
         if (l->fd == NULL) {
             log_stderr("opening log file '%s' failed: %s", fname, strerror(errno));
-            return RPS_ERROR;
+            return -1;
         }
     }
 
-    return RPS_OK;
+    return 0;
 }
 
-rps_status_t
+int
 log_init(log_level level, char *fname) {
-    rps_status_t status;
+    int status;
     
     status = log_set_level(level);
-    if (status != RPS_OK) {
+    if (status != 0) {
         return status;
     }
 
     status = log_set_output(fname);
-    if (status != RPS_OK) {
+    if (status != 0) {
         return status;
     }
 
-    return RPS_OK;
+    return 0;
 }
 
 void
@@ -126,13 +125,13 @@ log_deinit() {
 #ifdef LOG_TEST
 int
 main(int argc, char **argv) {
-    rps_status_t stat;
+    int stat;
     log_level level;
 
     level = log_level_to_int("DEBUG");
     
     stat = log_init(level, NULL);
-    if (stat != RPS_OK) {
+    if (stat != 0) {
         log_stderr("init log failed.");
         exit(1);
     }
