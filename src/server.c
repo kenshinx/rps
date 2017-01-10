@@ -205,11 +205,11 @@ server_do_next(rps_ctx_t *ctx) {
 
 static void
 server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-    rps_ctx_t *request;   
+    rps_ctx_t *ctx;   
     
-    request = stream->data;
-    ASSERT(&request->handle.stream == stream);
-	ASSERT(request->buf == buf->base);
+    ctx = stream->data;
+    ASSERT(&ctx->handle.stream == stream);
+	ASSERT(ctx->buf == buf->base);
 
     if (nread <0 ) {
         if (nread != UV_EOF) {
@@ -217,28 +217,32 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         }
 
         //Client close connect
-        server_ctx_close(request);
-        server_sess_free(request->sess);
+        server_ctx_close(ctx);
+        server_sess_free(ctx->sess);
         return;
 
     }
 	
-	request->nread = nread;
+	ctx->nread = nread;
 
-	server_do_next(request);
+	server_do_next(ctx);
 }
 
 
 static void 
-server_on_request_timer_expire(uv_timer_t *handle) {
-    rps_ctx_t *request;
+server_on_timer_expire(uv_timer_t *handle) {
+    rps_ctx_t *ctx;
 
-    request = handle->data;
+    ctx = handle->data;
 
-    log_debug("Request from %s timeout", request->peername);
+	if (ctx->flag == c_request) {
+		log_debug("Request from %s timeout", ctx->peername);
+	} else {
+		log_debug("Forward to %s timeout", ctx->peername);
+	}
 
-    server_ctx_close(request);
-    server_sess_free(request->sess);
+    server_ctx_close(ctx);
+    server_sess_free(ctx->sess);
 }
 
 
@@ -322,7 +326,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
      * Beigin receive data
      */
     err = uv_read_start(&request->handle.stream, 
-            (uv_alloc_cb)server_alloc, (uv_read_cb)server_on_request_read);
+            (uv_alloc_cb)server_alloc, (uv_read_cb)server_on_read_done);
     if (err < 0) {
         goto error;
     }
@@ -332,7 +336,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
      */
     request->timer.data = request;
     err = uv_timer_start(&request->timer, 
-            (uv_timer_cb)server_on_request_timer_expire, REQUEST_CONTEXT_TIMEOUT, 0);
+            (uv_timer_cb)server_on_timer_expire, REQUEST_CONTEXT_TIMEOUT, 0);
     if (err) {
         UV_SHOW_ERROR(err, "set request timer");
         goto error;
