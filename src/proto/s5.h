@@ -15,14 +15,14 @@
  *                    |     S5_Version     |                    |                 |
  *                    |  +------------->   |                    |                 |
  *                    |                    |                    |                 |
- *      S5 HandShake  |     S5_Method      |                    |                 |
+ *         HandShake  |     S5_Method      |                    |                 |
  *   +--------------+ |  <--------------+  |                    |                 |
  *                    |                    |                    |                 |
  *                    |                    |                    |                 |
  *                    |    S5_Auth         |                    |                 |
  *                    |   +------------->  |                    |                 |
  *                    |                    |                    |                 |
- *    S5 SubNegotiate |    S5_Auth_result  |                    |                 |
+ *       SubNegotiate |    S5_Auth_result  |                    |                 |
  *   +--------------+ |   <--------------+ |                    |                 |
  *                    |                    |                    |                 |
  *                    |                    |                    |                 |
@@ -52,7 +52,7 @@
  *                    |                    |                    |                 |
  *                    |    S5_Reply        |                    |                 |
  *                    |   <-------------+  |                    |                 |
- * RPS Handshake sucess                    |                    |                 |
+ *       Established  |                    |                    |                 |
  * +------------------|                    |                    |                 |
  *                    |                    |                    |                 |
  */
@@ -81,5 +81,15 @@ typedef enum {
 } s5_phase_t;
 
 void s5_do_next(struct context *ctx, const char *data, ssize_t nread);
+uint16_t s5_server_handshake(struct context *ctx);
+uint16_t s5_server_auth(struct context *ctx);
+uint16_t s5_client_handshake(struct context *ctx);
+uint16_t s5_client_auth(struct context *ctx);
+
+uint16_t http_server_handshake(struct context *ctx);
+uint16_t http_server_auth(struct context *ctx);
+uint16_t http_client_handshake(struct context *ctx);
+uint16_t http_client_auth(struct context *ctx);
+
 
 #endif

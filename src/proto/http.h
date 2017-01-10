@@ -5,7 +5,12 @@
 
 #include <uv.h>
 
+/*
+ * http tunnel proxy:
+ * https://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01
+ */
+
 void 
-http_do_parse(struct context *ctx, const char *data, ssize_t nread);
+http_do_next(struct context *ctx, const char *data, ssize_t nread);
 
 #endif

@@ -7,14 +7,6 @@
 
 typedef int rps_status_t;
 
-/*
- * socks5 proxy:
- * https://www.ietf.org/rfc/rfc1928.txt
- *
- * http tunnel proxy:
- * https://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01
- *
- */
 typedef enum {
     SOCKS5,
     HTTP,

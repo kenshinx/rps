@@ -73,12 +73,14 @@ server_sess_init(rps_sess_t *sess) {
 
 static void
 server_sess_free(rps_sess_t *sess) {
+    /*
     if (sess->request != NULL) {
         ASSERT(!(sess->request->state &  c_connect));
     }
     if (sess->forward != NULL) {
         ASSERT(!(sess->forward->state &  c_connect));
     }
+	*/
     rps_free(sess);
 }
 
@@ -89,29 +91,49 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
     ctx->flag = flag;
     ctx->state = c_init;
     ctx->proxy = proxy;
+	ctx->nread = 0;
 
-    switch (ctx->proxy) {
-        case SOCKS5:
-            ctx->do_parse = s5_do_parse;
-            break;
-        case HTTP:
-            ctx->do_parse = http_do_parse;
-            break;
-        #ifdef SOCKS4_PROXY_SUPPORT
-        case SOCKS4:
-           ctx->do_parse = s4_do_parse; 
-           break;
-        #endif
-        #if PRIVATE_PROXY_SUPPORT
-        case PRIVATE:
-           ctx->do_parse = private_do_parse;
-           break;
-        #endif
-        default:
-           NOT_REACHED();
-    }
-
-    return;
+	if (ctx->flag == c_request) {
+		switch (ctx->proxy) {
+			case SOCKS5:
+				ctx->do_handshake = s5_server_handshake;
+				ctx->do_auth = s5_server_auth;
+				break;
+			case HTTP:
+				ctx->do_handshake = http_server_handshake;
+				ctx->do_auth = http_server_auth;
+				break;
+			#ifdef SOCKS4_PROXY_SUPPORT
+			case SOCKS4:
+				ctx->do_handshake = s4_server_handshake;
+				ctx->do_auth = s4_server_auth;
+			   break;
+			#endif
+			default:
+			   NOT_REACHED();
+		}
+	} else if (ctx->flag == c_forward) {
+		switch (ctx->proxy) {
+			case SOCKS5:
+				ctx->do_handshake = s5_client_handshake;
+				ctx->do_auth = s5_client_auth;
+				break;
+			case HTTP:
+				ctx->do_handshake = http_client_handshake;
+				ctx->do_auth = http_client_auth;
+				break;
+			#ifdef SOCKS4_PROXY_SUPPORT
+			case SOCKS4:
+				ctx->do_handshake = s4_client_handshake;
+				ctx->do_auth = s4_client_auth;
+			   break;
+			#endif
+			default:
+			   NOT_REACHED();
+		}
+	} else {
+		NOT_REACHED();
+	}
 }
 
 static void 
@@ -142,7 +164,7 @@ server_on_ctx_close(uv_handle_t* handle) {
 
 static void
 server_ctx_close(rps_ctx_t *ctx) {
-    ASSERT((ctx->state & c_connect));
+    //ASSERT((ctx->state & c_connect));
     ctx->state = c_closing;
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
     uv_timer_stop(&ctx->timer);
@@ -150,16 +172,35 @@ server_ctx_close(rps_ctx_t *ctx) {
 
 
 static uv_buf_t *
-server_on_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     rps_ctx_t *ctx;
+
     ctx = handle->data;
 
-    buf->base = (char *)rps_alloc(suggested_size);
-    ASSERT(buf->base != NULL);
-
-    buf->len = suggested_size;
+	buf->base = ctx->buf;
+    buf->len = sizeof(ctx->buf);
 
     return buf;
+}
+
+static void
+server_do_next(rps_ctx_t *ctx) {
+	uint16_t new_state;
+
+	switch (ctx->state) {
+		case c_handshake:
+			new_state = ctx->do_handshake(ctx);	
+			break;
+		case c_auth:
+			new_state = ctx->do_auth(ctx);
+			break;
+		case c_established:
+			break;
+		default:
+			NOT_REACHED();
+	}
+
+	ctx->state = new_state;
 }
 
 static void
@@ -168,6 +209,7 @@ server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) 
     
     request = stream->data;
     ASSERT(&request->handle.stream == stream);
+	ASSERT(request->buf == buf->base);
 
     if (nread <0 ) {
         if (nread != UV_EOF) {
@@ -180,8 +222,12 @@ server_on_request_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) 
         return;
 
     }
+	
+	request->nread = nread;
 
-    request->do_parse(request, buf->base, nread);
+	request->state = c_handshake;
+	
+	server_do_next(request);
 }
 
 
@@ -277,7 +323,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
      * Beigin receive data
      */
     err = uv_read_start(&request->handle.stream, 
-            (uv_alloc_cb)server_on_alloc, (uv_read_cb)server_on_request_read);
+            (uv_alloc_cb)server_alloc, (uv_read_cb)server_on_request_read);
     if (err < 0) {
         goto error;
     }

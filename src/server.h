@@ -16,13 +16,15 @@
 #define REQUEST_CONTEXT_TIMEOUT 30000 // 30 seconds
 #define FORWARD_CONTEXT_TIMEOUT 30000 // 30 seconds
 
+#define	READ_BUF_LENGTH 2048 //2k
+
 struct server {
     uv_loop_t               loop;   
     uv_tcp_t                us; /* libuv tcp server */
 
     rps_proxy_t             proxy;
     
-    rps_addr_t             listen;
+    rps_addr_t              listen;
     
     struct config_server    *cfg;
 };
@@ -54,7 +56,7 @@ enum context_state {
 typedef struct context rps_ctx_t;
 typedef struct session rps_sess_t;
 
-typedef void (* rps_next_t)(struct context *, const char *, ssize_t);
+typedef uint16_t (* rps_next_t)(struct context *);
 
 struct context {
     struct session  *sess;
@@ -70,12 +72,16 @@ struct context {
 
     rps_proxy_t     proxy;
 
-    rps_next_t      do_next;
+	char 			buf[READ_BUF_LENGTH];
+	ssize_t			nread;
+
+    rps_next_t      do_handshake;
+	rps_next_t		do_auth;
 
     char            peername[MAX_INET_ADDRSTRLEN];
 
     uint8_t         flag;
-    uint8_t         state;
+    uint16_t        state;
 };
 
 struct session {
