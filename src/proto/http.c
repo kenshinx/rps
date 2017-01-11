@@ -10,7 +10,7 @@ http_server_do_next(struct context *ctx) {
     ssize_t size;
     http_handle_t   *handle;
 
-    handle = &ctx->proxy_handle.s5;
+    handle = &ctx->proxy_handle.http;
 
     data = ctx->buf;
     size = ctx->nread;
