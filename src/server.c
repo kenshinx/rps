@@ -87,37 +87,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
     ctx->proxy = proxy;
 	ctx->nread = 0;
     ctx->handle.handle.data  = ctx;
-
-	if (ctx->proxy == SOCKS5) {
-		ctx->proxy_handle.s5.data = ctx;
-		switch (ctx->flag) {
-			case c_request:
-				ctx->s5_do_next = s5_server_do_next;
-				break;
-			case c_forward:
-				ctx->s5_do_next = s5_client_do_next;
-				break;
-			default:
-				NOT_REACHED();
-		}
-	}
-	else if (ctx->proxy == HTTP) {
-		ctx->proxy_handle.http.data = ctx;
-		switch (ctx->flag) {
-			case c_request:
-				ctx->http_do_next = http_server_do_next;
-				break;
-			case c_forward:
-				ctx->http_do_next = http_client_do_next;
-				break;
-			default:
-				NOT_REACHED();
-		}
-	} else {
-		NOT_REACHED();
-	}
 	
-/*
 	if (ctx->flag == c_request) {
 		switch (ctx->proxy) {
 			case SOCKS5:
@@ -153,8 +123,6 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
 	} else {
 		NOT_REACHED();
 	}
-*/
-
 }
 
 static void 
@@ -207,22 +175,7 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 static void
 server_do_next(rps_ctx_t *ctx) {
 
-	switch (ctx->proxy) {
-		case SOCKS5:
-			ctx->s5_do_next(&ctx->proxy_handle.s5);
-			break;
-		case HTTP:
-			ctx->http_do_next(&ctx->proxy_handle.http);
-#ifdef SOCKS4_PROXY_SUPPORT
-		case SOCKS4:
-			ctx->s4_do_next(&ctx->proxy_handle.s4);
-#endif
-		default:
-			NOT_REACHED();
-
-		
-			
-	}
+	ctx->do_next(ctx);
 
 	/*
 	switch (ctx->state) {

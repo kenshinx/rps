@@ -5,17 +5,7 @@
 #define RPS_ERROR   -1
 #define RPS_ENOMEM  -2
 
-#include "util.h"
-#include "log.h"
-#include "proto/s5.h"
-#include "proto/http.h"
-
-#include <uv.h>
-
-#include <stdint.h>
-
 #define	READ_BUF_LENGTH 2048 //2k
-
 
 typedef int rps_status_t;
 
@@ -33,6 +23,19 @@ typedef enum {
 
 } rps_proxy_t;
 
+typedef struct context rps_ctx_t;
+typedef struct session rps_sess_t;
+
+#include "util.h"
+#include "log.h"
+#include "proto/s5.h"
+#include "proto/http.h"
+
+#include <uv.h>
+
+#include <stdint.h>
+
+
 enum context_flag {
     c_request,
     c_forward
@@ -48,8 +51,8 @@ enum context_state {
 };
 
 
-typedef struct context rps_ctx_t;
-typedef struct session rps_sess_t;
+typedef void (*rps_next_t)(struct context *);
+
 
 struct context {
     struct session 		*sess;
@@ -68,11 +71,7 @@ struct context {
 #endif
 	} proxy_handle;
 
-	s5_next_t			s5_do_next;
-	http_next_t			http_do_next;
-#ifdef SOCKS4_PROXY_SUPPORT
-	s4_next_t			s4_do_next;
-#endif
+	rps_next_t			do_next;
 	
 	
 

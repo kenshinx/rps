@@ -6,7 +6,7 @@
 
 
 void 
-s5_client_do_next(s5_handle_t *handle) {
+s5_client_do_next(struct context *ctx) {
 }
 
 uint16_t

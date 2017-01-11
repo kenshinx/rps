@@ -1,15 +1,25 @@
 #include "http.h"
-#include "server.h"
+#include "core.h"
 
 #include <uv.h>
 
 
 void 
-http_server_do_next(http_handle_t *handle) {
+http_server_do_next(struct context *ctx) {
+    char    *data;
+    ssize_t size;
+    http_handle_t   *handle;
+
+    handle = &ctx->proxy_handle.s5;
+
+    data = ctx->buf;
+    size = ctx->nread;
+
+    printf("http read %d bytes: %s\n", size, data);
 }
 
 void 
-http_client_do_next(http_handle_t *handle) {
+http_client_do_next(struct context *ctx) {
 }
 
 uint16_t

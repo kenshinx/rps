@@ -1,7 +1,9 @@
 #ifndef _RPS_S5_H
 #define _RPS_S5_H
 
+
 #include <uv.h>
+
 
 /*
  * RPS work based on socks5 proxy 
@@ -93,27 +95,19 @@ typedef enum {
 } s5_state_t;
 
 typedef struct {
-	void		*data;  /* Pointer to context struct */
 
 	uint32_t	arg0;
 	uint32_t	arg1;
 
-	s5_state_t	state;
+	uint8_t		state;
 	uint8_t		methods;
 	uint8_t		cmd;
 
 } s5_handle_t;
 
-typedef void (* s5_next_t)(s5_handle_t *);
+#include "core.h"
 
-void s5_server_do_next(s5_handle_t *handle);
-void s5_client_do_next(s5_handle_t *handle);
-
-
-uint16_t s5_server_handshake(s5_handle_t *handle);
-uint16_t s5_server_auth(s5_handle_t *handle);
-uint16_t s5_client_handshake(s5_handle_t *handle);
-uint16_t s5_client_auth(s5_handle_t *handle);
-
+void s5_server_do_next(struct context *ctx);
+void s5_client_do_next(struct context *ctx);
 
 #endif
