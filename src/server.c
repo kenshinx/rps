@@ -177,6 +177,14 @@ server_do_next(rps_ctx_t *ctx) {
 
 	ctx->do_next(ctx);
 
+	switch (ctx->state) {
+		case c_established:
+			/* rps connect has be established */
+			break;
+		default:
+			ctx->do_next(ctx);
+	}
+
 	/*
 	switch (ctx->state) {
 		case c_handshake:
