@@ -5,27 +5,30 @@
 
 
 void 
-http_do_next(struct context *ctx, const char *data, ssize_t nread) {
-    printf("<<nread:%zd>>, %s\n", nread, data);
+http_server_do_next(http_handle_t *handle) {
+}
+
+void 
+http_client_do_next(http_handle_t *handle) {
 }
 
 uint16_t
-http_server_handshake(struct context *ctx) {
+http_server_handshake(http_handle_t *handle) {
     
 }
 
 uint16_t
-http_server_auth(struct context *ctx) {
+http_server_auth(http_handle_t *handle) {
 
 }
 
 uint16_t
-http_client_handshake(struct context *ctx) {
+http_client_handshake(http_handle_t *handle) {
     
 }
 
 uint16_t
-http_client_auth(struct context *ctx) {
+http_client_auth(http_handle_t *handle) {
 
 }
 

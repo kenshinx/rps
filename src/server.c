@@ -35,11 +35,6 @@ server_init(struct server *s, struct config_server *cfg) {
         s->proxy = SOCKS4;
      }
 #endif
-#ifdef PRIVATE_PROXY_SUPPORT
-     else if (rps_strcmp(cfg->proxy.data, "private") == 0 ) {
-        s->proxy = PRIVATE;
-     }
-#endif
     else{
         log_error("unsupport proxy type: %s", cfg->proxy.data);
         return RPS_ERROR;
@@ -87,26 +82,53 @@ server_sess_free(rps_sess_t *sess) {
 static void
 server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t proxy) {
     ctx->sess = sess;
-    ctx->handle.handle.data  = ctx;
     ctx->flag = flag;
     ctx->state = c_init;
     ctx->proxy = proxy;
 	ctx->nread = 0;
+    ctx->handle.handle.data  = ctx;
 
+	if (ctx->proxy == SOCKS5) {
+		ctx->proxy_handle.s5.data = ctx;
+		switch (ctx->flag) {
+			case c_request:
+				ctx->s5_do_next = s5_server_do_next;
+				break;
+			case c_forward:
+				ctx->s5_do_next = s5_client_do_next;
+				break;
+			default:
+				NOT_REACHED();
+		}
+	}
+	else if (ctx->proxy == HTTP) {
+		ctx->proxy_handle.http.data = ctx;
+		switch (ctx->flag) {
+			case c_request:
+				ctx->http_do_next = http_server_do_next;
+				break;
+			case c_forward:
+				ctx->http_do_next = http_client_do_next;
+				break;
+			default:
+				NOT_REACHED();
+		}
+	} else {
+		NOT_REACHED();
+	}
+	
+/*
 	if (ctx->flag == c_request) {
 		switch (ctx->proxy) {
 			case SOCKS5:
-				ctx->do_handshake = s5_server_handshake;
-				ctx->do_auth = s5_server_auth;
+				ctx->do_next = s5_server_do_next;
 				break;
 			case HTTP:
-				ctx->do_handshake = http_server_handshake;
-				ctx->do_auth = http_server_auth;
+				ctx->do_next = http_server_do_next;
 				break;
 			#ifdef SOCKS4_PROXY_SUPPORT
 			case SOCKS4:
-				ctx->do_handshake = s4_server_handshake;
-				ctx->do_auth = s4_server_auth;
+				ctx->do_next = s4_server_do_next;
 			   break;
 			#endif
 			default:
@@ -115,17 +137,14 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
 	} else if (ctx->flag == c_forward) {
 		switch (ctx->proxy) {
 			case SOCKS5:
-				ctx->do_handshake = s5_client_handshake;
-				ctx->do_auth = s5_client_auth;
+				ctx->do_next = s5_client_do_next;
 				break;
 			case HTTP:
-				ctx->do_handshake = http_client_handshake;
-				ctx->do_auth = http_client_auth;
+				ctx->do_next = http_client_do_next;
 				break;
 			#ifdef SOCKS4_PROXY_SUPPORT
 			case SOCKS4:
-				ctx->do_handshake = s4_client_handshake;
-				ctx->do_auth = s4_client_auth;
+				ctx->do_next = s4_client_do_next;
 			   break;
 			#endif
 			default:
@@ -134,6 +153,8 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
 	} else {
 		NOT_REACHED();
 	}
+*/
+
 }
 
 static void 
@@ -185,14 +206,31 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 
 static void
 server_do_next(rps_ctx_t *ctx) {
-	uint16_t new_state;
 
+	switch (ctx->proxy) {
+		case SOCKS5:
+			ctx->s5_do_next(&ctx->proxy_handle.s5);
+			break;
+		case HTTP:
+			ctx->http_do_next(&ctx->proxy_handle.http);
+#ifdef SOCKS4_PROXY_SUPPORT
+		case SOCKS4:
+			ctx->s4_do_next(&ctx->proxy_handle.s4);
+#endif
+		default:
+			NOT_REACHED();
+
+		
+			
+	}
+
+	/*
 	switch (ctx->state) {
 		case c_handshake:
-			new_state = ctx->do_handshake(ctx);	
+			new_state = ctx->do_handshake(ctx->proxy_handle.s5_handle);	
 			break;
 		case c_auth:
-			new_state = ctx->do_auth(ctx);
+			new_state = ctx->do_auth(ctx->proxy_handle.s5_handle);	
 			break;
 		case c_established:
 			break;
@@ -201,6 +239,7 @@ server_do_next(rps_ctx_t *ctx) {
 	}
 
 	ctx->state = new_state;
+	*/
 }
 
 static void
@@ -260,6 +299,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_sess_t *sess;
     rps_ctx_t *request; /* client -> rps */
     int len;
+	rps_status_t status;
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");

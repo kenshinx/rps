@@ -1,8 +1,6 @@
 #ifndef _RPS_S5_H
 #define _RPS_S5_H
 
-#include "core.h"
-
 #include <uv.h>
 
 /*
@@ -94,9 +92,9 @@ typedef enum {
 	s5_dead
 } s5_state_t;
 
-typedef struct s5_handle_s  s5_handle_t;
+typedef struct {
+	void		*data;  /* Pointer to context struct */
 
-struct s5_handle_s {
 	uint32_t	arg0;
 	uint32_t	arg1;
 
@@ -104,20 +102,18 @@ struct s5_handle_s {
 	uint8_t		methods;
 	uint8_t		cmd;
 
-};
+} s5_handle_t;
+
+typedef void (* s5_next_t)(s5_handle_t *);
+
+void s5_server_do_next(s5_handle_t *handle);
+void s5_client_do_next(s5_handle_t *handle);
 
 
-
-void s5_do_next(struct context *ctx, const char *data, ssize_t nread);
-uint16_t s5_server_handshake(struct context *ctx);
-uint16_t s5_server_auth(struct context *ctx);
-uint16_t s5_client_handshake(struct context *ctx);
-uint16_t s5_client_auth(struct context *ctx);
-
-uint16_t http_server_handshake(struct context *ctx);
-uint16_t http_server_auth(struct context *ctx);
-uint16_t http_client_handshake(struct context *ctx);
-uint16_t http_client_auth(struct context *ctx);
+uint16_t s5_server_handshake(s5_handle_t *handle);
+uint16_t s5_server_auth(s5_handle_t *handle);
+uint16_t s5_client_handshake(s5_handle_t *handle);
+uint16_t s5_client_auth(s5_handle_t *handle);
 
 
 #endif

@@ -7,6 +7,8 @@
 
 #include "util.h"
 #include "log.h"
+#include "proto/s5.h"
+#include "proto/http.h"
 
 #include <uv.h>
 
@@ -49,39 +51,43 @@ enum context_state {
 typedef struct context rps_ctx_t;
 typedef struct session rps_sess_t;
 
-typedef uint16_t (* rps_next_t)(struct context *);
-
 struct context {
-    struct session  *sess;
+    struct session 		*sess;
 
     union {
-        uv_handle_t handle;
-        uv_stream_t stream;
-        uv_tcp_t    tcp;
+        uv_handle_t 	handle;
+        uv_stream_t 	stream;
+        uv_tcp_t    	tcp;
     } handle;
 
-/*
 	union {
-		s5_handle_t		s5_handle;
-		http_handle_t	http_handle;
+		s5_handle_t		s5;
+		http_handle_t	http;
+#ifdef SOCKS4_PROXY_SUPPORT
+		s4_handle_t		s4;
+#endif
 	} proxy_handle;
-*/
 
-    uv_timer_t      timer;
-    uv_write_t      write_req;
+	s5_next_t			s5_do_next;
+	http_next_t			http_do_next;
+#ifdef SOCKS4_PROXY_SUPPORT
+	s4_next_t			s4_do_next;
+#endif
+	
+	
 
-    rps_proxy_t     proxy;
+    uv_timer_t      	timer;
+    uv_write_t      	write_req;
 
-	char 			buf[READ_BUF_LENGTH];
-	ssize_t			nread;
+    rps_proxy_t     	proxy;
 
-    rps_next_t      do_handshake;
-	rps_next_t		do_auth;
+	char 				buf[READ_BUF_LENGTH];
+	ssize_t				nread;
 
-    char            peername[MAX_INET_ADDRSTRLEN];
+    char            	peername[MAX_INET_ADDRSTRLEN];
 
-    uint8_t         flag;
-    uint16_t        state;
+    uint8_t         	flag;
+    uint16_t        	state;
 };
 
 struct session {

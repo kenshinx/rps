@@ -1,6 +1,6 @@
 
 #include "s5.h"
-#include "server.h"
+#include "core.h"
 
 #include <stdio.h>
 #include <uv.h>
@@ -8,8 +8,7 @@
 
 
 void 
-s5_do_next(struct context *ctx, const char *data, ssize_t nread) {
-    printf("<<nread:%zd>>, %s\n", nread, data);
+s5_server_do_next(s5_handle_t *handle) {
 }
 
 static void 
@@ -18,9 +17,12 @@ s5_parse(char **data, ssize_t *size) {
 }
 
 uint16_t
-s5_server_handshake(struct context *ctx) {
+s5_server_handshake(s5_handle_t *handle) {
+    struct context *ctx;
     char    *data;
     ssize_t size;
+
+    ctx = (struct context *)handle->data;
 
     data = ctx->buf;
     size = ctx->nread;
@@ -29,7 +31,7 @@ s5_server_handshake(struct context *ctx) {
 }
 
 uint16_t
-s5_server_auth(struct context *ctx) {
+s5_server_auth(s5_handle_t *handle) {
 
 }
 
