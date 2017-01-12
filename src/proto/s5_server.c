@@ -22,6 +22,8 @@ s5_parse(s5_handle_t *handle, uint8_t **data, ssize_t *size) {
     n = *size; 
     p = *data;
 
+    int x = 0;
+
     while(i < n) {
         c = p[i];
         i++;
@@ -49,19 +51,19 @@ s5_parse(s5_handle_t *handle, uint8_t **data, ssize_t *size) {
                 if (handle->__n < handle->nmethods) {
                     switch (c) {
                         case 0:
-                            handle->methods |= s5_auth_none;
+                            handle->methods[handle->__n] = s5_auth_none;
                             break;
                         case 1:
-                            handle->methods |= s5_auth_gssapi;
+                            handle->methods[handle->__n] = s5_auth_gssapi;
                             break;
                         case 2:
-                            handle->methods |= s5_auth_passwd;
+                            handle->methods[handle->__n]= s5_auth_passwd;
                             break;
                     }
                     handle->__n++;
                 }
                 if (handle->__n == handle->nmethods) {
-                    printf("nmethods:%d, methods:%c\n", handle->nmethods, handle->methods);
+                    printf("nmethods:%d\n", handle->nmethods);
                 }
         }
     }
@@ -83,6 +85,8 @@ s5_do_handshake(s5_handle_t *handle, uint8_t *data, ssize_t size) {
     if (err != s5_ok) {
         log_error("s5 handshake error: %s", s5_strerr(err));
     }
+
+    return c_auth;
 
 }
 

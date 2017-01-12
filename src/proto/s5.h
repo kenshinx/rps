@@ -136,7 +136,7 @@ typedef struct {
 	uint8_t		version;
 	uint8_t		state;
 	uint8_t		nmethods;
-	uint8_t		methods;
+	uint8_t		methods[255];
 	uint8_t		cmd;
 
 } s5_handle_t;
