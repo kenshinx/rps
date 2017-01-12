@@ -205,8 +205,6 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 static void
 server_do_next(rps_ctx_t *ctx) {
 
-	ctx->do_next(ctx);
-
 	switch (ctx->state) {
 		case c_established:
 			/* rps connect has be established */

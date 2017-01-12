@@ -58,21 +58,32 @@
  */
 
 #define S5_ERR_MAP(V)                                                       	\
-    V(-1, S5_BAD_VERSION, "Bad protocol version.")                              \
-    V(-2, S5_BAD_CMD, "Bad protocol command.")                                  \
-    V(-3, S5_BAD_ATYP, "Bad address type.")                                     \
-    V(-4, S5_AUTH_ERROR, "Auth failure.")                                       \
-    V(-5, S5_NEED_MORE_DATA, "Need more data.")                                 \
-    V(0,  S5_OK, "No error.")                                                   \
-    V(1,  S5_AUTH_SELECT, "Select authentication method.")                      \
-    V(2,  S5_AUTH_VERIFY, "Verify authentication.")                             \
-    V(3,  S5_EXEC_CMD, "Execute command.")                                      \
+    V(-1, s5_bad_version, "Bad protocol version.")                              \
+    V(-2, s5_bad_cmd, "Bad protocol command.")                                  \
+    V(-3, s5_bad_atyp, "Bad address type.")                                     \
+    V(-4, s5_auth_error, "Auth failure.")                                       \
+    V(-5, s5_need_more_data, "Need more data.")                                 \
+    V(0,  s5_ok, "No error.")                                                   \
+    V(1,  s5_auth_select, "Select authentication method.")                      \
+    V(2,  s5_auth_verify, "Verify authentication.")                             \
+    V(3,  s5_exec_cmd, "Execute command.")                                      \
 
 typedef enum {
 #define S5_ERR_GEN(code, name, _) name = code,
       S5_ERR_MAP(S5_ERR_GEN)
 #undef S5_ERR_GEN
 } s5_err_t;
+
+static inline const char * 
+s5_strerr(s5_err_t err) {
+#define S5_ERR_GEN(_, name, errmsg) case name: return errmsg;
+	switch (err) {
+		S5_ERR_MAP(S5_ERR_GEN)
+		default: ;
+	}
+#undef S5_ERR_GEN
+	return "Unknown error.";
+}
 
 typedef enum {
 	s5_version,
@@ -94,12 +105,37 @@ typedef enum {
 	s5_dead
 } s5_state_t;
 
+typedef enum {
+    s5_auth_none = 0x00,
+    s5_auth_gssapi = 0x01,
+    s5_auth_passwd = 0x02
+} s5_auth_method;
+
+typedef enum {
+    s5_auth_allow,
+    s5_auth_deny
+} s5_auth_result;
+
+typedef enum {
+    s5_atyp_ipv4,
+    s5_atyp_ipv6,
+    s5_atyp_host
+} s5_atyp;
+
+typedef enum {
+    s5_cmd_tcp_connect,
+    s5_cmd_tcp_bind,
+    s5_cmd_udp_assoc
+} s5_cmd;
+
+
 typedef struct {
 
-	uint32_t	arg0;
-	uint32_t	arg1;
+	uint32_t	__n;
 
+	uint8_t		version;
 	uint8_t		state;
+	uint8_t		nmethods;
 	uint8_t		methods;
 	uint8_t		cmd;
 
