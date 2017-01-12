@@ -107,6 +107,12 @@ typedef struct {
 
 #include "core.h"
 
+static inline void
+s5_handle_init(s5_handle_t *handle) {
+	memset(handle, 0, sizeof(*handle));
+	handle->state = s5_version;
+}
+
 void s5_server_do_next(struct context *ctx);
 void s5_client_do_next(struct context *ctx);
 
