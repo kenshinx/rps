@@ -1,7 +1,6 @@
 #ifndef _PRS_STRING_H
 #define _PRS_STRING_H
 
-#include "core.h"
 #include "util.h"
 
 #include <stdint.h>
@@ -30,8 +29,8 @@ string_deinit(rps_str_t *str) {
 
 rps_str_t *string_new();
 void string_free(rps_str_t *str);
-rps_status_t string_duplicate(rps_str_t *dst, const char *src, size_t len);
-rps_status_t string_copy(rps_str_t *dst, const rps_str_t *src);
+int string_duplicate(rps_str_t *dst, const char *src, size_t len);
+int string_copy(rps_str_t *dst, const rps_str_t *src);
 
 
 

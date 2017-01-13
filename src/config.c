@@ -1,4 +1,5 @@
 #include "config.h"
+#include "core.h"
 #include "util.h"
 #include "log.h"
 #include "array.h"

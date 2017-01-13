@@ -1,6 +1,7 @@
 #ifndef _RPS_CONFIG_H
 #define _RPS_CONFIG_H
 
+#include "core.h"
 #include "array.h"
 #include "_string.h"
 

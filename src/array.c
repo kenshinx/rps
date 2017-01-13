@@ -5,8 +5,7 @@
 
 #include <stdint.h>
 
-
-rps_status_t
+int
 array_init(rps_array_t *a, uint32_t n, size_t size) {
     ASSERT(a !=  NULL);
     ASSERT( n !=0 && size != 0);

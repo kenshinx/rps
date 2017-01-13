@@ -1,8 +1,6 @@
 #ifndef _RPS_ARRAY_H
 #define _RPS_ARRAY_H
 
-#include "core.h"
-
 #include <stdio.h>
 #include <stdint.h>
 
@@ -28,7 +26,7 @@ array_n(rps_array_t *a) {
 #define array_is_full(_a)                              \
     ((_a)->nelts == (_a)->nalloc)
 
-rps_status_t array_init(rps_array_t *a, uint32_t n, size_t size);
+int array_init(rps_array_t *a, uint32_t n, size_t size);
 rps_array_t *array_create(uint32_t n, size_t size);
 void array_deinit(rps_array_t *a);
 void array_destroy(rps_array_t *a);
