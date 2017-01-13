@@ -5,9 +5,20 @@
 #include <uv.h>
 
 
-/*
- * RPS work based on socks5 proxy 
+/* SOCKS5 Protocol
+ *
+ * Related RFC:
+ * 
+ * SOCKS Protocol Version 5
  * https://www.ietf.org/rfc/rfc1928.txt
+ *
+ * Username/Password Authentication for SOCKS V5
+ * https://tools.ietf.org/html/rfc1929
+ *
+ * A SOCKS-based IPv6/IPv4 Gateway Mechanism
+ * https://tools.ietf.org/html/rfc3089
+ *
+ * RPS work based on socks5 proxy 
  *
  *                   Client                RPS               Upstream            Remote
  * 
@@ -106,7 +117,7 @@ typedef enum {
 } s5_state_t;
 
 typedef enum {
-    s5_auth_none = 0x00,
+    s5_auth_none =   0x00,
     s5_auth_gssapi = 0x01,
     s5_auth_passwd = 0x02
 } s5_auth_method;
