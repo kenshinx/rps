@@ -59,12 +59,13 @@ s5_parse(s5_handle_t *handle, uint8_t **data, ssize_t *size) {
                         case 2:
                             handle->methods[handle->__n]= s5_auth_passwd;
                             break;
+                        default:
+                            /* Unsupport auth method */
+                            break;
                     }
                     handle->__n++;
                 }
-                if (handle->__n == handle->nmethods) {
-                    printf("nmethods:%d\n", handle->nmethods);
-                }
+                break;
         }
     }
 
