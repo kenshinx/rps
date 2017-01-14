@@ -3,6 +3,7 @@
 #include "core.h"
 #include "util.h"
 #include "log.h"
+#include "server.h"
 
 #include <stdio.h>
 #include <uv.h>
@@ -78,26 +79,76 @@ out:
     
 }
 
-static uint16_t
-s5_do_handshake(s5_handle_t *handle, uint8_t *data, ssize_t size) {
-    s5_err_t err;
-    
-    err = s5_parse(handle, &data, &size);
-    if (err != s5_ok) {
-        log_error("s5 handshake error: %s", s5_strerr(err));
+static uint8_t
+s5_select_auth(struct s5_method_request *req) {
+    int i;
+    uint8_t method;
+
+    ASSERT(req->nmethods <= 255);
+
+    /* Select no authentication required if rps server didn't set user and password */
+
+    for (i=0; i<req->nmethods; i++) {
+        method = req->methods[i];
+        if (method == s5_auth_none) {
+            return s5_auth_none;
+        }
     }
 
-    return c_auth;
+    return s5_auth_unacceptable;
+}
+
+static uint16_t
+s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
+    uint16_t new_state;
+    struct server *s;
+    struct s5_method_request *req;
+    struct s5_method_response resp;
+
+    req = (struct s5_method_request *)data;
+    if (req->version != SOCKS5_VERSION) {
+        log_error("s5 handshake error: bad protocol version.");
+        return c_kill;
+    }
+    
+    resp.version = req->version;
+
+    s = ctx->sess->server;
+    
+    if (string_empty(&s->cfg->username) && string_empty(&s->cfg->password)) {
+        /* If rps didn't assign username and password, 
+         * select auth method dependent on client request 
+         * */
+        resp.method = s5_select_auth(req);
+    } else {
+        resp.method = s5_auth_passwd;
+    }
+
+    switch (resp.method) {
+        case s5_auth_none:
+            new_state = c_request;
+            break;
+        case s5_auth_passwd:
+            new_state = c_auth;
+            break;
+        case s5_auth_gssapi:
+        case s5_auth_unacceptable:
+            new_state = c_kill;
+            log_error("s5 handshake error: unacceptable authentication.");
+            break;
+    }
+
+    return new_state;
 
 }
 
 static uint16_t
-s5_do_auth(s5_handle_t *handle, uint8_t *data, ssize_t size) {
+s5_do_auth(uint8_t *data, ssize_t size) {
 
 }
 
-static s5_state_t 
-s5_request() {
+static uint16_t
+s5_do_request(uint8_t *data, ssize_t size) {
 
 }
 
@@ -120,10 +171,13 @@ s5_server_do_next(struct context *ctx) {
 
     switch (ctx->state) {
         case c_handshake:
-            new_state = s5_do_handshake(handle, data, size);
+            new_state = s5_do_handshake(ctx, data, size);
             break;
         case c_auth:
-            new_state = s5_do_auth(handle, data, size);
+            new_state = s5_do_auth(data, size);
+            break;
+        case c_request:
+            new_state = s5_do_request(data, size);
             break;
         default:
             NOT_REACHED();

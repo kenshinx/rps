@@ -20,7 +20,7 @@
  *
  * RPS work based on socks5 proxy 
  *
- *                   Client                RPS               Upstream            Remote
+ *                   Client                RPS               Upstream            Destination
  * 
  *                    |                    |                    |                 |
  *                    |     S5_Version     |                    |                 |
@@ -96,6 +96,22 @@ s5_strerr(s5_err_t err) {
 	return "Unknown error.";
 }
 
+#pragma pack(push,1)
+
+struct s5_method_request {
+    uint8_t version;
+    uint8_t nmethods;
+    uint8_t methods[255];
+};
+
+struct s5_method_response {
+    uint8_t version;
+    uint8_t method;
+};
+
+
+#pragma pack(pop)
+
 typedef enum {
 	s5_version,
 	s5_nmethods,
@@ -119,7 +135,8 @@ typedef enum {
 typedef enum {
     s5_auth_none =   0x00,
     s5_auth_gssapi = 0x01,
-    s5_auth_passwd = 0x02
+    s5_auth_passwd = 0x02,
+    s5_auth_unacceptable = 0xFF
 } s5_auth_method;
 
 typedef enum {

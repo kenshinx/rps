@@ -27,7 +27,10 @@ typedef struct context rps_ctx_t;
 typedef struct session rps_sess_t;
 
 #include "util.h"
+#include "_string.h"
 #include "log.h"
+#include "array.h"
+#include "server.h"
 #include "proto/s5.h"
 #include "proto/http.h"
 
@@ -46,8 +49,9 @@ enum context_state {
 	c_handshake = (1 << 2),
 	c_auth = (1 << 3),
 	c_established = (1 << 4),
-    c_closing = (1 << 5),
-    c_closed = (1 << 6)
+    c_kill = (1 << 5),
+    c_closing = (1 << 6),
+    c_closed = (1 << 7)
 };
 
 
@@ -93,6 +97,8 @@ struct session {
     rps_addr_t client;
     rps_addr_t upstream;
     rps_addr_t remote;
+
+    struct server  *server;
 
     struct context *request;
     struct context *forward;
