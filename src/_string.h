@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct rps_string {
     size_t      len;
@@ -25,6 +26,11 @@ string_deinit(rps_str_t *str) {
         rps_free(str->data);
         string_init(str);
     }
+}
+
+static inline bool
+string_empty(rps_str_t *str) {
+    return str->len == 0 ? true : false;
 }
 
 rps_str_t *string_new();

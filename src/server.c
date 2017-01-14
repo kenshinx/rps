@@ -61,7 +61,8 @@ server_deinit(struct server *s) {
 }
 
 static void
-server_sess_init(rps_sess_t *sess) {
+server_sess_init(rps_sess_t *sess, struct server *s) {
+    sess->server = s;
     sess->request = NULL;
     sess->forward = NULL;
 }
@@ -301,7 +302,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     if (sess == NULL) {
         return;
     }
-    server_sess_init(sess);
+    server_sess_init(sess, s);
 
     request = (struct context *)rps_alloc(sizeof(struct context));
     if (request == NULL) {
