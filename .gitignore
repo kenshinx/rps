@@ -14,3 +14,4 @@ src/proto/*.o
 src/proto/*.swp
 src/proto/*.a
 .rps.yml.swp
+/src/tags
