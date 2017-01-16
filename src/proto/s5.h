@@ -120,6 +120,11 @@ struct s5_auth_request {
     uint8_t passwd[255];
 };
 
+struct s5_auth_response {
+    uint8_t ver;
+    uint8_t status;
+};
+
 
 #pragma pack(pop)
 

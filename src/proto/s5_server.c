@@ -143,13 +143,20 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
             break;
     }
 
+#ifdef RPS_DEBUG_OPEN
+    log_verb("s5 handshake finish.");
+#endif
+
     return new_state;
 }
 
 static uint16_t
 s5_do_auth(struct context *ctx, uint8_t *data, ssize_t size) {
     uint16_t *new_state;
+    struct server *s;
     struct s5_auth_request *req;
+    struct s5_auth_response resp;
+    rps_status_t status;
 
     req = (struct s5_auth_request *)data;
     if (req->ver != SOCKS5_AUTH_PASSWD_VERSION) {
@@ -166,11 +173,32 @@ s5_do_auth(struct context *ctx, uint8_t *data, ssize_t size) {
     ASSERT(strlen(req->uname) == req->ulen);
     ASSERT(strlen(req->passwd) == req->plen);
 
-    printf("uname:%s, plen:%d, passwd:%s\n", req->uname, req->plen, req->passwd);
-    
-    
-    
-    
+    s = ctx->sess->server;
+
+    resp.ver = SOCKS5_AUTH_PASSWD_VERSION;
+    if (strcmp(s->cfg->username.data, req->uname) == 0 && 
+            strcmp(s->cfg->password.data, req->passwd) == 0) {
+        resp.status = s5_auth_allow;
+        new_state = c_requests;
+    } else {
+        resp.status = s5_auth_deny;
+        new_state = c_kill;
+    }
+
+    status = server_write(ctx, &resp, sizeof(resp));
+    if (status != RPS_OK) {
+        return c_kill;
+    }
+
+#ifdef RPS_DEBUG_OPEN
+    if (resp.status ==  s5_auth_allow) {
+        log_verb("s5 username password authentication success.");
+    } else {
+        log_verb("s5 username password authentication failed.");
+    }
+#endif
+
+    return new_state;
 }
 
 static uint16_t
