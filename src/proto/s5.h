@@ -20,7 +20,7 @@
  *
  * RPS work based on socks5 proxy 
  *
- *                   Client                RPS               Upstream            Destination
+ *                   Client                RPS               Upstream           Remote
  * 
  *                    |                    |                    |                 |
  *                    |     S5_Version     |                    |                 |
