@@ -87,7 +87,10 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
     ctx->state = c_init;
     ctx->proxy = proxy;
 	ctx->nread = 0;
+    ctx->last_status = 0;
     ctx->handle.handle.data  = ctx;
+    ctx->write_req.data = ctx;
+    ctx->timer.data = ctx;
 
 	if (ctx->proxy == SOCKS5) {
 		s5_handle_init(&ctx->proxy_handle.s5);
@@ -206,10 +209,18 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 static void
 server_do_next(rps_ctx_t *ctx) {
 
+    if (ctx->last_status < 0) {
+        ctx->state = c_kill;
+    }
+
 	switch (ctx->state) {
 		case c_established:
 			/* rps connect has be established */
 			break;
+        case c_kill:
+            break;
+        case c_dead:
+            break;
 		default:
 			ctx->do_next(ctx);
 	}
@@ -258,8 +269,18 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 }
 
 static void
-server_on_write_done(uv_write_t *req, int status) {
+server_on_write_done(uv_write_t *req, int err) {
+    rps_ctx_t *ctx;
 
+    ctx = req->data;
+    
+    if (err) {
+        UV_SHOW_ERROR(err, "on write done");
+    }
+
+    ctx->last_status = err;
+    
+    server_do_next(ctx);
 }
 
 rps_status_t
@@ -391,7 +412,6 @@ server_on_new_connect(uv_stream_t *us, int err) {
     /*
      * Set request context timer
      */
-    request->timer.data = request;
     err = uv_timer_start(&request->timer, 
             (uv_timer_cb)server_on_timer_expire, REQUEST_CONTEXT_TIMEOUT, 0);
     if (err) {

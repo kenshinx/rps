@@ -125,9 +125,14 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
         resp.method = s5_auth_passwd;
     }
 
+    status = server_write(ctx, &resp, sizeof(resp));
+    if (status != RPS_OK) {
+        return c_kill;
+    }
+
     switch (resp.method) {
         case s5_auth_none:
-            new_state = c_request;
+            new_state = c_requests;
             break;
         case s5_auth_passwd:
             new_state = c_auth;
@@ -137,11 +142,6 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
             new_state = c_kill;
             log_error("s5 handshake error: unacceptable authentication.");
             break;
-    }
-
-    status = server_write(ctx, &resp, sizeof(resp));
-    if (status != RPS_OK) {
-        new_state = c_kill;
     }
 
     return new_state;
@@ -173,6 +173,16 @@ s5_server_do_next(struct context *ctx) {
 
     data = (uint8_t *)ctx->buf;
     size = ctx->nread;
+
+    printf("ctx->state:%d\n", ctx->state);
+    printf("read %zd bytes\n", size);
+    int i;
+    for (i=0; i<size; i++) {
+        printf("%x ", data[i]);
+    }
+    printf ("\n");
+
+
 
     switch (ctx->state) {
         case c_handshake:

@@ -9,7 +9,7 @@
 #define RPS_VERSION "0.1.2"
 
 #ifdef RPS_DEBUG_OPEN
-#define RPS_DEFAULT_LOG_LEVEL       LOG_INFO
+#define RPS_DEFAULT_LOG_LEVEL       LOG_VERBOSE
 #else
 #define RPS_DEFAULT_LOG_LEVEL       LOG_NOTICE
 #endif

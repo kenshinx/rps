@@ -45,13 +45,15 @@ enum context_flag {
 };
 
 enum context_state {
-    c_init = (1 << 1),
-	c_handshake = (1 << 2),
-	c_auth = (1 << 3),
+    c_init = (1 << 0),
+	c_handshake = (1 << 1),
+	c_auth = (1 << 2),
+    c_requests = (1 << 3),
 	c_established = (1 << 4),
     c_kill = (1 << 5),
-    c_closing = (1 << 6),
-    c_closed = (1 << 7)
+    c_dead = (1 << 6),
+    c_closing = (1 << 7),
+    c_closed = (1 << 8)
 };
 
 
@@ -77,7 +79,6 @@ struct context {
 
 	rps_next_t			do_next;
 	
-	
 
     uv_timer_t      	timer;
     uv_write_t      	write_req;
@@ -91,6 +92,8 @@ struct context {
 
     uint8_t         	flag;
     uint16_t        	state;
+
+    int                 last_status;
 };
 
 struct session {
