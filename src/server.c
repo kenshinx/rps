@@ -276,11 +276,11 @@ server_on_write_done(uv_write_t *req, int err) {
     
     if (err) {
         UV_SHOW_ERROR(err, "on write done");
+        ctx->last_status = err;
+        server_do_next(ctx);
     }
-
-    ctx->last_status = err;
     
-    server_do_next(ctx);
+    //server_do_next(ctx);
 }
 
 rps_status_t
@@ -301,6 +301,14 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
         UV_SHOW_ERROR(err, "write");
         return RPS_ERROR;
     }
+
+#if RPS_DEBUG_OPEN
+    int i;
+    log_verb("write %zd bytes\n", len);
+    for (i=0; i<len; i++) {
+        log_verb("\t%x", buf.base[i]);
+    }
+#endif
     
     return RPS_OK;
 }

@@ -174,13 +174,13 @@ s5_server_do_next(struct context *ctx) {
     data = (uint8_t *)ctx->buf;
     size = ctx->nread;
 
-    printf("ctx->state:%d\n", ctx->state);
-    printf("read %zd bytes\n", size);
+#if RPS_DEBUG_OPEN
     int i;
+    log_verb("read %zd bytes\n", size);
     for (i=0; i<size; i++) {
-        printf("%x ", data[i]);
+        log_verb("\t%x", data[i]);
     }
-    printf ("\n");
+#endif
 
 
 
@@ -191,7 +191,7 @@ s5_server_do_next(struct context *ctx) {
         case c_auth:
             new_state = s5_do_auth(data, size);
             break;
-        case c_request:
+        case c_requests:
             new_state = s5_do_request(data, size);
             break;
         default:
