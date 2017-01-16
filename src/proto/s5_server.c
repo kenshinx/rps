@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <uv.h>
 
-#define SOCKS5_VERSION  5
 
 
 static s5_err_t 
@@ -107,12 +106,12 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
     rps_status_t status;
 
     req = (struct s5_method_request *)data;
-    if (req->version != SOCKS5_VERSION) {
+    if (req->ver != SOCKS5_VERSION) {
         log_error("s5 handshake error: bad protocol version.");
         return c_kill;
     }
     
-    resp.version = req->version;
+    resp.ver = req->ver;
 
     s = ctx->sess->server;
     
@@ -148,8 +147,30 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
 }
 
 static uint16_t
-s5_do_auth(uint8_t *data, ssize_t size) {
+s5_do_auth(struct context *ctx, uint8_t *data, ssize_t size) {
+    uint16_t *new_state;
+    struct s5_auth_request *req;
 
+    req = (struct s5_auth_request *)data;
+    if (req->ver != SOCKS5_AUTH_PASSWD_VERSION) {
+        log_error("s5 handshake error: bad password auth version.");
+        return c_kill;
+    } 
+
+    /* Reset the req struct memory layout */
+    req->plen = req->uname[req->ulen];
+    req->uname[req->ulen] = '\0';
+    memcpy(req->passwd, &req->uname[req->ulen+1], req->plen);
+    req->passwd[req->plen] = '\0';
+
+    ASSERT(strlen(req->uname) == req->ulen);
+    ASSERT(strlen(req->passwd) == req->plen);
+
+    printf("uname:%s, plen:%d, passwd:%s\n", req->uname, req->plen, req->passwd);
+    
+    
+    
+    
 }
 
 static uint16_t
@@ -176,9 +197,9 @@ s5_server_do_next(struct context *ctx) {
 
 #if RPS_DEBUG_OPEN
     int i;
-    log_verb("read %zd bytes\n", size);
+    log_verb("read %zd bytes: ", size);
     for (i=0; i<size; i++) {
-        log_verb("\t%x", data[i]);
+        log_verb("\t%x ", data[i]);
     }
 #endif
 
@@ -189,7 +210,7 @@ s5_server_do_next(struct context *ctx) {
             new_state = s5_do_handshake(ctx, data, size);
             break;
         case c_auth:
-            new_state = s5_do_auth(data, size);
+            new_state = s5_do_auth(ctx, data, size);
             break;
         case c_requests:
             new_state = s5_do_request(data, size);

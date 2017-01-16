@@ -304,7 +304,7 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
 
 #if RPS_DEBUG_OPEN
     int i;
-    log_verb("write %zd bytes\n", len);
+    log_verb("write %zd bytes", len);
     for (i=0; i<len; i++) {
         log_verb("\t%x", buf.base[i]);
     }

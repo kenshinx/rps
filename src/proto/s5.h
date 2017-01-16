@@ -96,17 +96,28 @@ s5_strerr(s5_err_t err) {
 	return "Unknown error.";
 }
 
+#define SOCKS5_VERSION  5
+#define SOCKS5_AUTH_PASSWD_VERSION 1
+
 #pragma pack(push,1)
 
 struct s5_method_request {
-    uint8_t version;
+    uint8_t ver;
     uint8_t nmethods;
     uint8_t methods[255];
 };
 
 struct s5_method_response {
-    uint8_t version;
+    uint8_t ver;
     uint8_t method;
+};
+
+struct s5_auth_request {
+    uint8_t ver;
+    uint8_t ulen;
+    uint8_t uname[255];
+    uint8_t plen;
+    uint8_t passwd[255];
 };
 
 
