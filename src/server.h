@@ -30,9 +30,8 @@ struct server {
 rps_status_t server_init(struct server *s, struct config_server *cs);
 void server_deinit(struct server *s);
 void server_run(struct server *s);
+// void server_stop(struct server *);
 
-/*
- * server_stop
- */
+rps_status_t server_write(struct context *ctx, const void *data, size_t len);
 
 #endif

@@ -257,6 +257,33 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 	server_do_next(ctx);
 }
 
+static void
+server_on_write_done(uv_write_t *req, int status) {
+
+}
+
+rps_status_t
+server_write(rps_ctx_t *ctx, const void *data, size_t len) {
+    int err;
+    uv_buf_t buf;
+    
+    buf.base = (char *)data;
+    buf.len = len;
+
+    err = uv_write(&ctx->write_req, 
+             &ctx->handle.stream, 
+             &buf, 
+             1, 
+             server_on_write_done);
+
+    if (err) {
+        UV_SHOW_ERROR(err, "write");
+        return RPS_ERROR;
+    }
+    
+    return RPS_OK;
+}
+
 
 static void 
 server_on_timer_expire(uv_timer_t *handle) {

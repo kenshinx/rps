@@ -104,6 +104,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
     struct server *s;
     struct s5_method_request *req;
     struct s5_method_response resp;
+    rps_status_t status;
 
     req = (struct s5_method_request *)data;
     if (req->version != SOCKS5_VERSION) {
@@ -138,8 +139,12 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
             break;
     }
 
-    return new_state;
+    status = server_write(ctx, &resp, sizeof(resp));
+    if (status != RPS_OK) {
+        new_state = c_kill;
+    }
 
+    return new_state;
 }
 
 static uint16_t
