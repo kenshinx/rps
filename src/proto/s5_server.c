@@ -22,8 +22,6 @@ s5_parse(s5_handle_t *handle, uint8_t **data, ssize_t *size) {
     n = *size; 
     p = *data;
 
-    int x = 0;
-
     while(i < n) {
         c = p[i];
         i++;
@@ -98,7 +96,7 @@ s5_select_auth(struct s5_method_request *req) {
 }
 
 static uint16_t
-s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
+s5_do_handshake(struct context *ctx, uint8_t *data) {
     uint16_t new_state;
     struct server *s;
     struct s5_method_request *req;
@@ -110,7 +108,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
         log_error("s5 handshake error: bad protocol version.");
         return c_kill;
     }
-    
+
     resp.ver = req->ver;
 
     s = ctx->sess->server;
@@ -151,8 +149,8 @@ s5_do_handshake(struct context *ctx, uint8_t *data, ssize_t size) {
 }
 
 static uint16_t
-s5_do_auth(struct context *ctx, uint8_t *data, ssize_t size) {
-    uint16_t *new_state;
+s5_do_auth(struct context *ctx, uint8_t *data) {
+    uint16_t new_state;
     struct server *s;
     struct s5_auth_request *req;
     struct s5_auth_response resp;
@@ -170,14 +168,14 @@ s5_do_auth(struct context *ctx, uint8_t *data, ssize_t size) {
     memcpy(req->passwd, &req->uname[req->ulen+1], req->plen);
     req->passwd[req->plen] = '\0';
 
-    ASSERT(strlen(req->uname) == req->ulen);
-    ASSERT(strlen(req->passwd) == req->plen);
+    ASSERT(strlen((const char *)req->uname) == req->ulen);
+    ASSERT(strlen((const char *)req->passwd) == req->plen);
 
     s = ctx->sess->server;
 
     resp.ver = SOCKS5_AUTH_PASSWD_VERSION;
-    if (strcmp(s->cfg->username.data, req->uname) == 0 && 
-            strcmp(s->cfg->password.data, req->passwd) == 0) {
+    if (rps_strcmp(s->cfg->username.data, req->uname) == 0 && 
+        rps_strcmp(s->cfg->password.data, req->passwd) == 0) {
         resp.status = s5_auth_allow;
         new_state = c_requests;
     } else {
@@ -202,8 +200,8 @@ s5_do_auth(struct context *ctx, uint8_t *data, ssize_t size) {
 }
 
 static uint16_t
-s5_do_request(uint8_t *data, ssize_t size) {
-    uint16_t *new_state;
+s5_do_request(struct context *ctx, uint8_t *data) {
+    uint16_t new_state;
     struct s5_request *req;
 
     req = (struct s5_request *)data;
@@ -263,16 +261,17 @@ s5_server_do_next(struct context *ctx) {
 
     switch (ctx->state) {
         case c_handshake:
-            new_state = s5_do_handshake(ctx, data, size);
+            new_state = s5_do_handshake(ctx, data);
             break;
         case c_auth:
-            new_state = s5_do_auth(ctx, data, size);
+            new_state = s5_do_auth(ctx, data);
             break;
         case c_requests:
-            new_state = s5_do_request(data, size);
+            new_state = s5_do_request(ctx, data);
             break;
         default:
             NOT_REACHED();
+			new_state = c_kill;
     }
     
     ctx->state = new_state;

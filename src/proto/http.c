@@ -15,7 +15,7 @@ http_server_do_next(struct context *ctx) {
     data = ctx->buf;
     size = ctx->nread;
 
-    printf("http read %d bytes: %s\n", size, data);
+    printf("http read %zd bytes: %s\n", size, data);
 }
 
 void 
