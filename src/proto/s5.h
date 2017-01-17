@@ -101,17 +101,38 @@ s5_strerr(s5_err_t err) {
 
 #pragma pack(push,1)
 
+/*
+ *  +----+----------+----------+
+ *  |VER | NMETHODS | METHODS  |
+ *  +----+----------+----------+
+ *  | 1  |    1     | 1 to 255 |
+ *  +----+----------+----------+
+ */
 struct s5_method_request {
     uint8_t ver;
     uint8_t nmethods;
     uint8_t methods[255];
 };
 
+/*
+ *  +----+--------+
+ *   |VER | METHOD |
+ *   +----+--------+
+ *   | 1  |   1    |
+ *   +----+--------+
+ */
 struct s5_method_response {
     uint8_t ver;
     uint8_t method;
 };
 
+/*
+ *  +----+------+----------+------+----------+
+ *  |VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+ *  +----+------+----------+------+----------+
+ *  | 1  |  1   | 1 to 255 |  1   | 1 to 255 |
+ *  +----+------+----------+------+----------+
+ */
 struct s5_auth_request {
     uint8_t ver;
     uint8_t ulen;
@@ -120,11 +141,25 @@ struct s5_auth_request {
     uint8_t passwd[255];
 };
 
+/*
+ *  +----+--------+
+ *  |VER | STATUS |
+ *  +----+--------+
+ *  | 1  |   1    |
+ *  +----+--------+
+ */
 struct s5_auth_response {
     uint8_t ver;
     uint8_t status;
 };
 
+/*
+ *  +----+-----+-------+------+----------+----------+
+ *  |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+ *  +----+-----+-------+------+----------+----------+
+ *  | 1  |  1  | X'00' |  1   | Variable |    2     |
+ *  +----+-----+-------+------+----------+----------+
+ */
 struct s5_request {
     uint8_t ver;
     uint8_t cmd;
