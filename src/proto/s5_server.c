@@ -204,6 +204,7 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     uint16_t new_state;
     uint8_t len;
     struct s5_request *req;
+    int err;
     rps_addr_t  remote;
 
     req = (struct s5_request *)data;
@@ -223,6 +224,7 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     switch (req->atyp) {
         case s5_atyp_ipv4:
 			memcpy(req->dport, &req->daddr[4], 2);
+
             memset(&remote.addr.in, 0, sizeof(remote.addr.in));
             remote.addr.in.sin_family = AF_INET;
             memcpy(&remote.addr.in.sin_port, req->dport, 2);
@@ -231,22 +233,43 @@ s5_do_request(struct context *ctx, uint8_t *data) {
             remote.family = AF_INET;
             remote.addrlen = sizeof(remote.addr.in);
 			break;
+
 		case s5_atyp_ipv6:
 			memcpy(req->dport, &req->daddr[16], 2);
+
+            memset(&remote.addr.in6, 0, sizeof(remote.addr.in6));
+            remote.addr.in6.sin6_family = AF_INET6;
+            memcpy(&remote.addr.in6.sin6_port, req->dport, 2);
+            memcpy(&remote.addr.in6.sin6_addr, req->daddr, 16);
+            remote.family = AF_INET6;
+            remote.addrlen = sizeof(remote.addr.in6);
 			break;
+
 		case s5_atyp_domain:
 			len = strlen(req->daddr);
 			memcpy(req->dport, &req->daddr[len], 2);	
+
+            memset(&remote.addr.un, 0, sizeof(remote.addr.un));
+            remote.addr.un.sun_family = AF_UNIX;
+            memcpy(&remote.addr.un.sun_path, req->daddr, len-2); //last 2 byte is dport length.
+            remote.addr.un.sun_path[len-2] = '\0';
+            remote.family = AF_UNIX;
+            remote.addrlen = sizeof(remote.addr.un);
 			break;
+
+        default:
+            /* Address type not supported */
+            return c_kill;
     }
 
-    char remoteip[INET_ADDRSTRLEN];
+    char remoteip[MAX_INET_ADDRSTRLEN];
 
-    rps_unresolve_addr(&remote, remoteip);
+    err = rps_unresolve_addr(&remote, remoteip);
+    if (err < 0) {
+        return c_kill;
+    }
     
-    printf("remote %s:%d\n", remoteip, rps_unresolve_port(&remote));
-
-
+    log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(&remote));
 
 }
 
