@@ -8,74 +8,6 @@
 #include <stdio.h>
 #include <uv.h>
 
-
-
-static s5_err_t 
-s5_parse(s5_handle_t *handle, uint8_t **data, ssize_t *size) {
-    s5_err_t err;
-    uint8_t *p;
-    uint8_t c;
-    size_t i;
-    size_t n;
-
-    i = 0;
-    n = *size; 
-    p = *data;
-
-    while(i < n) {
-        c = p[i];
-        i++;
-
-        printf("read: %x\n", c);
-        
-        switch (handle->state) {
-            case s5_version:
-                if (c != SOCKS5_VERSION) {
-                    err = s5_bad_version;
-                    goto out;
-         
-                }
-                handle->version = c;
-                handle->state = s5_nmethods;
-                break;
-
-            case s5_nmethods:
-                handle->nmethods = c;
-                handle->__n = 0;
-                handle->state = s5_methods;
-                break;
-
-            case s5_methods:
-                if (handle->__n < handle->nmethods) {
-                    switch (c) {
-                        case 0:
-                            handle->methods[handle->__n] = s5_auth_none;
-                            break;
-                        case 1:
-                            handle->methods[handle->__n] = s5_auth_gssapi;
-                            break;
-                        case 2:
-                            handle->methods[handle->__n]= s5_auth_passwd;
-                            break;
-                        default:
-                            /* Unsupport auth method */
-                            break;
-                    }
-                    handle->__n++;
-                }
-                break;
-        }
-    }
-
-    err = s5_ok;
-
-out:
-    *data = p + i;
-    *size = n - i;  
-    return err;  
-    
-}
-
 static uint8_t
 s5_select_auth(struct s5_method_request *req) {
     int i;
@@ -265,7 +197,7 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(&remote));
 }
 
-static s5_state_t
+static uint16_t
 s5_reply() {
 
 }
@@ -275,9 +207,6 @@ s5_server_do_next(struct context *ctx) {
     uint8_t    *data;
     ssize_t size;
     uint16_t new_state; 
-    s5_handle_t *handle;
-
-    handle = &ctx->proxy_handle.s5;
 
     data = (uint8_t *)ctx->buf;
     size = ctx->nread;

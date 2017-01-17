@@ -31,8 +31,6 @@ typedef struct session rps_sess_t;
 #include "log.h"
 #include "array.h"
 #include "server.h"
-#include "proto/s5.h"
-#include "proto/http.h"
 
 #include <uv.h>
 
@@ -68,14 +66,6 @@ struct context {
         uv_stream_t 	stream;
         uv_tcp_t    	tcp;
     } handle;
-
-	union {
-		s5_handle_t		s5;
-		http_handle_t	http;
-#ifdef SOCKS4_PROXY_SUPPORT
-		s4_handle_t		s4;
-#endif
-	} proxy_handle;
 
 	rps_next_t			do_next;
 	

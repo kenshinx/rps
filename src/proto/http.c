@@ -8,9 +8,6 @@ void
 http_server_do_next(struct context *ctx) {
     char    *data;
     ssize_t size;
-    http_handle_t   *handle;
-
-    handle = &ctx->proxy_handle.http;
 
     data = ctx->buf;
     size = ctx->nread;

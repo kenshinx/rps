@@ -10,12 +10,12 @@ s5_client_do_next(struct context *ctx) {
 }
 
 uint16_t
-s5_client_handshake(s5_handle_t *handle) {
+s5_client_handshake() {
     
 }
 
 uint16_t
-s5_client_auth(s5_handle_t *handle) {
+s5_client_auth() {
 
 }
 

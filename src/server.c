@@ -93,7 +93,6 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
     ctx->timer.data = ctx;
 
 	if (ctx->proxy == SOCKS5) {
-		s5_handle_init(&ctx->proxy_handle.s5);
 		switch (ctx->flag) {
 			case c_request:
 				ctx->do_next = s5_server_do_next;
@@ -105,7 +104,6 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
 				NOT_REACHED();
 		}
 	} else if (ctx->proxy == HTTP) {
-		http_handle_init(&ctx->proxy_handle.http);
 		switch (ctx->flag) {
 			case c_request:
 				ctx->do_next = http_server_do_next;
@@ -225,22 +223,6 @@ server_do_next(rps_ctx_t *ctx) {
 			ctx->do_next(ctx);
 	}
 
-	/*
-	switch (ctx->state) {
-		case c_handshake:
-			new_state = ctx->do_handshake(ctx->proxy_handle.s5_handle);	
-			break;
-		case c_auth:
-			new_state = ctx->do_auth(ctx->proxy_handle.s5_handle);	
-			break;
-		case c_established:
-			break;
-		default:
-			NOT_REACHED();
-	}
-
-	ctx->state = new_state;
-	*/
 }
 
 static void

@@ -210,26 +210,6 @@ s5_in4_response_init(struct s5_in4_response *resp) {
 }
 
 typedef enum {
-	s5_version,
-	s5_nmethods,
-	s5_methods,
-	s5_auth_pw_version,
-	s5_auth_pw_userlen,
-	s5_auth_pw_username,
-	s5_auth_pw_passlen,
-	s5_auth_pw_password,
-	s5_req_version,
-	s5_req_cmd,
-	s5_req_reserved,
-	s5_req_atyp,
-	s5_req_atyp_host,
-	s5_req_daddr,
-	s5_req_dport0,
-	s5_req_dport1,
-	s5_dead
-} s5_state_t;
-
-typedef enum {
     s5_auth_none =          0x00,
     s5_auth_gssapi =        0x01,
     s5_auth_passwd =        0x02,
@@ -253,26 +233,7 @@ typedef enum {
     s5_cmd_udp_assoc   = 0x03
 } s5_cmd;
 
-
-typedef struct {
-
-	uint32_t	__n;
-
-	uint8_t		version;
-	uint8_t		state;
-	uint8_t		nmethods;
-	uint8_t		methods[255];
-	uint8_t		cmd;
-
-} s5_handle_t;
-
 #include "core.h"
-
-static inline void
-s5_handle_init(s5_handle_t *handle) {
-	memset(handle, 0, sizeof(*handle));
-	handle->state = s5_version;
-}
 
 void s5_server_do_next(struct context *ctx);
 void s5_client_do_next(struct context *ctx);
