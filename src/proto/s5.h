@@ -1,6 +1,7 @@
 #ifndef _RPS_S5_H
 #define _RPS_S5_H
 
+#include "core.h"
 
 #include <uv.h>
 
@@ -232,8 +233,6 @@ typedef enum {
     s5_cmd_tcp_bind    = 0x02,
     s5_cmd_udp_assoc   = 0x03
 } s5_cmd;
-
-#include "core.h"
 
 void s5_server_do_next(struct context *ctx);
 void s5_client_do_next(struct context *ctx);
