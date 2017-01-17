@@ -162,25 +162,25 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     }
 
     remote = ctx->sess->remote;
-	
+    
     switch (req->atyp) {
         case s5_atyp_ipv4:
-			memcpy(req->dport, &req->daddr[4], 2);
+            memcpy(req->dport, &req->daddr[4], 2);
             rps_addr_in4(&remote, req->daddr, 4, req->dport);
-			break;
+            break;
 
-		case s5_atyp_ipv6:
-			memcpy(req->dport, &req->daddr[16], 2);
+        case s5_atyp_ipv6:
+            memcpy(req->dport, &req->daddr[16], 2);
             rps_addr_in6(&remote, req->daddr, 16, req->dport);
             break;
 
-		case s5_atyp_domain:
+        case s5_atyp_domain:
             /* First byte is hostname length */
             len = req->daddr[0]; 
             /* Last 2 byte is dport */
-			memcpy(req->dport, &req->daddr[len+1], 2);	
+            memcpy(req->dport, &req->daddr[len+1], 2);  
             rps_addr_name(&remote, &req->daddr[1], len, req->dport);
-			break;
+            break;
 
         default:
             /* Address type not supported */
@@ -231,7 +231,7 @@ s5_server_do_next(struct context *ctx) {
             break;
         default:
             NOT_REACHED();
-			new_state = c_kill;
+            new_state = c_kill;
     }
     
     ctx->state = new_state;

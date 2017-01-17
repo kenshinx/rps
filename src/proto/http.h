@@ -19,7 +19,7 @@ typedef struct {
 
 static inline void
 http_handle_init(http_handle_t *handle) {
-	memset(handle, 0, sizeof(*handle));
+    memset(handle, 0, sizeof(*handle));
 }
 
 void http_server_do_next(struct context *ctx);

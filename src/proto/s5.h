@@ -69,7 +69,7 @@
  *                    |                    |                    |                 |
  */
 
-#define S5_ERR_MAP(V)                                                       	\
+#define S5_ERR_MAP(V)                                                           \
     V(-1, s5_bad_version, "Bad protocol version.")                              \
     V(-2, s5_bad_cmd, "Bad protocol command.")                                  \
     V(-3, s5_bad_atyp, "Bad address type.")                                     \
@@ -89,12 +89,12 @@ typedef enum {
 static inline const char * 
 s5_strerr(s5_err_t err) {
 #define S5_ERR_GEN(_, name, errmsg) case name: return errmsg;
-	switch (err) {
-		S5_ERR_MAP(S5_ERR_GEN)
-		default: ;
-	}
+    switch (err) {
+        S5_ERR_MAP(S5_ERR_GEN)
+        default: ;
+    }
 #undef S5_ERR_GEN
-	return "Unknown error.";
+    return "Unknown error.";
 }
 
 #define SOCKS5_VERSION  5

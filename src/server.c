@@ -76,7 +76,7 @@ server_sess_free(rps_sess_t *sess) {
     if (sess->forward != NULL) {
         ASSERT(!(sess->forward->state &  c_connect));
     }
-	*/
+    */
     rps_free(sess);
 }
 
@@ -86,74 +86,74 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
     ctx->flag = flag;
     ctx->state = c_init;
     ctx->proxy = proxy;
-	ctx->nread = 0;
+    ctx->nread = 0;
     ctx->last_status = 0;
     ctx->handle.handle.data  = ctx;
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
 
-	if (ctx->proxy == SOCKS5) {
-		switch (ctx->flag) {
-			case c_request:
-				ctx->do_next = s5_server_do_next;
-				break;
-			case c_forward:
-				ctx->do_next = s5_client_do_next;
-				break;
-			default:
-				NOT_REACHED();
-		}
-	} else if (ctx->proxy == HTTP) {
-		switch (ctx->flag) {
-			case c_request:
-				ctx->do_next = http_server_do_next;
-				break;
-			case c_forward:
-				ctx->do_next = http_client_do_next;
-				break;
-			default:
-				NOT_REACHED();
-		}
-	} else {
-		NOT_REACHED();
-	}
-	
+    if (ctx->proxy == SOCKS5) {
+        switch (ctx->flag) {
+            case c_request:
+                ctx->do_next = s5_server_do_next;
+                break;
+            case c_forward:
+                ctx->do_next = s5_client_do_next;
+                break;
+            default:
+                NOT_REACHED();
+        }
+    } else if (ctx->proxy == HTTP) {
+        switch (ctx->flag) {
+            case c_request:
+                ctx->do_next = http_server_do_next;
+                break;
+            case c_forward:
+                ctx->do_next = http_client_do_next;
+                break;
+            default:
+                NOT_REACHED();
+        }
+    } else {
+        NOT_REACHED();
+    }
+    
 /*
-	if (ctx->flag == c_request) {
-		switch (ctx->proxy) {
-			case SOCKS5:
-				ctx->do_next = s5_server_do_next;
-				break;
-			case HTTP:
-				ctx->do_next = http_server_do_next;
-				break;
-			#ifdef SOCKS4_PROXY_SUPPORT
-			case SOCKS4:
-				ctx->do_next = s4_server_do_next;
-			   break;
-			#endif
-			default:
-			   NOT_REACHED();
-		}
-	} else if (ctx->flag == c_forward) {
-		switch (ctx->proxy) {
-			case SOCKS5:
-				ctx->do_next = s5_client_do_next;
-				break;
-			case HTTP:
-				ctx->do_next = http_client_do_next;
-				break;
-			#ifdef SOCKS4_PROXY_SUPPORT
-			case SOCKS4:
-				ctx->do_next = s4_client_do_next;
-			   break;
-			#endif
-			default:
-			   NOT_REACHED();
-		}
-	} else {
-		NOT_REACHED();
-	}
+    if (ctx->flag == c_request) {
+        switch (ctx->proxy) {
+            case SOCKS5:
+                ctx->do_next = s5_server_do_next;
+                break;
+            case HTTP:
+                ctx->do_next = http_server_do_next;
+                break;
+            #ifdef SOCKS4_PROXY_SUPPORT
+            case SOCKS4:
+                ctx->do_next = s4_server_do_next;
+               break;
+            #endif
+            default:
+               NOT_REACHED();
+        }
+    } else if (ctx->flag == c_forward) {
+        switch (ctx->proxy) {
+            case SOCKS5:
+                ctx->do_next = s5_client_do_next;
+                break;
+            case HTTP:
+                ctx->do_next = http_client_do_next;
+                break;
+            #ifdef SOCKS4_PROXY_SUPPORT
+            case SOCKS4:
+                ctx->do_next = s4_client_do_next;
+               break;
+            #endif
+            default:
+               NOT_REACHED();
+        }
+    } else {
+        NOT_REACHED();
+    }
 */
 }
 
@@ -198,7 +198,7 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 
     ctx = handle->data;
 
-	buf->base = ctx->buf;
+    buf->base = ctx->buf;
     buf->len = sizeof(ctx->buf);
 
     return buf;
@@ -211,17 +211,17 @@ server_do_next(rps_ctx_t *ctx) {
         ctx->state = c_kill;
     }
 
-	switch (ctx->state) {
-		case c_established:
-			/* rps connect has be established */
-			break;
+    switch (ctx->state) {
+        case c_established:
+            /* rps connect has be established */
+            break;
         case c_kill:
             break;
         case c_dead:
             break;
-		default:
-			ctx->do_next(ctx);
-	}
+        default:
+            ctx->do_next(ctx);
+    }
 
 }
 
@@ -231,7 +231,7 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     
     ctx = stream->data;
     ASSERT(&ctx->handle.stream == stream);
-	ASSERT(ctx->buf == buf->base);
+    ASSERT(ctx->buf == buf->base);
 
     if (nread <0 ) {
         if (nread != UV_EOF) {
@@ -244,10 +244,10 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         return;
 
     }
-	
-	ctx->nread = nread;
+    
+    ctx->nread = nread;
 
-	server_do_next(ctx);
+    server_do_next(ctx);
 }
 
 static void
@@ -302,11 +302,11 @@ server_on_timer_expire(uv_timer_t *handle) {
 
     ctx = handle->data;
 
-	if (ctx->flag == c_request) {
-		log_debug("Request from %s timeout", ctx->peername);
-	} else {
-		log_debug("Forward to %s timeout", ctx->peername);
-	}
+    if (ctx->flag == c_request) {
+        log_debug("Request from %s timeout", ctx->peername);
+    } else {
+        log_debug("Forward to %s timeout", ctx->peername);
+    }
 
     server_ctx_close(ctx);
     server_sess_free(ctx->sess);
@@ -327,7 +327,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
     rps_sess_t *sess;
     rps_ctx_t *request; /* client -> rps */
     int len;
-	rps_status_t status;
+    rps_status_t status;
 
     if (err) {
         UV_SHOW_ERROR(err, "on new connect");
@@ -388,7 +388,7 @@ server_on_new_connect(uv_stream_t *us, int err) {
 
     log_debug("Accept request from %s", request->peername);
 
-	request->state = c_handshake;
+    request->state = c_handshake;
 
     /*
      * Beigin receive data
