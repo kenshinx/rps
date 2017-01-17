@@ -203,6 +203,34 @@ s5_do_auth(struct context *ctx, uint8_t *data, ssize_t size) {
 
 static uint16_t
 s5_do_request(uint8_t *data, ssize_t size) {
+    uint16_t *new_state;
+    struct s5_request *req;
+
+    req = (struct s5_request *)data;
+    if (req->ver != SOCKS5_VERSION) {
+        log_error("s5 request error: bad protocol version.");
+        return c_kill;
+    }
+
+    /* tcp bind and udp association are not be supported */
+    if (req->cmd != s5_cmd_tcp_connect) {
+        log_error("s5 request error: only support tcp connect verify.");
+        return c_kill;
+    }
+
+    /*
+    switch (req->atyp) {
+        case s5_atyp_ipv4:
+            
+    }
+    */
+
+    
+
+    
+
+    
+
 
 }
 

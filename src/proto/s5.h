@@ -125,6 +125,15 @@ struct s5_auth_response {
     uint8_t status;
 };
 
+struct s5_request {
+    uint8_t ver;
+    uint8_t cmd;
+    uint8_t rsv;
+    uint8_t atyp;
+    uint8_t daddr[16];
+    uint8_t dport[2];
+};
+
 
 #pragma pack(pop)
 
@@ -149,10 +158,10 @@ typedef enum {
 } s5_state_t;
 
 typedef enum {
-    s5_auth_none =   0x00,
-    s5_auth_gssapi = 0x01,
-    s5_auth_passwd = 0x02,
-    s5_auth_unacceptable = 0xFF
+    s5_auth_none =          0x00,
+    s5_auth_gssapi =        0x01,
+    s5_auth_passwd =        0x02,
+    s5_auth_unacceptable =  0xFF
 } s5_auth_method;
 
 typedef enum {
@@ -161,15 +170,15 @@ typedef enum {
 } s5_auth_result;
 
 typedef enum {
-    s5_atyp_ipv4,
-    s5_atyp_ipv6,
-    s5_atyp_host
+    s5_atyp_ipv4 =   0x01,
+    s5_atyp_domain = 0x03,
+    s5_atyp_ipv6 =   0x04
 } s5_atyp;
 
 typedef enum {
-    s5_cmd_tcp_connect,
-    s5_cmd_tcp_bind,
-    s5_cmd_udp_assoc
+    s5_cmd_tcp_connect = 0x01,
+    s5_cmd_tcp_bind    = 0x02,
+    s5_cmd_udp_assoc   = 0x03
 } s5_cmd;
 
 
