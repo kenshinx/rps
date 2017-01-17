@@ -109,6 +109,8 @@ s5_do_handshake(struct context *ctx, uint8_t *data) {
         return c_kill;
     }
 
+    memset(&resp, 0, sizeof(struct s5_method_response));
+
     resp.ver = req->ver;
 
     s = ctx->sess->server;
@@ -173,6 +175,8 @@ s5_do_auth(struct context *ctx, uint8_t *data) {
 
     s = ctx->sess->server;
 
+    memset(&resp, 0, sizeof(struct s5_auth_response));
+
     resp.ver = SOCKS5_AUTH_PASSWD_VERSION;
     if (rps_strcmp(s->cfg->username.data, req->uname) == 0 && 
         rps_strcmp(s->cfg->password.data, req->passwd) == 0) {
@@ -204,6 +208,8 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     uint16_t new_state;
     uint8_t len;
     struct s5_request *req;
+    struct s5_in4_response resp;
+    char remoteip[MAX_INET_ADDRSTRLEN];
     int err;
     rps_addr_t  remote;
 
@@ -213,8 +219,12 @@ s5_do_request(struct context *ctx, uint8_t *data) {
         return c_kill;
     }
 
-    /* tcp bind and udp association are not be supported */
+    s5_in4_response_init(&resp);
+
     if (req->cmd != s5_cmd_tcp_connect) {
+        /* Command not supported */
+        resp.rep = 0x07;
+        server_write(ctx, &resp, sizeof(struct s5_in4_response));
         log_error("s5 request error: only support tcp connect verify.");
         return c_kill;
     }
@@ -242,10 +252,10 @@ s5_do_request(struct context *ctx, uint8_t *data) {
 
         default:
             /* Address type not supported */
+            resp.rep = 0x08;
+            server_write(ctx, &resp, sizeof(struct s5_in4_response));
             return c_kill;
     }
-
-    char remoteip[MAX_INET_ADDRSTRLEN];
 
     err = rps_unresolve_addr(&remote, remoteip);
     if (err < 0) {
@@ -253,7 +263,6 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     }
     
     log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(&remote));
-
 }
 
 static s5_state_t

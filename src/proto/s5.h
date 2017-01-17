@@ -171,8 +171,43 @@ struct s5_request {
     uint8_t dport[2];
 };
 
+/*
+ * +----+-----+-------+------+----------+----------+
+ *  |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
+ *  +----+-----+-------+------+----------+----------+
+ *  | 1  |  1  | X'00' |  1   | Variable |    2     |
+ *  +----+-----+-------+------+----------+----------+
+ */
 
+#define S5_RESPONSE_FIELDS  \
+    uint8_t ver;            \
+    uint8_t rep;            \
+    uint8_t rsv;            \
+    uint8_t atyp;
+
+struct s5_in4_response {
+    S5_RESPONSE_FIELDS
+    uint8_t baddr[4];
+    uint8_t bport[2];
+};
+
+struct s5_in6_response {
+    S5_RESPONSE_FIELDS
+    uint8_t baddr[16];
+    uint8_t bport[2];
+};
+
+#undef S5_RESPONSE_FIELDS
 #pragma pack(pop)
+
+
+static inline void
+s5_in4_response_init(struct s5_in4_response *resp) {
+    memset(resp, 0, sizeof(struct s5_in4_response));
+    resp->ver = 0x05;
+    resp->rsv = 0x00;
+    resp->atyp = 0x01;
+}
 
 typedef enum {
 	s5_version,
