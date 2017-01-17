@@ -224,37 +224,20 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     switch (req->atyp) {
         case s5_atyp_ipv4:
 			memcpy(req->dport, &req->daddr[4], 2);
-
-            memset(&remote.addr.in, 0, sizeof(remote.addr.in));
-            remote.addr.in.sin_family = AF_INET;
-            memcpy(&remote.addr.in.sin_port, req->dport, 2);
-            /* sizeof(remote.addr.in.sin_addr) == 4 */
-            memcpy(&remote.addr.in.sin_addr, req->daddr, 4);
-            remote.family = AF_INET;
-            remote.addrlen = sizeof(remote.addr.in);
+            rps_addr_in4(&remote, req->daddr, 4, req->dport);
 			break;
 
 		case s5_atyp_ipv6:
 			memcpy(req->dport, &req->daddr[16], 2);
-
-            memset(&remote.addr.in6, 0, sizeof(remote.addr.in6));
-            remote.addr.in6.sin6_family = AF_INET6;
-            memcpy(&remote.addr.in6.sin6_port, req->dport, 2);
-            memcpy(&remote.addr.in6.sin6_addr, req->daddr, 16);
-            remote.family = AF_INET6;
-            remote.addrlen = sizeof(remote.addr.in6);
-			break;
+            rps_addr_in6(&remote, req->daddr, 16, req->dport);
+            break;
 
 		case s5_atyp_domain:
-			len = strlen(req->daddr);
-			memcpy(req->dport, &req->daddr[len], 2);	
-
-            memset(&remote.addr.un, 0, sizeof(remote.addr.un));
-            remote.addr.un.sun_family = AF_UNIX;
-            memcpy(&remote.addr.un.sun_path, req->daddr, len-2); //last 2 byte is dport length.
-            remote.addr.un.sun_path[len-2] = '\0';
-            remote.family = AF_UNIX;
-            remote.addrlen = sizeof(remote.addr.un);
+            /* First byte is hostname length */
+            len = req->daddr[0]; 
+            /* Last 2 byte is dport */
+			memcpy(req->dport, &req->daddr[len+1], 2);	
+            rps_addr_name(&remote, &req->daddr[1], len, req->dport);
 			break;
 
         default:

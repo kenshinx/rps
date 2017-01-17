@@ -51,19 +51,24 @@ void _rps_assert(const char *cond, const char *file, int line);
     }                                                               \
 } while(0)
 
-#ifdef MAKE_IPV6_ENABLE
 #define MAX_INET_ADDRSTRLEN INET6_ADDRSTRLEN
-#else
-#define MAX_INET_ADDRSTRLEN INET_ADDRSTRLEN
-#endif
+#define MAX_HOSTNAME_LEN 255
+#define AF_DOMAIN 60 /* AF_INET is 2, AF_INET6 is 30, so we get 60 */
+
+struct sockaddr_name {
+    uint16_t    family;
+    char        host[255];
+    uint16_t    port;
+};
 
 typedef struct sockinfo {
     uint16_t        family;
     unsigned int    addrlen;
     union {
-        struct sockaddr_in  in;
-        struct sockaddr_in6 in6;
-        struct sockaddr_un  un;
+        struct sockaddr_in      in;
+        struct sockaddr_in6     in6;
+        struct sockaddr_un      un;
+        struct sockaddr_name    name;
     } addr;
 } rps_addr_t;
 
@@ -83,6 +88,9 @@ rps_addrinfo(struct sockaddr *addr, struct sockinfo *info, unsigned int addrlen)
 int rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si); 
 int rps_unresolve_addr(rps_addr_t *addr, char *name);
 uint16_t rps_unresolve_port(rps_addr_t *addr);
+void rps_addr_in4(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
+void rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
+void rps_addr_inname(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
 
 #endif
 
