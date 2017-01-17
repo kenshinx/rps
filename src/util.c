@@ -139,3 +139,15 @@ rps_unresolve_addr(rps_addr_t *addr, char *name) {
     return 0;
 }
 
+uint16_t
+rps_unresolve_port(rps_addr_t *addr) {
+    if (addr->family == AF_INET) {
+        return ntohs(addr->addr.in.sin_port);
+    } else if (addr->family == AF_INET6) {
+        return ntohs(addr->addr.in6.sin6_port);
+    } else {
+        NOT_REACHED();
+        return -1;
+    }
+}
+

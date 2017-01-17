@@ -202,7 +202,9 @@ s5_do_auth(struct context *ctx, uint8_t *data) {
 static uint16_t
 s5_do_request(struct context *ctx, uint8_t *data) {
     uint16_t new_state;
+    uint8_t len;
     struct s5_request *req;
+    rps_addr_t  remote;
 
     req = (struct s5_request *)data;
     if (req->ver != SOCKS5_VERSION) {
@@ -216,18 +218,34 @@ s5_do_request(struct context *ctx, uint8_t *data) {
         return c_kill;
     }
 
-    /*
+    remote = ctx->sess->remote;
+	
     switch (req->atyp) {
         case s5_atyp_ipv4:
-            
+			memcpy(req->dport, &req->daddr[4], 2);
+            memset(&remote.addr.in, 0, sizeof(remote.addr.in));
+            remote.addr.in.sin_family = AF_INET;
+            memcpy(&remote.addr.in.sin_port, req->dport, 2);
+            /* sizeof(remote.addr.in.sin_addr) == 4 */
+            memcpy(&remote.addr.in.sin_addr, req->daddr, 4);
+            remote.family = AF_INET;
+            remote.addrlen = sizeof(remote.addr.in);
+			break;
+		case s5_atyp_ipv6:
+			memcpy(req->dport, &req->daddr[16], 2);
+			break;
+		case s5_atyp_domain:
+			len = strlen(req->daddr);
+			memcpy(req->dport, &req->daddr[len], 2);	
+			break;
     }
-    */
 
-    
+    char remoteip[INET_ADDRSTRLEN];
 
+    rps_unresolve_addr(&remote, remoteip);
     
+    printf("remote %s:%d\n", remoteip, rps_unresolve_port(&remote));
 
-    
 
 
 }
@@ -256,8 +274,6 @@ s5_server_do_next(struct context *ctx) {
         log_verb("\t%x ", data[i]);
     }
 #endif
-
-
 
     switch (ctx->state) {
         case c_handshake:

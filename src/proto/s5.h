@@ -99,6 +99,8 @@ s5_strerr(s5_err_t err) {
 #define SOCKS5_VERSION  5
 #define SOCKS5_AUTH_PASSWD_VERSION 1
 
+#define MAX_UNIXHOSTNAME_LEN   255
+
 #pragma pack(push,1)
 
 /*
@@ -165,7 +167,7 @@ struct s5_request {
     uint8_t cmd;
     uint8_t rsv;
     uint8_t atyp;
-    uint8_t daddr[16];
+    uint8_t daddr[MAX_UNIXHOSTNAME_LEN]; /* Max hostname length */
     uint8_t dport[2];
 };
 

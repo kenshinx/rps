@@ -6,6 +6,8 @@
 #include "uv.h"
 
 #include <stdlib.h>
+#include <sys/un.h>
+#include <sys/socket.h>
 
 #define CRLF    "\x0d\x0a"
 
@@ -61,6 +63,7 @@ typedef struct sockinfo {
     union {
         struct sockaddr_in  in;
         struct sockaddr_in6 in6;
+        struct sockaddr_un  un;
     } addr;
 } rps_addr_t;
 
@@ -79,6 +82,7 @@ rps_addrinfo(struct sockaddr *addr, struct sockinfo *info, unsigned int addrlen)
 
 int rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si); 
 int rps_unresolve_addr(rps_addr_t *addr, char *name);
+uint16_t rps_unresolve_port(rps_addr_t *addr);
 
 #endif
 
