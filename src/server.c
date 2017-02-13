@@ -427,7 +427,7 @@ server_run(struct server *s) {
         return;
     }
     
-    err = uv_listen((uv_stream_t*)&s->us, HTTP_DEFAULT_BACKLOG, server_on_new_connect);
+    err = uv_listen((uv_stream_t*)&s->us, TCP_BACKLOG, server_on_new_connect);
     if (err) {
         UV_SHOW_ERROR(err, "listen");
         return;

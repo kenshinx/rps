@@ -10,7 +10,7 @@
 
 #include <unistd.h>
 
-#define HTTP_DEFAULT_BACKLOG  65536
+#define TCP_BACKLOG  65536
 #define TCP_KEEPALIVE_DELAY 120
 
 #define REQUEST_CONTEXT_TIMEOUT 30000 // 30 seconds
