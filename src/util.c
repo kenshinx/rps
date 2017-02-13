@@ -159,7 +159,7 @@ void
 rps_addr_in4(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
     memset(&addr->addr.in, 0, sizeof(addr->addr.in));
     addr->addr.in.sin_family = AF_INET;
-    memcpy(&addr->addr.in.sin_port, port, 2);
+    addr->addr.in.sin_port = htons((uint16_t)*port);
     /* sizeof(remote.addr.in.sin_addr) == 4 */
     memcpy(&addr->addr.in.sin_addr, _addr, len);
     addr->family = AF_INET;
@@ -170,7 +170,7 @@ void
 rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
     memset(&addr->addr.in6, 0, sizeof(addr->addr.in6));
     addr->addr.in6.sin6_family = AF_INET6;
-    memcpy(&addr->addr.in6.sin6_port, port, 2);
+    addr->addr.in6.sin6_port = htons((uint16_t)*port);
     memcpy(&addr->addr.in6.sin6_addr, _addr, len);
     addr->family = AF_INET6;
     addr->addrlen = sizeof(addr->addr.in6);
@@ -180,7 +180,7 @@ void
 rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
     memset(&addr->addr.name, 0, sizeof(addr->addr.name));
     addr->addr.name.family = AF_DOMAIN;
-    memcpy(&addr->addr.name.port, port, 2);
+    addr->addr.name.port = htons((uint16_t)*port);
     memcpy(&addr->addr.name.host, _addr, len); 
     addr->addr.name.host[len] = '\0';
     addr->family = AF_DOMAIN;
