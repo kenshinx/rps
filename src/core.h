@@ -5,7 +5,7 @@
 #define RPS_ERROR   -1
 #define RPS_ENOMEM  -2
 
-#define	READ_BUF_LENGTH 2048 //2k
+#define	READ_BUF_SIZE 2048 //2k
 
 typedef int rps_status_t;
 
@@ -75,7 +75,7 @@ struct context {
 
     rps_proxy_t     	proxy;
 
-	char 				buf[READ_BUF_LENGTH];
+	char 				buf[READ_BUF_SIZE];
 	ssize_t				nread;
 
     char            	peername[MAX_INET_ADDRSTRLEN];
