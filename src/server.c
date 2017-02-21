@@ -276,6 +276,10 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     
     ctx->nread = nread;
 
+#ifdef RPS_DEBUG_OPEN
+    log_hex(LOG_VERBOSE, ctx->buf, ctx->nread, "read %zd bytes: ", ctx->nread);
+#endif
+
     server_do_next(ctx);
 }
 
@@ -305,6 +309,7 @@ server_on_write_done(uv_write_t *req, int err) {
         UV_SHOW_ERROR(err, "on write done");
         ctx->last_status = err;
         server_do_next(ctx);
+        return;
     }
     
     //server_do_next(ctx);
@@ -330,11 +335,7 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
     }
 
 #if RPS_DEBUG_OPEN
-    int i;
-    log_verb("write %zd bytes", len);
-    for (i=0; i<len; i++) {
-        log_verb("\t%x", buf.base[i]);
-    }
+    log_hex(LOG_VERBOSE, (char *)data, len, "write %zd bytes: ", len);
 #endif
 
     server_timer_reset(ctx);

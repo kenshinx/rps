@@ -35,6 +35,10 @@ static const char *LOG_LEVEL_TEXT[] = {
     _log_stream(stderr, __VA_ARGS__);                           \
 } while(0)                                                      \
 
+#define log_hex(level, ...) do {               \
+    _log_hex(level, __FILE__, __LINE__, __VA_ARGS__);       \
+} while(0)                                                      \
+
 #define log_verb(...) do {                                      \
     _log(LOG_VERBOSE, __FILE__, __LINE__, __VA_ARGS__);            \
 } while(0)                                                      \
@@ -88,6 +92,8 @@ struct logger {
 
 
 void _log_stream(FILE *stream, const char *fmt, ...);
+void _log_hex(log_level level, const char *file, int line, 
+        char *data, int n, const char *fmt, ...);
 void _log(log_level level, const char *file, int line, const char *fmt, ...);
 int log_set_level(log_level level);
 int log_set_output(char *fname);

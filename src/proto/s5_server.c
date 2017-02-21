@@ -205,19 +205,9 @@ s5_reply() {
 void 
 s5_server_do_next(struct context *ctx) {
     uint8_t    *data;
-    ssize_t size;
     uint16_t new_state; 
 
     data = (uint8_t *)ctx->buf;
-    size = ctx->nread;
-
-#if RPS_DEBUG_OPEN
-    int i;
-    log_verb("read %zd bytes: ", size);
-    for (i=0; i<size; i++) {
-        log_verb("\t%x ", data[i]);
-    }
-#endif
 
     switch (ctx->state) {
         case c_handshake:
