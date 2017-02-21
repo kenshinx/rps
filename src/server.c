@@ -187,6 +187,7 @@ static void
 server_ctx_close(rps_ctx_t *ctx) {
     //ASSERT((ctx->state & c_connect));
     ctx->state = c_closing;
+    uv_read_stop(&ctx->handle.stream);
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
     uv_timer_stop(&ctx->timer);
 }
@@ -225,6 +226,34 @@ server_do_next(rps_ctx_t *ctx) {
 
 }
 
+static void 
+server_on_timer_expire(uv_timer_t *handle) {
+    rps_ctx_t *ctx;
+
+    ctx = handle->data;
+
+    if (ctx->flag == c_request) {
+        log_debug("Request from %s timeout", ctx->peername);
+    } else {
+        log_debug("Forward to %s timeout", ctx->peername);
+    }
+
+    server_ctx_close(ctx);
+    server_sess_free(ctx->sess);
+}
+
+static void 
+server_timer_reset(rps_ctx_t *ctx) {
+    int err;
+
+    err = uv_timer_start(&ctx->timer, 
+            (uv_timer_cb)server_on_timer_expire, CONTEXT_TIMEOUT, 0);
+    if (err) {
+        UV_SHOW_ERROR(err, "reset timer");
+    }
+}
+
+
 static void
 server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     rps_ctx_t *ctx;   
@@ -248,6 +277,22 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     ctx->nread = nread;
 
     server_do_next(ctx);
+}
+
+rps_status_t
+server_read(rps_ctx_t *ctx) {
+    int err;
+
+    err = uv_read_start(&ctx->handle.stream, 
+            (uv_alloc_cb)server_alloc, (uv_read_cb)server_on_read_done);
+    if (err < 0) {
+        return RPS_ERROR;
+    }
+
+    
+    server_timer_reset(ctx);
+    
+    return RPS_OK;
 }
 
 static void
@@ -291,25 +336,10 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
         log_verb("\t%x", buf.base[i]);
     }
 #endif
+
+    server_timer_reset(ctx);
     
     return RPS_OK;
-}
-
-
-static void 
-server_on_timer_expire(uv_timer_t *handle) {
-    rps_ctx_t *ctx;
-
-    ctx = handle->data;
-
-    if (ctx->flag == c_request) {
-        log_debug("Request from %s timeout", ctx->peername);
-    } else {
-        log_debug("Forward to %s timeout", ctx->peername);
-    }
-
-    server_ctx_close(ctx);
-    server_sess_free(ctx->sess);
 }
 
 
@@ -322,7 +352,7 @@ server_on_timer_expire(uv_timer_t *handle) {
  */
 
 static void
-server_on_new_connect(uv_stream_t *us, int err) {
+server_on_request_connect(uv_stream_t *us, int err) {
     struct server *s;
     rps_sess_t *sess;
     rps_ctx_t *request; /* client -> rps */
@@ -386,26 +416,15 @@ server_on_new_connect(uv_stream_t *us, int err) {
         goto error;
     }
 
-    log_debug("Accept request from %s", request->peername);
+    log_debug("accept request from %s:%d", request->peername, rps_unresolve_port(&sess->client));
 
     request->state = c_handshake;
 
     /*
      * Beigin receive data
      */
-    err = uv_read_start(&request->handle.stream, 
-            (uv_alloc_cb)server_alloc, (uv_read_cb)server_on_read_done);
-    if (err < 0) {
-        goto error;
-    }
-
-    /*
-     * Set request context timer
-     */
-    err = uv_timer_start(&request->timer, 
-            (uv_timer_cb)server_on_timer_expire, REQUEST_CONTEXT_TIMEOUT, 0);
-    if (err) {
-        UV_SHOW_ERROR(err, "set request timer");
+    status = server_read(request);
+    if (status != RPS_OK) {
         goto error;
     }
 
@@ -427,7 +446,7 @@ server_run(struct server *s) {
         return;
     }
     
-    err = uv_listen((uv_stream_t*)&s->us, TCP_BACKLOG, server_on_new_connect);
+    err = uv_listen((uv_stream_t*)&s->us, TCP_BACKLOG, server_on_request_connect);
     if (err) {
         UV_SHOW_ERROR(err, "listen");
         return;

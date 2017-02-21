@@ -13,8 +13,7 @@
 #define TCP_BACKLOG  65536
 #define TCP_KEEPALIVE_DELAY 120
 
-#define REQUEST_CONTEXT_TIMEOUT 30000 // 30 seconds
-#define FORWARD_CONTEXT_TIMEOUT 30000 // 30 seconds
+#define CONTEXT_TIMEOUT 30000 // 30 seconds
 
 struct server {
     uv_loop_t               loop;   
