@@ -52,7 +52,10 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     gettimeofday(&tv, NULL);
     buf[len++] = '[';
     len += strftime(buf + len, size - len, "%Y-%m-%d %H:%M:%S", localtime(&tv.tv_sec));
-    len += snprintf(buf + len, size - len, "] <%s:%d> ", file, line);
+    len += sprintf(buf + len, "] ");
+#ifdef RPS_DEBUG_OPEN
+    len += snprintf(buf + len, size - len, "<%s:%d> ", file, line);
+#endif
     len += snprintf(buf + len, size - len, "%s: ", log_level_to_text(level)); 
 
     va_start(args, fmt);
