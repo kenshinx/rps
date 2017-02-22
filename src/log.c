@@ -48,7 +48,12 @@ _log_hex(log_level level, const char *file, int line, char *data, int n) {
 }
 
 void
+#ifdef RPS_DEBUG_OPEN
 _log(log_level level, const char *file, int line, const char *fmt, ...) {
+#else
+_log(log_level level, const char *fmt, ...) {
+#endif
+
     struct logger *l = &logger;
     int len;
     size_t size;
