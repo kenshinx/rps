@@ -30,8 +30,7 @@ _log_stream(FILE *stream, const char *fmt, ...) {
 }
 
 void
-_log_hex(log_level level, const char *file, int line, 
-        char *data, int n, const char *fmt, ...) {
+_log_hex(log_level level, const char *file, int line, char *data, int n) {
     int i;
     char buf[LOG_MAX_LEN];
     va_list args;
@@ -40,10 +39,6 @@ _log_hex(log_level level, const char *file, int line,
     size_t size = LOG_MAX_LEN;
 
     len = 0;
-
-    va_start(args, fmt);
-    len += vsnprintf(buf, sizeof(buf), fmt, args);
-    va_end(args);
 
     for (i=0; i<n; i++) {
         len += snprintf(buf + len, size - len, "%x ", data[i]);
