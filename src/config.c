@@ -95,6 +95,7 @@ config_server_init(struct config_server *server) {
     string_init(&server->proxy);
     string_init(&server->listen);
     server->port = 0;
+    server->timeout = 0;
     string_init(&server->username);
     string_init(&server->password);
 }
@@ -130,9 +131,9 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
     if (section == NULL) {
         if (rps_strcmp(key->data, "title") == 0 ) {
             status = string_copy(&cfg->title, val);          
-        } else if(rps_strcmp(key->data, "pidfile") == 0) {
+        } else if (rps_strcmp(key->data, "pidfile") == 0) {
             status = string_copy(&cfg->pidfile, val);
-        } else if(rps_strcmp(key->data, "daemon") == 0) {
+        } else if (rps_strcmp(key->data, "daemon") == 0) {
             status = config_set_daemon(cfg, val);
         } else {
             status = RPS_ERROR;
@@ -149,7 +150,10 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
             status = string_copy(&server->username, val);
         } else if (rps_strcmp(key->data, "password") == 0) {
             status = string_copy(&server->password, val);
-        } else {
+        } else if (rps_strcmp(key->data, "timeout") == 0) { 
+            /*convert uint from second to millsecond*/
+            server->timeout = (atoi((char *)val->data)) * 1000;
+        }else {
             status = RPS_ERROR;
         }
     } else if (rps_strcmp(section->data, "log") == 0) {
@@ -472,6 +476,7 @@ config_dump_server(void *data) {
     log_debug("\t port: %d", server->port);
     log_debug("\t username: %s", server->username.data);
     log_debug("\t password: %s", server->password.data);
+    log_debug("\t timeout: %d (millseconds)", server->timeout);
     log_debug("");
 }
 

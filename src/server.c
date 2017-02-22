@@ -245,9 +245,12 @@ server_on_timer_expire(uv_timer_t *handle) {
 static void 
 server_timer_reset(rps_ctx_t *ctx) {
     int err;
+    int timeout;
+
+    timeout = ctx->sess->server->cfg->timeout;
 
     err = uv_timer_start(&ctx->timer, 
-            (uv_timer_cb)server_on_timer_expire, CONTEXT_TIMEOUT, 0);
+            (uv_timer_cb)server_on_timer_expire, timeout, 0);
     if (err) {
         UV_SHOW_ERROR(err, "reset timer");
     }
