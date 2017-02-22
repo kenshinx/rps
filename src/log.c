@@ -33,14 +33,14 @@ void
 _log_hex(log_level level, const char *file, int line, char *data, int n) {
     int i;
     char buf[LOG_MAX_LEN];
-    va_list args;
 
     size_t len = 0;
     size_t size = LOG_MAX_LEN;
 
-    len = 0;
-
     for (i=0; i<n; i++) {
+        if (len >= size) {
+            break;
+        }
         len += snprintf(buf + len, size - len, "%x ", data[i]);
     }
 
