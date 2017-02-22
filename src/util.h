@@ -14,6 +14,8 @@
 #define MAX(_a, _b)     ((_a) > (_b) ? (_a):(_b))
 #define MIN(_a, _b)     ((_a) < (_b) ? (_a):(_b))
 
+#define UNUSED(_x) (void)(_x)
+
 #define rps_alloc(_s)                                               \
     _rps_alloc((size_t)(_s), __FILE__, __LINE__)                    \
 

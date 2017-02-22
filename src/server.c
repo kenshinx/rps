@@ -197,6 +197,8 @@ static uv_buf_t *
 server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     rps_ctx_t *ctx;
 
+    UNUSED(suggested_size);
+
     ctx = handle->data;
 
     buf->base = ctx->buf;
