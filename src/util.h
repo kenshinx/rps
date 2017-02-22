@@ -12,6 +12,7 @@
 #define CRLF    "\x0d\x0a"
 
 #define MAX(_a, _b)     ((_a) > (_b) ? (_a):(_b))
+#define MIN(_a, _b)     ((_a) < (_b) ? (_a):(_b))
 
 #define rps_alloc(_s)                                               \
     _rps_alloc((size_t)(_s), __FILE__, __LINE__)                    \
