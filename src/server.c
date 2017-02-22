@@ -169,11 +169,11 @@ server_on_ctx_close(uv_handle_t* handle) {
 
     switch (ctx->flag) {
         case c_request:
-            log_debug("Request from %s be closed", ctx->peername);
+            log_debug("request from %s be closed", ctx->peername);
             sess->request = NULL;       
             break;
         case c_forward:
-            log_debug("Forward to %s be closed.", ctx->peername);
+            log_debug("forward to %s be closed.", ctx->peername);
             sess->forward = NULL;       
             break;
         default:
@@ -286,6 +286,8 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     log_hex(LOG_VERBOSE, ctx->buf, ctx->nread);
 #endif
 
+    server_timer_reset(ctx);
+
     server_do_next(ctx);
 }
 
@@ -298,9 +300,6 @@ server_read(rps_ctx_t *ctx) {
     if (err < 0) {
         return RPS_ERROR;
     }
-
-    
-    server_timer_reset(ctx);
     
     return RPS_OK;
 }
@@ -317,8 +316,6 @@ server_on_write_done(uv_write_t *req, int err) {
         server_do_next(ctx);
         return;
     }
-    
-    //server_do_next(ctx);
 }
 
 rps_status_t

@@ -28,7 +28,7 @@ s5_select_auth(struct s5_method_request *req) {
 }
 
 static uint16_t
-s5_do_handshake(struct context *ctx, uint8_t *data) {
+s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     uint16_t new_state;
     struct server *s;
     struct s5_method_request *req;
@@ -38,6 +38,12 @@ s5_do_handshake(struct context *ctx, uint8_t *data) {
     req = (struct s5_method_request *)data;
     if (req->ver != SOCKS5_VERSION) {
         log_error("s5 handshake error: bad protocol version.");
+        return c_kill;
+    }
+
+    /* ver(1) + nmethods(1) + methods(nmethods) */
+    if (size != (2 + req->nmethods)) {
+        log_error("junk in handshake");
         return c_kill;
     }
 
@@ -83,7 +89,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data) {
 }
 
 static uint16_t
-s5_do_auth(struct context *ctx, uint8_t *data) {
+s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     uint16_t new_state;
     struct server *s;
     struct s5_auth_request *req;
@@ -102,8 +108,18 @@ s5_do_auth(struct context *ctx, uint8_t *data) {
     memcpy(req->passwd, &req->uname[req->ulen+1], req->plen);
     req->passwd[req->plen] = '\0';
 
-    ASSERT(strlen((const char *)req->uname) == req->ulen);
-    ASSERT(strlen((const char *)req->passwd) == req->plen);
+    /* ver(1) + ulen(1) + uname(ulen) + plen(1) + passwd(plen) */
+    if ((3 + req->ulen + req->plen) != size) {
+        log_error("junk in auth");
+        return c_kill;
+    }
+
+    if ((strlen((const char *)req->uname) != req->ulen) || 
+        (strlen((const char *)req->passwd) != req->plen)) {
+        log_error("invalid auth packet");
+        return c_kill;
+        
+    }
 
     s = ctx->sess->server;
 
@@ -136,9 +152,9 @@ s5_do_auth(struct context *ctx, uint8_t *data) {
 }
 
 static uint16_t
-s5_do_request(struct context *ctx, uint8_t *data) {
+s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     uint16_t new_state;
-    uint8_t len;
+    uint8_t alen;
     struct s5_request *req;
     struct s5_in4_response resp;
     char remoteip[MAX_INET_ADDRSTRLEN];
@@ -165,21 +181,23 @@ s5_do_request(struct context *ctx, uint8_t *data) {
     
     switch (req->atyp) {
         case s5_atyp_ipv4:
-            memcpy(req->dport, &req->daddr[4], 2);
-            rps_addr_in4(&remote, req->daddr, 4, req->dport);
+            alen = 4;
+            memcpy(req->dport, &req->daddr[alen], 2);
+            rps_addr_in4(&remote, req->daddr, alen, req->dport);
             break;
 
         case s5_atyp_ipv6:
-            memcpy(req->dport, &req->daddr[16], 2);
-            rps_addr_in6(&remote, req->daddr, 16, req->dport);
+            alen = 16;
+            memcpy(req->dport, &req->daddr[alen], 2);
+            rps_addr_in6(&remote, req->daddr, alen, req->dport);
             break;
 
         case s5_atyp_domain:
             /* First byte is hostname length */
-            len = req->daddr[0]; 
+            alen = req->daddr[0]; 
             /* Last 2 byte is dport */
-            memcpy(req->dport, &req->daddr[len+1], 2);  
-            rps_addr_name(&remote, &req->daddr[1], len, req->dport);
+            memcpy(req->dport, &req->daddr[alen+1], 2);  
+            rps_addr_name(&remote, &req->daddr[1], alen, req->dport);
             break;
 
         default:
@@ -187,6 +205,12 @@ s5_do_request(struct context *ctx, uint8_t *data) {
             resp.rep = 0x08;
             server_write(ctx, &resp, sizeof(struct s5_in4_response));
             return c_kill;
+    }
+
+    /* ver(1) + cmd(1) + rsv(1) + atyp(1) +daddr(alen) + dport(2) */
+    if ((6 + alen) != size) {
+        log_error("junk in request");
+        return c_kill;
     }
 
     err = rps_unresolve_addr(&remote, remoteip);
@@ -205,19 +229,21 @@ s5_reply() {
 void 
 s5_server_do_next(struct context *ctx) {
     uint8_t    *data;
+    size_t     size;
     uint16_t new_state; 
 
     data = (uint8_t *)ctx->buf;
+    size = (size_t)ctx->nread;
 
     switch (ctx->state) {
         case c_handshake:
-            new_state = s5_do_handshake(ctx, data);
+            new_state = s5_do_handshake(ctx, data, size);
             break;
         case c_auth:
-            new_state = s5_do_auth(ctx, data);
+            new_state = s5_do_auth(ctx, data, size);
             break;
         case c_requests:
-            new_state = s5_do_request(ctx, data);
+            new_state = s5_do_request(ctx, data, size);
             break;
         default:
             NOT_REACHED();
