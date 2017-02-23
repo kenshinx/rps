@@ -231,6 +231,9 @@ server_do_next(rps_ctx_t *ctx) {
             ctx->do_next(ctx);
     }
 
+    if (ctx->state & c_kill) {
+        server_ctx_close(ctx);
+    }
 }
 
 static void 
