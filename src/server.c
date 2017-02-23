@@ -69,14 +69,20 @@ server_sess_init(rps_sess_t *sess, struct server *s) {
 
 static void
 server_sess_free(rps_sess_t *sess) {
-    /*
-    if (sess->request != NULL) {
-        ASSERT(!(sess->request->state &  c_connect));
+    if ((sess->request != NULL) && (sess->request->state & c_closed)) {
+        rps_free(sess->request);
+        sess->request = NULL;
     }
-    if (sess->forward != NULL) {
-        ASSERT(!(sess->forward->state &  c_connect));
+
+    if ((sess->forward != NULL) && (sess->forward->state & c_closed)) {
+        rps_free(sess->forward);
+        sess->forward = NULL;
     }
-    */
+
+    if (sess->request != NULL || sess->forward != NULL) {
+        return;
+    }
+
     rps_free(sess);
 }
 
@@ -170,17 +176,15 @@ server_on_ctx_close(uv_handle_t* handle) {
     switch (ctx->flag) {
         case c_request:
             log_debug("request from %s be closed", ctx->peername);
-            sess->request = NULL;       
             break;
         case c_forward:
             log_debug("forward to %s be closed.", ctx->peername);
-            sess->forward = NULL;       
             break;
         default:
             NOT_REACHED();
     }
 
-    rps_free(ctx);
+    server_sess_free(sess);
 }
 
 static void
@@ -219,6 +223,7 @@ server_do_next(rps_ctx_t *ctx) {
             /* rps connect has be established */
             break;
         case c_kill:
+            server_ctx_close(ctx);
             break;
         case c_dead:
             break;
@@ -235,13 +240,12 @@ server_on_timer_expire(uv_timer_t *handle) {
     ctx = handle->data;
 
     if (ctx->flag == c_request) {
-        log_debug("Request from %s timeout", ctx->peername);
+        log_debug("request from %s timeout", ctx->peername);
     } else {
-        log_debug("Forward to %s timeout", ctx->peername);
+        log_debug("forward to %s timeout", ctx->peername);
     }
 
     server_ctx_close(ctx);
-    server_sess_free(ctx->sess);
 }
 
 static void 
@@ -274,7 +278,6 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
         //Client close connect
         server_ctx_close(ctx);
-        server_sess_free(ctx->sess);
         return;
 
     }
@@ -437,7 +440,6 @@ server_on_request_connect(uv_stream_t *us, int err) {
 
 error:
     server_ctx_close(request);
-    server_sess_free(sess);
     return;
 }
 
