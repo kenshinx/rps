@@ -47,16 +47,16 @@ enum context_state {
 	c_handshake = (1 << 1),
 	c_auth = (1 << 2),
     c_requests = (1 << 3),
-	c_established = (1 << 4),
-    c_kill = (1 << 5),
-    c_dead = (1 << 6),
-    c_closing = (1 << 7),
-    c_closed = (1 << 8)
+    c_reply = (1 << 4),
+	c_established = (1 << 5),
+    c_kill = (1 << 6),
+    c_dead = (1 << 7),
+    c_closing = (1 << 8),
+    c_closed = (1 << 9)
 };
 
 
 typedef void (*rps_next_t)(struct context *);
-
 
 struct context {
     struct session 		*sess;
@@ -68,7 +68,6 @@ struct context {
     } handle;
 
 	rps_next_t			do_next;
-	
 
     uv_timer_t      	timer;
     uv_write_t      	write_req;

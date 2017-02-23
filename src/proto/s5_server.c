@@ -153,7 +153,6 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
 
 static uint16_t
 s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
-    uint16_t new_state;
     uint8_t alen;
     struct s5_request *req;
     struct s5_in4_response resp;
@@ -217,13 +216,14 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     if (err < 0) {
         return c_kill;
     }
-    
     log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(&remote));
+
+    return c_reply;
 }
 
 static uint16_t
-s5_reply() {
-
+s5_do_reply() {
+    return c_kill;
 }
 
 void 
@@ -244,6 +244,9 @@ s5_server_do_next(struct context *ctx) {
             break;
         case c_requests:
             new_state = s5_do_request(ctx, data, size);
+            break;
+        case c_reply:
+            new_state = s5_do_reply();
             break;
         default:
             NOT_REACHED();
