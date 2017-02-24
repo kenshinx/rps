@@ -218,7 +218,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     }
     log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(remote));
 
-    return c_reply;
+    return c_reply_pre;
 }
 
 static uint16_t
