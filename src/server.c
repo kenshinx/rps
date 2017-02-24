@@ -211,31 +211,6 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     return buf;
 }
 
-static void
-server_do_next(rps_ctx_t *ctx) {
-
-    if (ctx->last_status < 0) {
-        ctx->state = c_kill;
-    }
-
-    switch (ctx->state) {
-        case c_established:
-            /* rps connect has be established */
-            break;
-        case c_kill:
-            server_ctx_close(ctx);
-            break;
-        case c_dead:
-            break;
-        default:
-            ctx->do_next(ctx);
-    }
-
-    if (ctx->state & c_kill) {
-        server_ctx_close(ctx);
-    }
-}
-
 static void 
 server_on_timer_expire(uv_timer_t *handle) {
     rps_ctx_t *ctx;
@@ -445,6 +420,55 @@ error:
     server_ctx_close(request);
     return;
 }
+
+static uint16_t
+server_upstream_kickoff(rps_ctx_t *ctx) {
+    rps_sess_t *sess;
+    rps_ctx_t *request;  /* client -> rps */
+    rps_ctx_t *forward; /* rps -> upstream */
+
+    sess = ctx->sess;
+    request = sess->request;
+
+    sess->forward = (struct context *)rps_alloc(sizeof(struct context));
+    if (sess->forward == NULL) {
+        return c_kill;
+    }
+    
+    
+}
+
+
+void
+server_do_next(rps_ctx_t *ctx) {
+    uint16_t new_state;
+
+    if (ctx->last_status < 0) {
+        ctx->state = c_kill;
+    }
+
+    switch (ctx->state) {
+        case c_reply_pre:
+            new_state = server_upstream_kickoff(ctx);
+            break;
+        case c_kill:
+            server_ctx_close(ctx);
+            return;
+        case c_closing:
+        case c_closed:
+            return;
+        default:
+            new_state = ctx->do_next(ctx);
+            break;
+    }
+
+    ctx->state = new_state;
+
+    if (ctx->state & (c_kill | c_reply_pre)) {
+        server_do_next(ctx);
+    }
+}
+
 
 void 
 server_run(struct server *s) {
