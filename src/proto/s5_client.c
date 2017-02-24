@@ -5,7 +5,7 @@
 
 
 
-void 
+uint16_t 
 s5_client_do_next(struct context *ctx) {
 }
 

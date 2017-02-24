@@ -158,7 +158,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     struct s5_in4_response resp;
     char remoteip[MAX_INET_ADDRSTRLEN];
     int err;
-    rps_addr_t  remote;
+    rps_addr_t  *remote;
 
     req = (struct s5_request *)data;
     if (req->ver != SOCKS5_VERSION) {
@@ -176,19 +176,19 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
         return c_kill;
     }
 
-    remote = ctx->sess->remote;
+    remote = &ctx->sess->remote;
     
     switch (req->atyp) {
         case s5_atyp_ipv4:
             alen = 4;
             memcpy(req->dport, &req->daddr[alen], 2);
-            rps_addr_in4(&remote, req->daddr, alen, req->dport);
+            rps_addr_in4(remote, req->daddr, alen, req->dport);
             break;
 
         case s5_atyp_ipv6:
             alen = 16;
             memcpy(req->dport, &req->daddr[alen], 2);
-            rps_addr_in6(&remote, req->daddr, alen, req->dport);
+            rps_addr_in6(remote, req->daddr, alen, req->dport);
             break;
 
         case s5_atyp_domain:
@@ -196,7 +196,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
             alen = req->daddr[0]; 
             /* Last 2 byte is dport */
             memcpy(req->dport, &req->daddr[alen+1], 2);  
-            rps_addr_name(&remote, &req->daddr[1], alen, req->dport);
+            rps_addr_name(remote, &req->daddr[1], alen, req->dport);
             break;
 
         default:
@@ -212,11 +212,11 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
         return c_kill;
     }
 
-    err = rps_unresolve_addr(&remote, remoteip);
+    err = rps_unresolve_addr(remote, remoteip);
     if (err < 0) {
         return c_kill;
     }
-    log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(&remote));
+    log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(remote));
 
     return c_reply;
 }
@@ -226,7 +226,7 @@ s5_do_reply() {
     return c_kill;
 }
 
-void 
+uint16_t 
 s5_server_do_next(struct context *ctx) {
     uint8_t    *data;
     size_t     size;
@@ -253,5 +253,5 @@ s5_server_do_next(struct context *ctx) {
             new_state = c_kill;
     }
     
-    ctx->state = new_state;
+    return new_state;
 }
