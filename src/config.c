@@ -78,6 +78,21 @@ config_pop_scalar(struct config *cfg) {
     return value;
 }
 
+static void 
+config_redis_init(struct config_redis *redis) {
+    string_init(&redis->host);
+    string_init(&redis->password);
+    redis->port = 0;
+    redis->db = 0;
+    redis->timeout = 0;
+}
+
+static void
+config_redis_deinit(struct config_redis *redis) {
+    string_deinit(&redis->host);
+    string_deinit(&redis->password);
+}
+
 static void
 config_log_init(struct config_log *log) {
     string_init(&log->file);
@@ -156,6 +171,20 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         }else {
             status = RPS_ERROR;
         }
+    } else if (rps_strcmp(section->data, "redis") == 0) {
+        if (rps_strcmp(key->data, "host") == 0) {
+            status = string_copy(&cfg->redis->host, val);
+        } else if (rps_strcmp(key->data, "port") == 0) {
+            cfg->redis->port = atoi((char *)val->data);
+        } else if (rps_strcmp(key->data, "db") == 0) {
+            cfg->redis->db = atoi((char *)val->data);
+        } else if (rps_strcmp(key->data, "password") == 0){
+            status = string_copy(&cfg->redis->password, val);
+        } else if (rps_strcmp(key->data, "timeout") == 0) {
+            cfg->redis->timeout = atoi((char *)val->data);
+        } else {
+            status = RPS_ERROR;
+        }
     } else if (rps_strcmp(section->data, "log") == 0) {
         if(rps_strcmp(key->data, "file") == 0) {
             status = string_copy(&cfg->log->file, val);
@@ -208,6 +237,12 @@ config_load(char *filename, struct config *cfg) {
     if (cfg->args == NULL) {
         goto error;
     }
+
+    cfg->redis = rps_alloc(sizeof(struct config_redis));
+    if (cfg->redis == NULL) {
+        goto error;
+    }
+    config_redis_init(cfg->redis);
 
     cfg->log = rps_alloc(sizeof(struct config_log));
     if (cfg->log == NULL) {
@@ -489,6 +524,14 @@ config_dump(struct config *cfg) {
     log_debug("[servers]");
     array_foreach(cfg->servers, config_dump_server);
     
+    log_debug("[redis]");
+    log_debug("\t host: %s", cfg->redis->host.data);
+    log_debug("\t port: %d", cfg->redis->port);
+    log_debug("\t db: %d", cfg->redis->db);
+    log_debug("\t password: %s", cfg->redis->password.data);
+    log_debug("\t timeout: %d", cfg->redis->timeout);
+    log_debug("");
+    
     log_debug("[log]");
     log_debug("\t file: %s", cfg->log->file.data);
     log_debug("\t level: %s", cfg->log->level.data);
@@ -535,6 +578,10 @@ config_deinit(struct config *cfg) {
         config_server_deinit((struct config_server *)array_pop(cfg->servers));
     }
     array_destroy(cfg->servers);
+
+    config_redis_deinit(cfg->redis);
+    rps_free(cfg->redis);
+    
 
     config_log_deinit(cfg->log);
     rps_free(cfg->log);

@@ -11,13 +11,20 @@ servers:
       port: 9890
       #username: rps
       #password: secret
-      timeout: 30 #30 seconds
+      timeout: 300 #30 seconds
       
 
     - proxy: http
       listen: "::"
       port: 9891
       timeout: 30 #30 seconds
+
+redis:
+    host: localhost
+    port: 6379
+    db: 0
+    password: secret
+    timeout: 5
 
 log:
     file: ../logs/rps.log

@@ -19,6 +19,14 @@ struct config_server {
     uint32_t        timeout;
 };
 
+struct config_redis {
+    rps_str_t   host;
+    uint16_t    port;
+    uint16_t    db;
+    rps_str_t   password;
+    uint32_t    timeout;
+};
+
 struct config_log {
     rps_str_t       file;
     rps_str_t       level;
@@ -31,6 +39,7 @@ struct config {
     rps_str_t           pidfile;
     FILE                *fd;
     unsigned            daemon:1;
+    struct config_redis *redis;
     struct config_log   *log;
     rps_array_t         *servers;
     rps_array_t         *args;
