@@ -1,8 +1,9 @@
 #include "proxy.h"
-
 #include "util.h"
 #include "core.h"
 #include "config.h"
+
+#include <hiredis.h>
 
 #define PROXY_POOL_DEFAULT_LENGTH 64
 
@@ -29,5 +30,6 @@ proxy_pool_init(struct proxy_pool *pool) {
 rps_status_t
 proxy_pool_load(struct proxy_pool *pool, struct config_redis *cr) {
     rps_status_t status;
+    
     
 }

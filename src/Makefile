@@ -19,6 +19,7 @@ GNU_SOURCE=-D_GNU_SOURCE #libuv need this declaration in linux platform.
 DEPENDENCY_TARGETS=yaml libuv
 LIBYAML=yaml-0.1.5
 LIBUV=libuv-v1.9.1
+HIREDIS=hiredis-0.13.3
 
 
 
@@ -40,10 +41,12 @@ FINAL_CFLAGS+= -I.
 FINAL_CFLAGS+= -Iproto
 FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
 FINAL_CFLAGS+= -I../contrib/$(LIBUV)/include 
+FINAL_CFLAGS+= -I../contrib/$(HIREDIS)
 
 FINAL_LIBS+= ./proto/proto.a
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
 FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
+FINAL_LIBS+= ../contrib/$(HIREDIS)/libhiredis.a
 
 
 CC?=gcc
