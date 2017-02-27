@@ -9,7 +9,7 @@ REDIS_HOST = "dev1"
 REDIS_PORT = 6379
 REDIS_PASSWD = "secret"
 
-REDIS_KEY = "rps:proxy:pool"
+REDIS_KEY = "rps:upstream:pool"
 
 def add(host, port, proto="socks5", username=None, password=None):
 

@@ -1,4 +1,4 @@
-#include "proxy.h"
+#include "upstream.h"
 #include "util.h"
 #include "core.h"
 #include "config.h"
@@ -6,31 +6,31 @@
 
 #include <hiredis.h>
 
-#define PROXY_POOL_DEFAULT_LENGTH 64
+#define UPSTREAM_POOL_DEFAULT_LENGTH 64
 
 static void
-proxy_init(struct proxy *p) {
+upstream_init(struct upstream *p) {
     UNUSED(p);
 }
 
 
 
 rps_status_t
-proxy_pool_init(struct proxy_pool *pool) {
+upstream_pool_init(struct upstream_pool *up) {
     rps_status_t status;
 
-    status = array_init(&pool->pool, PROXY_POOL_DEFAULT_LENGTH, sizeof(struct proxy));
+    status = array_init(&up->pool, UPSTREAM_POOL_DEFAULT_LENGTH, sizeof(struct upstream));
     if (status != RPS_OK) {
         return status;
     }
 
-    pool->index = 0;
+    up->index = 0;
 
     return RPS_OK;
 }
 
 static redisContext *
-proxy_redis_connect(struct config_redis *cfg) {
+upstream_redis_connect(struct config_redis *cfg) {
     redisContext *c;
     redisReply  *reply;
     
@@ -50,14 +50,17 @@ proxy_redis_connect(struct config_redis *cfg) {
         return NULL;
     }
 
-    if (!string_empty(&cfg->password)) {
-        reply= redisCommand(c, "AUTH %s", cfg->password.data);
+    if (string_empty(&cfg->password)) {
+        log_debug("connect redis %s:%d success", cfg->host.data, cfg->port);
+        return c;
     }
     
-
-    if (reply->type == REDIS_REPLY_ERROR) {
+    reply= redisCommand(c, "AUTH %s", cfg->password.data);
+    if (reply == NULL || reply->type == REDIS_REPLY_ERROR) {
+        if (reply) {
+            freeReplyObject(reply);
+        }
         log_error("redis authentication failed.");
-        freeReplyObject(reply);
         return NULL;
     }
 
@@ -69,14 +72,18 @@ proxy_redis_connect(struct config_redis *cfg) {
 }
 
 rps_status_t
-proxy_pool_load(struct proxy_pool *pool, struct config_redis *cfg) {
-    rps_status_t status;
+upstream_pool_load(struct upstream_pool *up, struct config_redis *cfg) {
     redisContext *c;
+    redisReply  *reply;
 
-    c =  proxy_redis_connect(cfg);
+    c =  upstream_redis_connect(cfg);
     if (c == NULL) {
         return RPS_ERROR;
     }
+
+    reply = redisCommand(c, "SMEMBERS %s", "");
+
+    
 
     return RPS_OK;
 }

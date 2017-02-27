@@ -3,7 +3,7 @@
 
 #include "array.h"
 #include "config.h"
-#include "proxy.h"
+#include "upstream.h"
 
 #include <sys/types.h>
 
@@ -20,18 +20,18 @@
 
 
 struct application {
-    rps_array_t         servers;
+    rps_array_t             servers;
 
-    struct proxy_pool   upstreams;
+    struct upstream_pool    upstreams;
 
-    int                 log_level;
-    char                *log_filename;
-    pid_t               pid;
-    char                *pid_filename;
-    char                *config_filename;
-    struct config       cfg;
-    unsigned            daemon:1;
-    unsigned            verbose:1;
+    int                     log_level;
+    char                    *log_filename;
+    pid_t                   pid;
+    char                    *pid_filename;
+    char                    *config_filename;
+    struct config           cfg;
+    unsigned                daemon:1;
+    unsigned                verbose:1;
 };
 
 

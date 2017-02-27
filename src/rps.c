@@ -4,7 +4,7 @@
 #include "config.h"
 #include "util.h"
 #include "server.h"
-#include "proxy.h"
+#include "upstream.h"
 
 #include <uv.h>
 
@@ -174,12 +174,12 @@ static rps_status_t
 rps_upstream_setup(struct application *app) {
     rps_status_t status;
 
-    status = proxy_pool_init(&app->upstreams);
+    status = upstream_pool_init(&app->upstreams);
     if (status != RPS_OK) {
         return status;
     }
 
-    status = proxy_pool_load(&app->upstreams, app->cfg.redis);
+    status = upstream_pool_load(&app->upstreams, app->cfg.redis);
     
     
     
