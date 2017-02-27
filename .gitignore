@@ -15,3 +15,6 @@ src/proto/*.swp
 src/proto/*.a
 .rps.yml.swp
 /src/tags
+.s5_client.c.swp
+src/script/*.swp
+src/script/*.o
