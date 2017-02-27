@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#define UPSTREAM_DEFAULT_REFRESH    60
+
 struct config_server {
     rps_str_t       proto;
     rps_str_t       listen;
@@ -17,6 +19,11 @@ struct config_server {
     rps_str_t       username;
     rps_str_t       password;
     uint32_t        timeout;
+};
+
+struct config_upstream {
+    rps_str_t       rediskey;
+    uint32_t        refresh;
 };
 
 struct config_redis {
@@ -34,19 +41,20 @@ struct config_log {
 
 
 struct config {
-    char                *fname;
-    rps_str_t           title;
-    rps_str_t           pidfile;
-    FILE                *fd;
-    unsigned            daemon:1;
-    struct config_redis *redis;
-    struct config_log   *log;
-    rps_array_t         *servers;
-    rps_array_t         *args;
-    uint32_t            depth;
-    unsigned            seq:1;
-    yaml_parser_t       parser;
-    yaml_event_t        event;
+    char                    *fname;
+    rps_str_t               title;
+    rps_str_t               pidfile;
+    FILE                    *fd;
+    unsigned                daemon:1;
+    struct config_upstream  *upstream;
+    struct config_redis     *redis;
+    struct config_log       *log;
+    rps_array_t             *servers;
+    rps_array_t             *args;
+    uint32_t                depth;
+    unsigned                seq:1;
+    yaml_parser_t           parser;
+    yaml_event_t            event;
     
 };
 

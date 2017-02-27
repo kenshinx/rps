@@ -78,6 +78,17 @@ config_pop_scalar(struct config *cfg) {
     return value;
 }
 
+static void
+config_upstream_init(struct config_upstream *upstream) {
+    string_init(&upstream->rediskey);
+    upstream->refresh = UPSTREAM_DEFAULT_REFRESH;
+}
+
+static void
+config_upstream_deinit(struct config_upstream *upstream) {
+    string_deinit(&upstream->rediskey);
+}
+
 static void 
 config_redis_init(struct config_redis *redis) {
     string_init(&redis->host);
@@ -171,6 +182,14 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         }else {
             status = RPS_ERROR;
         }
+    } else if (rps_strcmp(section->data, "upstreams") == 0) {
+        if (rps_strcmp(key->data, "rediskey") == 0) {
+            status = string_copy(&cfg->upstream->rediskey, val);
+        } else if (rps_strcmp(key->data, "refresh") == 0) {
+            cfg->upstream->refresh = atoi((char *)val->data);
+        } else {
+            status = RPS_ERROR;
+        }
     } else if (rps_strcmp(section->data, "redis") == 0) {
         if (rps_strcmp(key->data, "host") == 0) {
             status = string_copy(&cfg->redis->host, val);
@@ -237,6 +256,12 @@ config_load(char *filename, struct config *cfg) {
     if (cfg->args == NULL) {
         goto error;
     }
+
+    cfg->upstream = rps_alloc(sizeof(struct config_upstream));
+    if (cfg->upstream == NULL) {
+        goto error;
+    }
+    config_upstream_init(cfg->upstream);
 
     cfg->redis = rps_alloc(sizeof(struct config_redis));
     if (cfg->redis == NULL) {
@@ -523,6 +548,12 @@ config_dump(struct config *cfg) {
 
     log_debug("[servers]");
     array_foreach(cfg->servers, config_dump_server);
+
+    log_debug("[upstreams]");
+    log_debug("\t rediskey: %s", cfg->upstream->rediskey.data);
+    log_debug("\t refresh: %d", cfg->upstream->refresh);
+    log_debug("");
+
     
     log_debug("[redis]");
     log_debug("\t host: %s", cfg->redis->host.data);
@@ -578,6 +609,9 @@ config_deinit(struct config *cfg) {
         config_server_deinit((struct config_server *)array_pop(cfg->servers));
     }
     array_destroy(cfg->servers);
+
+    config_upstream_deinit(cfg->upstream);
+    rps_free(cfg->upstream);
 
     config_redis_deinit(cfg->redis);
     rps_free(cfg->redis);
