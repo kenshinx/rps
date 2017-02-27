@@ -5,8 +5,9 @@ import redis
 import json
 import optparse
 
-REDIS_HOST = "127.0.0.1"
+REDIS_HOST = "dev1"
 REDIS_PORT = 6379
+REDIS_PASSWD = "secret"
 
 REDIS_KEY = "rps:proxy:pool"
 
@@ -20,7 +21,7 @@ def add(host, port, proto="socks5", username=None, password=None):
                 "password": password})
 
     print data
-    r = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT)
+    r = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWD)
     r.sadd(REDIS_KEY, data)
 
     print "sucess"

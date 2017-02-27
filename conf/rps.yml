@@ -20,7 +20,7 @@ servers:
       timeout: 30 #30 seconds
 
 redis:
-    host: localhost
+    host: dev1
     port: 6379
     db: 0
     password: secret
