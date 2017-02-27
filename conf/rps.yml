@@ -6,7 +6,7 @@ daemon: false
 pidfile: /var/run/rps.log
 
 servers:
-    - proxy: socks5
+    - proto: socks5
       listen: 0.0.0.0
       port: 9890
       #username: rps
@@ -14,7 +14,7 @@ servers:
       timeout: 300 #30 seconds
       
 
-    - proxy: http
+    - proto: http
       listen: "::"
       port: 9891
       timeout: 30 #30 seconds

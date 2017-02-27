@@ -25,18 +25,18 @@ server_init(struct server *s, struct config_server *cfg) {
 
     s->us.data = s;
 
-    if (rps_strcmp(cfg->proxy.data, "socks5") == 0 ) {
-        s->proxy = SOCKS5;
-    } else if (rps_strcmp(cfg->proxy.data, "http") == 0 ) {
-        s->proxy = HTTP;
+    if (rps_strcmp(cfg->proto.data, "socks5") == 0 ) {
+        s->proto = SOCKS5;
+    } else if (rps_strcmp(cfg->proto.data, "http") == 0 ) {
+        s->proto = HTTP;
     }
 #ifdef SOCKS4_PROXY_SUPPORT
-     else if (rps_strcmp(cfg->proxy.data, "socks4") == 0 ) {
-        s->proxy = SOCKS4;
+     else if (rps_strcmp(cfg->proto.data, "socks4") == 0 ) {
+        s->proto = SOCKS4;
      }
 #endif
     else{
-        log_error("unsupport proxy type: %s", cfg->proxy.data);
+        log_error("unsupport proxy protocol type: %s", cfg->proto.data);
         return RPS_ERROR;
     }
      
@@ -87,18 +87,18 @@ server_sess_free(rps_sess_t *sess) {
 }
 
 static void
-server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t proxy) {
+server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t proto) {
     ctx->sess = sess;
     ctx->flag = flag;
     ctx->state = c_init;
-    ctx->proxy = proxy;
+    ctx->proto = proto;
     ctx->nread = 0;
     ctx->last_status = 0;
     ctx->handle.handle.data  = ctx;
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
 
-    if (ctx->proxy == SOCKS5) {
+    if (ctx->proto == SOCKS5) {
         switch (ctx->flag) {
             case c_request:
                 ctx->do_next = s5_server_do_next;
@@ -109,7 +109,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
             default:
                 NOT_REACHED();
         }
-    } else if (ctx->proxy == HTTP) {
+    } else if (ctx->proto == HTTP) {
         switch (ctx->flag) {
             case c_request:
                 ctx->do_next = http_server_do_next;
@@ -126,7 +126,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
     
 /*
     if (ctx->flag == c_request) {
-        switch (ctx->proxy) {
+        switch (ctx->proto) {
             case SOCKS5:
                 ctx->do_next = s5_server_do_next;
                 break;
@@ -142,7 +142,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proxy_t prox
                NOT_REACHED();
         }
     } else if (ctx->flag == c_forward) {
-        switch (ctx->proxy) {
+        switch (ctx->proto) {
             case SOCKS5:
                 ctx->do_next = s5_client_do_next;
                 break;
@@ -363,7 +363,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
         return;
     }
     sess->request = request;
-    server_ctx_init(request, sess, c_request, s->proxy);
+    server_ctx_init(request, sess, c_request, s->proto);
     
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
@@ -423,19 +423,20 @@ error:
 
 static uint16_t
 server_upstream_kickoff(rps_ctx_t *ctx) {
+    struct server *s;
     rps_sess_t *sess;
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
 
     sess = ctx->sess;
+    s = sess->server;
     request = sess->request;
 
     sess->forward = (struct context *)rps_alloc(sizeof(struct context));
     if (sess->forward == NULL) {
         return c_kill;
     }
-    
-    
+
 }
 
 
@@ -486,7 +487,7 @@ server_run(struct server *s) {
         return;
     }
 
-    log_notice("%s proxy run on %s:%d", s->cfg->proxy.data, s->cfg->listen.data, s->cfg->port);
+    log_notice("%s proxy run on %s:%d", s->cfg->proto.data, s->cfg->listen.data, s->cfg->port);
 
     uv_run(&s->loop, UV_RUN_DEFAULT);
 }

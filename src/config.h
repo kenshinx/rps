@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 struct config_server {
-    rps_str_t       proxy;
+    rps_str_t       proto;
     rps_str_t       listen;
     uint16_t        port;
     rps_str_t       username;

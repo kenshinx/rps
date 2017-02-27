@@ -10,7 +10,7 @@ struct proxy  {
     rps_addr_t  server;
     rps_str_t   uname;
     rps_str_t   passwd;
-    rps_proxy_t proto;
+    rps_proto_t proto;
 };
 
 struct proxy_pool {

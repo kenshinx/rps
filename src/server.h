@@ -18,7 +18,7 @@ struct server {
     uv_loop_t               loop;   
     uv_tcp_t                us; /* libuv tcp server */
 
-    rps_proxy_t             proxy;
+    rps_proto_t             proto;
     
     rps_addr_t              listen;
     

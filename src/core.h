@@ -21,7 +21,7 @@ typedef enum {
     PRIVATE,
 #endif
 
-} rps_proxy_t;
+} rps_proto_t;
 
 typedef struct context rps_ctx_t;
 typedef struct session rps_sess_t;
@@ -73,7 +73,7 @@ struct context {
     uv_timer_t      	timer;
     uv_write_t      	write_req;
 
-    rps_proxy_t     	proxy;
+    rps_proto_t     	proto;
 
 	char 				buf[READ_BUF_SIZE];
 	ssize_t				nread;

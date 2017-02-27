@@ -107,7 +107,7 @@ config_log_deinit(struct config_log *log) {
 
 static void
 config_server_init(struct config_server *server) {
-    string_init(&server->proxy);
+    string_init(&server->proto);
     string_init(&server->listen);
     server->port = 0;
     server->timeout = 0;
@@ -117,7 +117,7 @@ config_server_init(struct config_server *server) {
 
 static void
 config_server_deinit(struct config_server *server) {
-    string_deinit(&server->proxy);
+    string_deinit(&server->proto);
     string_deinit(&server->listen);
     string_deinit(&server->username);
     string_deinit(&server->password);
@@ -155,8 +155,8 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         }
     } else if (rps_strcmp(section->data, "servers") == 0 ) {
         server = (struct config_server *)array_head(cfg->servers);
-        if (rps_strcmp(key->data, "proxy") == 0) {
-            status = string_copy(&server->proxy, val);
+        if (rps_strcmp(key->data, "proto") == 0) {
+            status = string_copy(&server->proto, val);
         } else if (rps_strcmp(key->data, "listen") == 0) {
             status = string_copy(&server->listen, val);
         } else if (rps_strcmp(key->data, "port") == 0) {
@@ -506,7 +506,7 @@ static void
 config_dump_server(void *data) {
     struct config_server *server = data;    
 
-    log_debug("\t - proxy: %s", server->proxy.data);
+    log_debug("\t - proto: %s", server->proto.data);
     log_debug("\t listen: %s", server->listen.data);
     log_debug("\t port: %d", server->port);
     log_debug("\t username: %s", server->username.data);
