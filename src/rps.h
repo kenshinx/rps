@@ -3,6 +3,7 @@
 
 #include "array.h"
 #include "config.h"
+#include "proxy.h"
 
 #include <sys/types.h>
 
@@ -20,7 +21,8 @@
 
 struct application {
     rps_array_t         servers;
-    rps_array_t         upstreams;
+
+    struct proxy_pool   upstreams;
 
     int                 log_level;
     char                *log_filename;

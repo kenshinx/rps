@@ -4,6 +4,7 @@
 #include "config.h"
 #include "util.h"
 #include "server.h"
+#include "proxy.h"
 
 #include <uv.h>
 
@@ -169,6 +170,22 @@ error:
     return RPS_ERROR;
 }
 
+static rps_status_t
+rps_upstream_setup(struct application *app) {
+    rps_status_t status;
+
+    status = proxy_pool_init(&app->upstreams);
+    if (status != RPS_OK) {
+        return status;
+    }
+
+    status = proxy_pool_load(&app->upstreams, app->cfg.redis);
+    
+    
+    
+
+}
+
 static void
 rps_teardown(struct application *app) {
     while (array_n(&app->servers)) {
@@ -197,9 +214,10 @@ rps_run(struct application *app) {
         return;
     }
 
-    /*
-     * rps_upstream_setup();
-     */
+    status = rps_upstream_setup(app);
+    if (status != RPS_OK) {
+        return;
+    }
 
     n = array_n(&app->servers);
     
