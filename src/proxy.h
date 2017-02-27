@@ -21,6 +21,6 @@ struct proxy_pool {
 };
 
 rps_status_t proxy_pool_init(struct proxy_pool *pool);
-rps_status_t proxy_pool_load(struct proxy_pool *pool, struct config_redis *cr);
+rps_status_t proxy_pool_load(struct proxy_pool *pool, struct config_redis *cfg);
 
 #endif
