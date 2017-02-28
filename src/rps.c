@@ -179,7 +179,7 @@ rps_upstream_setup(struct application *app) {
         return status;
     }
 
-    status = upstream_pool_load(&app->upstreams, app->cfg.redis);
+    status = upstream_pool_load(&app->upstreams, app->cfg.redis, app->cfg.upstream);
     
     
     

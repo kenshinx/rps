@@ -71,19 +71,39 @@ upstream_redis_connect(struct config_redis *cfg) {
     return c;
 }
 
+static rps_status_t
+upstream_json_parse(const char *str, struct upstream *upstream) {
+    printf("%s\n", str);
+
+    return RPS_OK;
+
+}
+
 rps_status_t
-upstream_pool_load(struct upstream_pool *up, struct config_redis *cfg) {
+upstream_pool_load(struct upstream_pool *up, struct config_redis *cr, struct config_upstream *cu) {
     redisContext *c;
     redisReply  *reply;
+    struct upstream *upstream;
+    size_t i;
 
-    c =  upstream_redis_connect(cfg);
+    c =  upstream_redis_connect(cr);
     if (c == NULL) {
         return RPS_ERROR;
     }
 
-    reply = redisCommand(c, "SMEMBERS %s", "");
+    reply = redisCommand(c, "SMEMBERS %s", cu->rediskey.data);
+    if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
+        if (reply) {
+            freeReplyObject(reply);
+        }
+        log_error("redis get upstreams failed.");
+        return RPS_ERROR;
+    }
 
-    
+    for (i = 0; i < reply->elements; i++) {
+        upstream = array_push(&up->pool);
+        upstream_json_parse(reply->element[i]->str, upstream);
+    }
 
     return RPS_OK;
 }

@@ -18,3 +18,4 @@ src/proto/*.a
 .s5_client.c.swp
 src/script/*.swp
 src/script/*.o
+script/.*.swp

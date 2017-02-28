@@ -21,6 +21,7 @@ struct upstream_pool {
 };
 
 rps_status_t upstream_pool_init(struct upstream_pool *up);
-rps_status_t upstream_pool_load(struct upstream_pool *up, struct config_redis *cfg);
+rps_status_t upstream_pool_load(struct upstream_pool *up, 
+        struct config_redis *cr, struct config_upstream *cu);
 
 #endif
