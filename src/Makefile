@@ -20,6 +20,7 @@ DEPENDENCY_TARGETS=yaml libuv
 LIBYAML=yaml-0.1.5
 LIBUV=libuv-v1.9.1
 HIREDIS=hiredis-0.13.3
+JANSSON=jansson-2.9
 
 
 
@@ -42,11 +43,13 @@ FINAL_CFLAGS+= -Iproto
 FINAL_CFLAGS+= -I../contrib/$(LIBYAML)/include 
 FINAL_CFLAGS+= -I../contrib/$(LIBUV)/include 
 FINAL_CFLAGS+= -I../contrib/$(HIREDIS)
+FINAL_CFLAGS+= -I../contrib/$(JANSSON)/src
 
 FINAL_LIBS+= ./proto/proto.a
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
 FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
 FINAL_LIBS+= ../contrib/$(HIREDIS)/libhiredis.a
+FINAL_LIBS+= ../contrib/$(JANSSON)/src/.libs/libjansson.a
 
 
 CC?=gcc
