@@ -19,6 +19,10 @@ servers:
       port: 9891
       timeout: 30 #30 seconds
 
+upstreams:
+    rediskey: rps:upstream:pool
+    refresh: 60 #30 seconds
+
 redis:
     host: dev1
     port: 6379
