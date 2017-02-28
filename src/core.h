@@ -1,6 +1,11 @@
 #ifndef _RPS_CORE_H
 #define _RPS_CORE_H
 
+
+#include <uv.h>
+#include <string.h>
+#include <stdint.h>
+
 #define RPS_OK      0
 #define RPS_ERROR   -1
 #define RPS_ENOMEM  -2
@@ -51,9 +56,6 @@ typedef struct session rps_sess_t;
 #include "array.h"
 #include "server.h"
 
-#include <uv.h>
-
-#include <stdint.h>
 
 
 enum context_flag {
