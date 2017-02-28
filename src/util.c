@@ -73,7 +73,7 @@ _rps_assert(const char *cond, const char *file, int line) {
 }
 
 int
-rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si) { 
+rps_resolve_inet(const char *node, uint16_t port, rps_addr_t *si) { 
     struct addrinfo hints;
     struct addrinfo *res, *rp;
     int status;
@@ -94,10 +94,10 @@ rps_resolve_inet(const char *ip, uint16_t port, rps_addr_t *si) {
 
     snprintf(service, sizeof(service), "%d", port);
 
-    status = getaddrinfo(ip, service, &hints, &res); 
+    status = getaddrinfo(node, service, &hints, &res); 
     if (status != 0) {
         log_error("get address info %s:%s failed: %s", 
-                ip, service, gai_strerror(status));
+                node, service, gai_strerror(status));
         return -1;
     }
 
