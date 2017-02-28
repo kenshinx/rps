@@ -84,7 +84,7 @@ rps_resolve_inet(const char *node, uint16_t port, rps_addr_t *si) {
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = PF_UNSPEC;
-    hints.ai_flags = AI_NUMERICHOST;
+    hints.ai_flags = AI_CANONNAME;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = 0;
     hints.ai_addrlen = 0;
