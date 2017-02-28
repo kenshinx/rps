@@ -9,19 +9,38 @@
 
 typedef int rps_status_t;
 
+#define RPS_PROTO_MAP(V)                      \
+    V(-1, UNSUPPORT, "unsupport")             \
+    V(1,  SOCKS5, "socks5")                   \
+    V(2,  HTTP, "http")                       \
+    V(3,  SOCKS4, "socks4")                   \
+    V(4,  PRIVATE, "private")                 \
+
 typedef enum {
-    SOCKS5,
-    HTTP,
-
-#ifdef SOCKS4_PROXY_SUPPORT
-    SOCKS4,
-#endif
-
-#ifdef PRIVATE_PROXY_SUPPORT
-    PRIVATE,
-#endif
-
+#define RPS_PROTO_GEN(code, name, _) name = code,
+      RPS_PROTO_MAP(RPS_PROTO_GEN)
+#undef RPS_PROTO_GEN
 } rps_proto_t;
+
+static inline const char * 
+rps_proto_str(rps_proto_t proto) {
+#define RPS_PROTO_GEN(_, name, str) case name: return str;
+    switch (proto) {
+        RPS_PROTO_MAP(RPS_PROTO_GEN)
+        default: ;
+    }
+#undef RPS_PROTO_GEN
+    return "Unsupport Proto";
+}
+
+static inline rps_proto_t
+rps_proto_int(const char *proto) {
+#define RPS_PROTO_GEN(_, name, str) if (strcmp(proto, str) == 0) {return name;}
+    RPS_PROTO_MAP(RPS_PROTO_GEN)
+#undef RPS_PROTO_GEN
+    return UNSUPPORT;
+}
+
 
 typedef struct context rps_ctx_t;
 typedef struct session rps_sess_t;

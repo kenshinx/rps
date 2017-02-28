@@ -25,17 +25,9 @@ server_init(struct server *s, struct config_server *cfg) {
 
     s->us.data = s;
 
-    if (rps_strcmp(cfg->proto.data, "socks5") == 0 ) {
-        s->proto = SOCKS5;
-    } else if (rps_strcmp(cfg->proto.data, "http") == 0 ) {
-        s->proto = HTTP;
-    }
-#ifdef SOCKS4_PROXY_SUPPORT
-     else if (rps_strcmp(cfg->proto.data, "socks4") == 0 ) {
-        s->proto = SOCKS4;
-     }
-#endif
-    else{
+    s->proto = rps_proto_int(cfg->proto.data);
+
+    if (s->proto < 0){
         log_error("unsupport proxy protocol type: %s", cfg->proto.data);
         return RPS_ERROR;
     }
