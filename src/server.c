@@ -25,7 +25,7 @@ server_init(struct server *s, struct config_server *cfg) {
 
     s->us.data = s;
 
-    s->proto = rps_proto_int(cfg->proto.data);
+    s->proto = rps_proto_int((const char *)cfg->proto.data);
 
     if (s->proto < 0){
         log_error("unsupport proxy protocol type: %s", cfg->proto.data);
