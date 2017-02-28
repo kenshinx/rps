@@ -7,6 +7,9 @@
 #include "_string.h"
 #include "config.h"
 
+#define UPSTREAM_DEFAULT_WEIGHT 10
+#define UPSTREAM_DEFAULT_POOL_LENGTH 64
+
 struct upstream  {
     rps_addr_t  server;
     rps_str_t   uname;
@@ -23,5 +26,6 @@ struct upstream_pool {
 rps_status_t upstream_pool_init(struct upstream_pool *up);
 rps_status_t upstream_pool_load(struct upstream_pool *up, 
         struct config_redis *cr, struct config_upstream *cu);
+void upstream_pool_dump(struct upstream_pool *up);
 
 #endif
