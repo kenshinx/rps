@@ -178,7 +178,7 @@ upstream_pool_load(struct upstream_pool *up,
 	redisFree(c);
 
     for (i = 0; i < reply->elements; i++) {
-        upstream = array_push(&up->pool);
+        upstream = (struct upstream *)array_push(&up->pool);
         upstream_init(upstream);
         if (upstream_json_parse(reply->element[i]->str, upstream) != RPS_OK) {
             return RPS_ERROR;
