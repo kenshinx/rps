@@ -37,8 +37,11 @@ upstream_pool_init(struct upstream_pool *up) {
 }
 
 void
-upstream_pool_deinit(struct upstream_pool up) {
-
+upstream_pool_deinit(struct upstream_pool *up) {
+	while(array_n(&up->pool)) {
+		upstream_deinit((struct upstream *)array_pop(&up->pool));
+	}
+	array_deinit(&up->pool);
 } 
 
 static redisContext *
@@ -140,7 +143,8 @@ upstream_json_parse(const char *str, struct upstream *u) {
     status = rps_resolve_inet((const char *)host.data, port, &u->server);
     if (status != RPS_OK) {
         log_error("jason parse error, invalid upstream address, %s:%d", host, port);
-        return status;
+		/* Avoid single invalid record  result in process exit */
+		// return status;  
     }
 
     return RPS_OK;
@@ -152,7 +156,6 @@ upstream_pool_load(struct upstream_pool *up,
         struct config_redis *cr, struct config_upstream *cu) {
     redisContext *c;
     redisReply  *reply;
-    rps_status_t    status;
     struct upstream *upstream;
     size_t i;
 

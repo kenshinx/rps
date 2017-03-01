@@ -181,11 +181,11 @@ rps_upstream_setup(struct application *app) {
 
     status = upstream_pool_load(&app->upstreams, app->cfg.redis, app->cfg.upstream);
     if (status != RPS_OK) {
-        return status;
+		upstream_pool_deinit(&app->upstreams);
+		return status;
     }
-    
-    
 
+	return RPS_OK;
 }
 
 static void
@@ -194,6 +194,8 @@ rps_teardown(struct application *app) {
         server_deinit((struct server *)array_pop(&app->servers));
     }
     array_deinit(&app->servers);
+
+	upstream_pool_deinit(&app->upstreams);
 }
 
 
