@@ -53,7 +53,7 @@ rps_show_version() {
 } 
 
 static void
-rps_set_default_options(struct application *app) {
+rps_init(struct application *app) {
     app->log_level = RPS_DEFAULT_LOG_LEVEL;
     app->log_filename = RPS_DEFAULT_LOG_FILE;
     
@@ -63,6 +63,8 @@ rps_set_default_options(struct application *app) {
 
     app->daemon = 0;
     app->verbose = 0;
+
+    log_init(app->log_level, app->log_filename);
 }
 
 static rps_status_t
@@ -255,9 +257,6 @@ rps_post_run(struct application *app) {
     /*
      * remove pidfile, signal_deinit
      */
-    log_deinit();
-    config_deinit(&app->cfg);
-    
 }
 
 int
@@ -265,9 +264,7 @@ main(int argc, char **argv) {
     struct application app;
     rps_status_t status;
 
-    log_init(RPS_DEFAULT_LOG_LEVEL, RPS_DEFAULT_LOG_FILE);
-
-    rps_set_default_options(&app);
+    rps_init(&app);
 
     status = rps_get_options(argc, argv, &app);
     if (status != RPS_OK) {
