@@ -6,8 +6,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define SERVER_HOST ""
-#define SERVER_PORT 1221
+#define SERVER_HOST "127.0.0.1"
+#define SERVER_PORT 9890
 
 #define MAXLINE 2024
 
@@ -83,9 +83,9 @@ void handle(int sockfd) {
     memcpy(&sendBuf[len], passwd, strlen(passwd));
     len += strlen(passwd);
 
-    _send(sockfd, sendBuf, len);
+    //_send(sockfd, sendBuf, len);
 
-    _recv(sockfd);
+    //_recv(sockfd);
 
 
 
