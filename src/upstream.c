@@ -76,6 +76,7 @@ upstream_redis_connect(struct config_redis *cfg) {
             freeReplyObject(reply);
         }
         log_error("redis authentication failed.");
+		redisFree(c);
         return NULL;
     }
 
@@ -169,9 +170,12 @@ upstream_pool_load(struct upstream_pool *up,
         if (reply) {
             freeReplyObject(reply);
         }
-        log_error("redis get upstreams failed.");
+        log_error("redis get upstreams failed.");	
+		redisFree(c);
         return RPS_ERROR;
     }
+
+	redisFree(c);
 
     for (i = 0; i < reply->elements; i++) {
         upstream = array_push(&up->pool);
@@ -192,14 +196,14 @@ upstream_str(void *data) {
     u = (struct upstream *)data;
 
     rps_unresolve_addr(&u->server, name);
-    log_debug("\t%s://%s:%s@%s:%d ", rps_proto_str(u->proto), 
+    log_verb("\t%s://%s:%s@%s:%d ", rps_proto_str(u->proto), 
             u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server));
 
 }
 
 void
 upstream_pool_dump(struct upstream_pool *up) {
-    log_debug("[rps upstream proxy pool]");
+    log_verb("[rps upstream proxy pool]");
     array_foreach(&up->pool, upstream_str);
 }
 

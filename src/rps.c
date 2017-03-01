@@ -185,6 +185,11 @@ rps_upstream_setup(struct application *app) {
 		return status;
     }
 
+#ifdef RPS_DEBUG_OPEN
+	upstream_pool_dump(&app->upstreams);
+#endif
+
+
 	return RPS_OK;
 }
 
