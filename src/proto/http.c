@@ -4,7 +4,7 @@
 #include <uv.h>
 
 
-uint16_t 
+ctx_state_t 
 http_server_do_next(struct context *ctx) {
     char    *data;
     ssize_t size;
@@ -15,26 +15,26 @@ http_server_do_next(struct context *ctx) {
     printf("http read %zd bytes: %s\n", size, data);
 }
 
-uint16_t 
+ctx_state_t 
 http_client_do_next(struct context *ctx) {
 }
 
-uint16_t
+ctx_state_t
 http_server_handshake(http_handle_t *handle) {
     
 }
 
-uint16_t
+ctx_state_t
 http_server_auth(http_handle_t *handle) {
 
 }
 
-uint16_t
+ctx_state_t
 http_client_handshake(http_handle_t *handle) {
     
 }
 
-uint16_t
+ctx_state_t
 http_client_auth(http_handle_t *handle) {
 
 }

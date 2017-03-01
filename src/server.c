@@ -413,7 +413,7 @@ error:
     return;
 }
 
-static uint16_t
+static ctx_state_t
 server_upstream_kickoff(rps_ctx_t *ctx) {
     struct server *s;
     rps_sess_t *sess;
@@ -434,7 +434,7 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
 
 void
 server_do_next(rps_ctx_t *ctx) {
-    uint16_t new_state;
+    ctx_state_t new_state;
 
     if (ctx->last_status < 0) {
         ctx->state = c_kill;

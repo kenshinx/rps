@@ -27,7 +27,7 @@ redis:
     host: dev1
     port: 6379
     db: 0
-    password: secret
+    password: tfqmcA0JvG04EHKDj
     timeout: 5
 
 log:

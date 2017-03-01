@@ -7,7 +7,7 @@ import optparse
 
 REDIS_HOST = "dev1"
 REDIS_PORT = 6379
-REDIS_PASSWD = "secret"
+REDIS_PASSWD = "tfqmcA0JvG04EHKDj"
 
 REDIS_KEY = "rps:upstream:pool"
 

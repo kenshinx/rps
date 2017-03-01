@@ -58,12 +58,12 @@ typedef struct session rps_sess_t;
 
 
 
-enum context_flag {
+typedef enum context_flag {
     c_request,
     c_forward
-};
+} ctx_flag_t;
 
-enum context_state {
+typedef enum context_state {
     c_init = (1 << 0),
 	c_handshake = (1 << 1),
 	c_auth = (1 << 2),
@@ -75,10 +75,10 @@ enum context_state {
     c_dead = (1 << 8),
     c_closing = (1 << 9),
     c_closed = (1 << 10)
-};
+} ctx_state_t;
 
 
-typedef uint16_t (*rps_next_t)(struct context *);
+typedef ctx_state_t (*rps_next_t)(struct context *);
 
 struct context {
     struct session 		*sess;
@@ -101,8 +101,8 @@ struct context {
 
     char            	peername[MAX_INET_ADDRSTRLEN];
 
-    uint8_t         	flag;
-    uint16_t        	state;
+    ctx_flag_t         	flag;
+    ctx_state_t        	state;
 
     int                 last_status;
 };

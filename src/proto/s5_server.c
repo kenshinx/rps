@@ -27,9 +27,9 @@ s5_select_auth(struct s5_method_request *req) {
     return s5_auth_unacceptable;
 }
 
-static uint16_t
+static ctx_state_t
 s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
-    uint16_t new_state;
+    ctx_state_t new_state;
     struct server *s;
     struct s5_method_request *req;
     struct s5_method_response resp;
@@ -88,9 +88,9 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     return new_state;
 }
 
-static uint16_t
+static ctx_state_t
 s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
-    uint16_t new_state;
+    ctx_state_t new_state;
     struct server *s;
     struct s5_auth_request *req;
     struct s5_auth_response resp;
@@ -151,7 +151,7 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     return new_state;
 }
 
-static uint16_t
+static ctx_state_t
 s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     uint8_t alen;
     struct s5_request *req;
@@ -221,16 +221,16 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     return c_reply_pre;
 }
 
-static uint16_t
+static ctx_state_t
 s5_do_reply() {
     return c_kill;
 }
 
-uint16_t 
+ctx_state_t 
 s5_server_do_next(struct context *ctx) {
     uint8_t    *data;
     size_t     size;
-    uint16_t new_state; 
+    ctx_state_t new_state; 
 
     data = (uint8_t *)ctx->buf;
     size = (size_t)ctx->nread;

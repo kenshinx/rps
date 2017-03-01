@@ -5,16 +5,16 @@
 
 
 
-uint16_t 
+ctx_state_t 
 s5_client_do_next(struct context *ctx) {
 }
 
-uint16_t
+ctx_state_t
 s5_client_handshake() {
     
 }
 
-uint16_t
+ctx_state_t
 s5_client_auth() {
 
 }

@@ -22,7 +22,7 @@ http_handle_init(http_handle_t *handle) {
     memset(handle, 0, sizeof(*handle));
 }
 
-uint16_t http_server_do_next(struct context *ctx);
-uint16_t http_client_do_next(struct context *ctx);
+ctx_state_t http_server_do_next(struct context *ctx);
+ctx_state_t http_client_do_next(struct context *ctx);
 
 #endif
