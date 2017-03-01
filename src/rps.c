@@ -65,6 +65,9 @@ rps_init(struct application *app) {
     app->verbose = 0;
 
     log_init(app->log_level, app->log_filename);
+	
+	array_null(&app->servers);
+	array_null(&app->upstreams.pool);
 }
 
 static rps_status_t
@@ -257,6 +260,8 @@ rps_post_run(struct application *app) {
     /*
      * remove pidfile, signal_deinit
      */
+    config_deinit(&app->cfg);
+	log_deinit();
 }
 
 int

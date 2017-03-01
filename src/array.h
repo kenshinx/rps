@@ -15,6 +15,14 @@ struct rps_array {
 
 typedef struct rps_array rps_array_t;
 
+static inline void
+array_null(rps_array_t *a) {
+    a->elts = NULL;
+    a->nelts = 0;
+    a->size = 0;
+    a->nalloc = 0;
+}
+
 static inline uint32_t
 array_n(rps_array_t *a) {
     return a->nelts;
@@ -22,6 +30,9 @@ array_n(rps_array_t *a) {
 
 #define array_is_empty(_a)                             \
     ((_a->nelts) == 0)          
+
+#define array_is_null(_a)                              \
+    (((_a->nelts) == 0) && ((_a->elts) == NULL))
 
 #define array_is_full(_a)                              \
     ((_a)->nelts == (_a)->nalloc)
