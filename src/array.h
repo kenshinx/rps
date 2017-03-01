@@ -29,10 +29,10 @@ array_n(rps_array_t *a) {
 }
 
 #define array_is_empty(_a)                             \
-    ((_a->nelts) == 0)          
+    ((_a)->nelts == 0)          
 
 #define array_is_null(_a)                              \
-    (((_a->nelts) == 0) && ((_a->elts) == NULL))
+    (((_a)->nelts == 0) && ((_a)->elts == NULL))
 
 #define array_is_full(_a)                              \
     ((_a)->nelts == (_a)->nalloc)
@@ -46,6 +46,7 @@ void *array_pop(rps_array_t *a);
 void *array_get(rps_array_t *a, uint32_t idx);
 void *array_head(rps_array_t *a);
 void array_foreach(rps_array_t *a, array_foreach_t func);
+void array_swap(rps_array_t **a, rps_array_t **b);
 
 
 #endif

@@ -28,6 +28,7 @@ array_deinit(rps_array_t *a) {
     if (a->elts != NULL) {
         rps_free(a->elts);
     }
+	array_null(a);
 }
 
 
@@ -123,4 +124,13 @@ array_foreach(rps_array_t *a, array_foreach_t func) {
         void *elt = array_get(a, i);
         func(elt);
     }   
+}
+
+void 
+array_swap(rps_array_t **a, rps_array_t **b) {
+    rps_array_t *tmp;
+    
+    tmp = *a;
+    *a = *b;
+    *b = tmp;
 }

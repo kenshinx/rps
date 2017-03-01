@@ -19,14 +19,14 @@ struct upstream  {
 };
 
 struct upstream_pool {
-    rps_array_t pool;
+    rps_array_t *pool;
     uint32_t    index;
 };
 
 rps_status_t upstream_pool_init(struct upstream_pool *up);
-rps_status_t upstream_pool_load(struct upstream_pool *up, 
-        struct config_redis *cr, struct config_upstream *cu);
 void upstream_pool_deinit(struct upstream_pool *up);
 void upstream_pool_dump(struct upstream_pool *up);
+void upstream_pool_refresh(struct upstream_pool *up, 
+        struct config_redis *cr, struct config_upstream *cu);
 
 #endif

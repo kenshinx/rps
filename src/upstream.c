@@ -24,11 +24,9 @@ upstream_deinit(struct upstream *u) {
 
 rps_status_t
 upstream_pool_init(struct upstream_pool *up) {
-    rps_status_t status;
-
-    status = array_init(&up->pool, UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
-    if (status != RPS_OK) {
-        return status;
+    up->pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
+    if (up->pool == NULL) {
+        return RPS_ERROR;
     }
 
     up->index = 0;
@@ -38,10 +36,11 @@ upstream_pool_init(struct upstream_pool *up) {
 
 void
 upstream_pool_deinit(struct upstream_pool *up) {
-	while(array_n(&up->pool)) {
-		upstream_deinit((struct upstream *)array_pop(&up->pool));
+	while(array_n(up->pool)) {
+		upstream_deinit((struct upstream *)array_pop(up->pool));
 	}
-	array_deinit(&up->pool);
+    array_destroy(up->pool);
+    up->pool = NULL;
 } 
 
 static redisContext *
@@ -152,7 +151,7 @@ upstream_json_parse(const char *str, struct upstream *u) {
 
 }
 
-rps_status_t
+static rps_status_t
 upstream_pool_load(struct upstream_pool *up, 
         struct config_redis *cr, struct config_upstream *cu) {
     redisContext *c;
@@ -178,7 +177,7 @@ upstream_pool_load(struct upstream_pool *up,
 	redisFree(c);
 
     for (i = 0; i < reply->elements; i++) {
-        upstream = (struct upstream *)array_push(&up->pool);
+        upstream = (struct upstream *)array_push(up->pool);
         upstream_init(upstream);
         if (upstream_json_parse(reply->element[i]->str, upstream) != RPS_OK) {
             return RPS_ERROR;
@@ -186,6 +185,35 @@ upstream_pool_load(struct upstream_pool *up,
     }
 
     return RPS_OK;
+}
+
+void 
+upstream_pool_refresh(struct upstream_pool *up, 
+        struct config_redis *cr, struct config_upstream *cu) {
+
+    struct upstream_pool new_up;
+
+    /* Free current upstream pool only when new pool load successful */
+
+    if (upstream_pool_init(&new_up) != RPS_OK) {
+        log_error("create new upstream pool failed");
+        return;
+    }
+
+    if (upstream_pool_load(&new_up, cr, cu) != RPS_OK) {
+        upstream_pool_deinit(&new_up);
+        log_error("load upstreams from redis failed.");
+        return;
+    }
+
+    array_swap(&up->pool, &new_up.pool);
+
+    if (new_up.pool != NULL) {
+        upstream_pool_deinit(&new_up);
+    }
+    
+
+    log_debug("refresh upstream pool, get <%d> proxys", array_n(up->pool));
 }
 
 static void
@@ -204,6 +232,6 @@ upstream_str(void *data) {
 void
 upstream_pool_dump(struct upstream_pool *up) {
     log_verb("[rps upstream proxy pool]");
-    array_foreach(&up->pool, upstream_str);
+    array_foreach(up->pool, upstream_str);
 }
 

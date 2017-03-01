@@ -67,7 +67,7 @@ rps_init(struct application *app) {
     log_init(app->log_level, app->log_filename);
 	
 	array_null(&app->servers);
-	array_null(&app->upstreams.pool);
+    app->upstreams.pool = NULL;
 }
 
 static rps_status_t
@@ -177,18 +177,9 @@ error:
 
 static rps_status_t
 rps_upstream_setup(struct application *app) {
-    rps_status_t status;
 
-    status = upstream_pool_init(&app->upstreams);
-    if (status != RPS_OK) {
-        return status;
-    }
-
-    status = upstream_pool_load(&app->upstreams, app->cfg.redis, app->cfg.upstream);
-    if (status != RPS_OK) {
-		upstream_pool_deinit(&app->upstreams);
-		return status;
-    }
+    upstream_pool_refresh(&app->upstreams, 
+            app->cfg.redis, app->cfg.upstream);
 
 #ifdef RPS_DEBUG_OPEN
 	upstream_pool_dump(&app->upstreams);
