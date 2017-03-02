@@ -137,7 +137,7 @@ rps_set_log(struct application *app) {
 }
 
 static rps_status_t
-rps_server_setup(struct application *app) {
+rps_server_load(struct application *app) {
     uint32_t i, n;
     rps_status_t status;
     struct config_server *cfg;
@@ -194,7 +194,7 @@ rps_upstream_refresh(uv_timer_t *handle) {
 }
 
 static void
-rps_upstream_setup(struct application *app) {
+rps_upstream_loader(struct application *app) {
     uv_loop_t *loop;
     uv_timer_t *timer;
 
@@ -236,7 +236,7 @@ rps_run(struct application *app) {
     uv_thread_t *tid;
     rps_array_t threads;
 
-    status = rps_server_setup(app);
+    status = rps_server_load(app);
     if (status != RPS_OK) {
         return;
     }
@@ -249,7 +249,7 @@ rps_run(struct application *app) {
     }
 
     tid = (uv_thread_t *)array_push(&threads);
-    uv_thread_create(tid, (uv_thread_cb)rps_upstream_setup, app);
+    uv_thread_create(tid, (uv_thread_cb)rps_upstream_loader, app);
     
     for (i = 0; i < array_n(&app->servers); i++) {
         tid = (uv_thread_t *)array_push(&threads);
