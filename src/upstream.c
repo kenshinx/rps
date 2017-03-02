@@ -32,6 +32,7 @@ upstream_pool_init(struct upstream_pool *up) {
 static rps_status_t
 upstream_pool_setup(struct upstream_pool *up, struct config_upstream *cu) {
     ASSERT(up->pool == NULL);
+
     up->pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
     if (up->pool == NULL) {
         return RPS_ERROR;
@@ -51,12 +52,17 @@ upstream_pool_setup(struct upstream_pool *up, struct config_upstream *cu) {
     return RPS_OK;
 }
 
-void
-upstream_pool_deinit(struct upstream_pool *up) {
+static void
+upstream_pool_teardown(struct upstream_pool *up) {
 	while(array_n(up->pool)) {
 		upstream_deinit((struct upstream *)array_pop(up->pool));
 	}
     array_destroy(up->pool);
+}
+
+void
+upstream_pool_deinit(struct upstream_pool *up) {
+    upstream_pool_teardown(up);
     up->pool = NULL;
     up->index = 0;
 } 
