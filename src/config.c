@@ -186,7 +186,7 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         if (rps_strcmp(key->data, "rediskey") == 0) {
             status = string_copy(&cfg->upstream->rediskey, val);
         } else if (rps_strcmp(key->data, "refresh") == 0) {
-            cfg->upstream->refresh = atoi((char *)val->data);
+            cfg->upstream->refresh = (atoi((char *)val->data)) * 1000;
         } else {
             status = RPS_ERROR;
         }

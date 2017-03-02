@@ -187,7 +187,7 @@ upstream_pool_load(struct upstream_pool *up,
     return RPS_OK;
 }
 
-void 
+rps_status_t
 upstream_pool_refresh(struct upstream_pool *up, 
         struct config_redis *cr, struct config_upstream *cu) {
 
@@ -197,13 +197,13 @@ upstream_pool_refresh(struct upstream_pool *up,
 
     if (upstream_pool_init(&new_up) != RPS_OK) {
         log_error("create new upstream pool failed");
-        return;
+        return RPS_ERROR;
     }
 
     if (upstream_pool_load(&new_up, cr, cu) != RPS_OK) {
         upstream_pool_deinit(&new_up);
         log_error("load upstreams from redis failed.");
-        return;
+        return RPS_ERROR;
     }
 
     array_swap(&up->pool, &new_up.pool);
@@ -214,6 +214,8 @@ upstream_pool_refresh(struct upstream_pool *up,
     
 
     log_debug("refresh upstream pool, get <%d> proxys", array_n(up->pool));
+
+    return RPS_OK;
 }
 
 static void

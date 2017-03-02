@@ -21,7 +21,7 @@ servers:
 
 upstreams:
     rediskey: rps:upstream:pool
-    refresh: 60 #30 seconds
+    refresh: 30 #30 seconds
 
 redis:
     host: dev1
