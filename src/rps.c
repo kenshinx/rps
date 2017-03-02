@@ -253,7 +253,7 @@ rps_run(struct application *app) {
     tid = (uv_thread_t *)array_push(&threads);
     uv_thread_create(tid, (uv_thread_cb)rps_upstream_setup, app);
     
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < array_n(&app->servers); i++) {
         tid = (uv_thread_t *)array_push(&threads);
         s = (struct server *)array_get(&app->servers, i);
         uv_thread_create(tid, (uv_thread_cb)server_run, s);
