@@ -106,29 +106,29 @@ upstream_json_parse(const char *str, struct upstream *u) {
     for (kv = json_object_iter(root); kv; kv = json_object_iter_next(root, kv)) {
         status = RPS_OK;
         json_t *tmp = json_object_iter_value(kv);
-        if (rps_strcmp(json_object_iter_key(kv), "host") == 0 && 
+        if (strcmp(json_object_iter_key(kv), "host") == 0 && 
                 json_typeof(tmp) == JSON_STRING) {
             status = string_duplicate(&host, json_string_value(tmp), json_string_length(tmp));
-        } else if (rps_strcmp(json_object_iter_key(kv), "port") == 0 && 
+        } else if (strcmp(json_object_iter_key(kv), "port") == 0 && 
                 json_typeof(tmp) == JSON_INTEGER) {
             port = (uint16_t)json_integer_value(tmp);
-        } else if (rps_strcmp(json_object_iter_key(kv), "proto") == 0 && 
+        } else if (strcmp(json_object_iter_key(kv), "proto") == 0 && 
                 json_typeof(tmp) == JSON_STRING) {
             u->proto = rps_proto_int(json_string_value(tmp));
             if (u->proto < 0) {
                 status = RPS_ERROR;
             }
-        } else if (rps_strcmp(json_object_iter_key(kv), "username") == 0) {
+        } else if (strcmp(json_object_iter_key(kv), "username") == 0) {
             /* Ignore username is null */
             if (json_typeof(tmp) == JSON_STRING) {
                 status = string_duplicate(&u->uname, json_string_value(tmp), json_string_length(tmp));
             }
-        } else if (rps_strcmp(json_object_iter_key(kv), "password") == 0) {
+        } else if (strcmp(json_object_iter_key(kv), "password") == 0) {
             /* Ignore password is null */
             if (json_typeof(tmp) == JSON_STRING) {
                 status = string_duplicate(&u->passwd, json_string_value(tmp), json_string_length(tmp));
             }
-        } else if (rps_strcmp(json_object_iter_key(kv), "weight") == 0) {
+        } else if (strcmp(json_object_iter_key(kv), "weight") == 0) {
             u->weight = (uint16_t)json_integer_value(tmp);
         } else {
             status = RPS_ERROR;

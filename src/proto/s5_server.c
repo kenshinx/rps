@@ -126,8 +126,8 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     memset(&resp, 0, sizeof(struct s5_auth_response));
 
     resp.ver = SOCKS5_AUTH_PASSWD_VERSION;
-    if (rps_strcmp(s->cfg->username.data, req->uname) == 0 && 
-        rps_strcmp(s->cfg->password.data, req->passwd) == 0) {
+    if (rps_strcmp(&s->cfg->username, req->uname) == 0 && 
+        rps_strcmp(&s->cfg->password, req->passwd) == 0) {
         resp.status = s5_auth_allow;
         new_state = c_requests;
     } else {

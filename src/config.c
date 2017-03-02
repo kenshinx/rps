@@ -136,9 +136,9 @@ config_server_deinit(struct config_server *server) {
 
 static rps_status_t
 config_set_daemon(struct config *cfg, rps_str_t *str) {
-    if (rps_strcmp(str->data, "true") == 0 ) {
+    if (rps_strcmp(str, "true") == 0 ) {
         cfg->daemon = 1;
-    } else if (rps_strcmp(str->data, "false") == 0 ) {
+    } else if (rps_strcmp(str, "false") == 0 ) {
         cfg->daemon = 0;
     } else {
         return RPS_ERROR;
@@ -155,59 +155,59 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
     status = RPS_OK;
 
     if (section == NULL) {
-        if (rps_strcmp(key->data, "title") == 0 ) {
+        if (rps_strcmp(key, "title") == 0 ) {
             status = string_copy(&cfg->title, val);          
-        } else if (rps_strcmp(key->data, "pidfile") == 0) {
+        } else if (rps_strcmp(key, "pidfile") == 0) {
             status = string_copy(&cfg->pidfile, val);
-        } else if (rps_strcmp(key->data, "daemon") == 0) {
+        } else if (rps_strcmp(key, "daemon") == 0) {
             status = config_set_daemon(cfg, val);
         } else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section->data, "servers") == 0 ) {
+    } else if (rps_strcmp(section, "servers") == 0 ) {
         server = (struct config_server *)array_head(cfg->servers);
-        if (rps_strcmp(key->data, "proto") == 0) {
+        if (rps_strcmp(key, "proto") == 0) {
             status = string_copy(&server->proto, val);
-        } else if (rps_strcmp(key->data, "listen") == 0) {
+        } else if (rps_strcmp(key, "listen") == 0) {
             status = string_copy(&server->listen, val);
-        } else if (rps_strcmp(key->data, "port") == 0) {
+        } else if (rps_strcmp(key, "port") == 0) {
             server->port = atoi((char *)val->data);
-        } else if (rps_strcmp(key->data, "username") == 0) {
+        } else if (rps_strcmp(key, "username") == 0) {
             status = string_copy(&server->username, val);
-        } else if (rps_strcmp(key->data, "password") == 0) {
+        } else if (rps_strcmp(key, "password") == 0) {
             status = string_copy(&server->password, val);
-        } else if (rps_strcmp(key->data, "timeout") == 0) { 
+        } else if (rps_strcmp(key, "timeout") == 0) { 
             /*convert uint from second to millsecond*/
             server->timeout = (atoi((char *)val->data)) * 1000;
         }else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section->data, "upstreams") == 0) {
-        if (rps_strcmp(key->data, "rediskey") == 0) {
+    } else if (rps_strcmp(section, "upstreams") == 0) {
+        if (rps_strcmp(key, "rediskey") == 0) {
             status = string_copy(&cfg->upstream->rediskey, val);
-        } else if (rps_strcmp(key->data, "refresh") == 0) {
+        } else if (rps_strcmp(key, "refresh") == 0) {
             cfg->upstream->refresh = (atoi((char *)val->data)) * 1000;
         } else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section->data, "redis") == 0) {
-        if (rps_strcmp(key->data, "host") == 0) {
+    } else if (rps_strcmp(section, "redis") == 0) {
+        if (rps_strcmp(key, "host") == 0) {
             status = string_copy(&cfg->redis->host, val);
-        } else if (rps_strcmp(key->data, "port") == 0) {
+        } else if (rps_strcmp(key, "port") == 0) {
             cfg->redis->port = atoi((char *)val->data);
-        } else if (rps_strcmp(key->data, "db") == 0) {
+        } else if (rps_strcmp(key, "db") == 0) {
             cfg->redis->db = atoi((char *)val->data);
-        } else if (rps_strcmp(key->data, "password") == 0){
+        } else if (rps_strcmp(key, "password") == 0){
             status = string_copy(&cfg->redis->password, val);
-        } else if (rps_strcmp(key->data, "timeout") == 0) {
+        } else if (rps_strcmp(key, "timeout") == 0) {
             cfg->redis->timeout = atoi((char *)val->data);
         } else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section->data, "log") == 0) {
-        if(rps_strcmp(key->data, "file") == 0) {
+    } else if (rps_strcmp(section, "log") == 0) {
+        if(rps_strcmp(key, "file") == 0) {
             status = string_copy(&cfg->log->file, val);
-        } else if (rps_strcmp(key->data, "level") == 0) {
+        } else if (rps_strcmp(key, "level") == 0) {
             status = string_copy(&cfg->log->level, val);
         } else {
             status = RPS_ERROR;
@@ -400,7 +400,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
         } 
 
         if (cfg->seq) {
-            if (rps_strcmp(section->data, "servers") == 0 ) {
+            if (rps_strcmp(section, "servers") == 0 ) {
                 /* new server block */
                 server = (struct config_server *)array_push(cfg->servers);
                 if (server == NULL) {
