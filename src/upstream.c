@@ -22,14 +22,31 @@ upstream_deinit(struct upstream *u) {
     string_deinit(&u->passwd);
 }
 
-rps_status_t
+void
 upstream_pool_init(struct upstream_pool *up) {
+    up->pool = NULL;
+    up->index = 0;
+    up->schedule = UPSTREAM_DEFAULT_SCHEDULE;
+}
+
+static rps_status_t
+upstream_pool_setup(struct upstream_pool *up, struct config_upstream *cu) {
+    ASSERT(up->pool == NULL);
     up->pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
     if (up->pool == NULL) {
         return RPS_ERROR;
     }
 
-    up->index = 0;
+    if (rps_strcmp(&cu->schedule, "rr") == 0) {
+        up->schedule = up_rr;
+    } else if (rps_strcmp(&cu->schedule, "random") == 0) {
+        up->schedule = up_random;
+    } else if (rps_strcmp(&cu->schedule, "wrr") == 0) {
+        ASSERT(0 && "wrr have not implemented");
+    } else {
+        NOT_REACHED();
+    }
+
 
     return RPS_OK;
 }
@@ -41,6 +58,7 @@ upstream_pool_deinit(struct upstream_pool *up) {
 	}
     array_destroy(up->pool);
     up->pool = NULL;
+    up->index = 0;
 } 
 
 static redisContext *
@@ -195,8 +213,10 @@ upstream_pool_refresh(struct upstream_pool *up,
 
     /* Free current upstream pool only when new pool load successful */
 
-    if (upstream_pool_init(&new_up) != RPS_OK) {
-        log_error("create new upstream pool failed");
+    upstream_pool_init(&new_up);
+
+    if (upstream_pool_setup(&new_up, cu) != RPS_OK) {
+        log_error("setup new upstream pool failed");
         return RPS_ERROR;
     }
 

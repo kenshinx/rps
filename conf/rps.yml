@@ -23,6 +23,11 @@ upstreams:
     rediskey: rps:upstream:pool
     refresh: 30 #30 seconds
 
+    #rr: round-robin
+    #random: random schedule
+    #wrr: weighted round robin
+    schedule: rr 
+
 redis:
     host: dev1
     port: 6379

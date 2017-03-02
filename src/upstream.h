@@ -9,6 +9,13 @@
 
 #define UPSTREAM_DEFAULT_WEIGHT 10
 #define UPSTREAM_DEFAULT_POOL_LENGTH 64
+#define UPSTREAM_DEFAULT_SCHEDULE up_rr
+
+enum upstream_schedule {
+    up_rr,         /* round-robin */
+    up_wrr,        /* weighted round-robin*/
+    up_random,     /* raondom schedule */
+};
 
 struct upstream  {
     rps_addr_t  server;
@@ -19,11 +26,12 @@ struct upstream  {
 };
 
 struct upstream_pool {
-    rps_array_t *pool;
-    uint32_t    index;
+    rps_array_t         *pool;
+    uint32_t            index;
+    uint8_t             schedule;
 };
 
-rps_status_t upstream_pool_init(struct upstream_pool *up);
+void upstream_pool_init(struct upstream_pool *up);
 void upstream_pool_deinit(struct upstream_pool *up);
 void upstream_pool_dump(struct upstream_pool *up);
 rps_status_t upstream_pool_refresh(struct upstream_pool *up, 

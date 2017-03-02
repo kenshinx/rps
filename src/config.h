@@ -24,6 +24,7 @@ struct config_server {
 struct config_upstream {
     rps_str_t       rediskey;
     uint32_t        refresh;
+    rps_str_t       schedule;
 };
 
 struct config_redis {

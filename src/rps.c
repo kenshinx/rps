@@ -67,7 +67,7 @@ rps_init(struct application *app) {
     log_init(app->log_level, app->log_filename);
 	
 	array_null(&app->servers);
-    app->upstreams.pool = NULL;
+    upstream_pool_init(&app->upstreams);
 }
 
 static rps_status_t
@@ -191,8 +191,6 @@ rps_upstream_refresh(uv_timer_t *handle) {
     #ifdef RPS_DEBUG_OPEN
         upstream_pool_dump(&app->upstreams);
     #endif
-
-
 }
 
 static void

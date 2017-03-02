@@ -82,11 +82,13 @@ static void
 config_upstream_init(struct config_upstream *upstream) {
     string_init(&upstream->rediskey);
     upstream->refresh = UPSTREAM_DEFAULT_REFRESH;
+    string_init(&upstream->schedule);
 }
 
 static void
 config_upstream_deinit(struct config_upstream *upstream) {
     string_deinit(&upstream->rediskey);
+    string_deinit(&upstream->schedule);
 }
 
 static void 
@@ -187,6 +189,8 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
             status = string_copy(&cfg->upstream->rediskey, val);
         } else if (rps_strcmp(key, "refresh") == 0) {
             cfg->upstream->refresh = (atoi((char *)val->data)) * 1000;
+        } else if (rps_strcmp(key, "schedule") == 0) {
+            status = string_copy(&cfg->upstream->schedule, val);
         } else {
             status = RPS_ERROR;
         }
@@ -552,6 +556,7 @@ config_dump(struct config *cfg) {
     log_debug("[upstreams]");
     log_debug("\t rediskey: %s", cfg->upstream->rediskey.data);
     log_debug("\t refresh: %d", cfg->upstream->refresh);
+    log_debug("\t schedule: %s", cfg->upstream->schedule.data);
     log_debug("");
 
     
