@@ -43,7 +43,7 @@ s5_server.o: s5_server.c s5.h
 s5_client.o: s5_client.c s5.h
 http.o: http.c http.h
 
-PROTO_OBJS=s5_server.o s5_client.o http.o
+PROTO_OBJS=s5_server.o s5_client.o 
 
 
 

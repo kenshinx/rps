@@ -103,6 +103,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
             default:
                 NOT_REACHED();
         }
+#ifdef TODO_HTTP
     } else if (ctx->proto == HTTP) {
         switch (ctx->flag) {
             case c_request:
@@ -114,6 +115,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
             default:
                 NOT_REACHED();
         }
+#endif
     } else {
         NOT_REACHED();
     }
