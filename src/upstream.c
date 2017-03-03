@@ -265,6 +265,8 @@ upstream_pool_reload(struct upstream_pool *up) {
     uv_rwlock_wrlock(&up->rwlock);
     array_swap(&up->pool, &new_up.pool);
     uv_rwlock_wrunlock(&up->rwlock);
+    
+    up->schedule = new_up.schedule;
 
     if (!upstream_pool_is_null(&new_up)) {
         upstream_pool_deinit(&new_up);
@@ -304,17 +306,27 @@ upstream_pool_get_rr(struct upstream_pool *up) {
         up->index = 0;
     }
 
-    uv_rwlock_rdlock(&up->rwlock);
     upstream = array_get(up->pool, up->index++);
-    uv_rwlock_rdunlock(&up->rwlock);
-
-    upstream_str(upstream);
 
     return upstream;
 }
 
 static struct upstream *
 upstream_pool_get_random(struct upstream_pool *up) {
+    struct upstream *upstream;
+    int i;
+
+    if (up->pool == NULL) {
+        log_error("upstream pool is null");
+        return NULL;
+    }
+
+    i = rps_random(array_n(up->pool));
+    
+    upstream = array_get(up->pool, i);
+    up->index = i;
+
+    return upstream;
     
 }
 
@@ -323,6 +335,8 @@ upstream_pool_get(struct upstream_pool *up) {
     struct upstream *upstream;
 
     upstream = NULL;
+
+    uv_rwlock_rdlock(&up->rwlock);
 
     switch (up->schedule) {
         case up_rr:
@@ -336,6 +350,14 @@ upstream_pool_get(struct upstream_pool *up) {
             NOT_REACHED();
     }   
     
+    uv_rwlock_rdunlock(&up->rwlock);
+
+#if RPS_DEBUG_OPEN
+    if (upstream != NULL) {
+        upstream_str(upstream);
+    }
+#endif
+
     return upstream;
 }
 

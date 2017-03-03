@@ -424,6 +424,7 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
     rps_sess_t *sess;
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
+    char name[MAX_HOSTNAME_LEN];
 
     sess = ctx->sess;
     s = sess->server;
@@ -434,8 +435,11 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
         return c_kill;
     }
 
-    upstream_pool_get(s->upstreams);
+    upstream = upstream_pool_get(s->upstreams);
 
+    rps_unresolve_addr(&upstream->server, name);
+    log_debug("upstream %s://%s:%d ", rps_proto_str(upstream->proto), name, 
+            rps_unresolve_port(&upstream->server));
 
 }
 

@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
+#include <time.h>
 
 #include <uv.h>
 
@@ -187,3 +188,9 @@ rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
     addr->addrlen = sizeof(addr->addr.name);
 }
 
+
+int 
+rps_random(int max) {
+    srand(time(NULL));
+    return rand() %max;
+}

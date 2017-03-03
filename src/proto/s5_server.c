@@ -216,7 +216,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     if (err < 0) {
         return c_kill;
     }
-    log_debug("remote %s:%d\n", remoteip, rps_unresolve_port(remote));
+    log_debug("remote %s:%d", remoteip, rps_unresolve_port(remote));
 
     return c_reply_pre;
 }
