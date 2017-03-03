@@ -31,17 +31,20 @@ struct upstream  {
 };
 
 struct upstream_pool {
-    rps_array_t         *pool;
-    uint32_t            index;
-    uint8_t             schedule;
-    uv_rwlock_t         rwlock;
+    rps_array_t             *pool;
+    uint32_t                index;
+    uint8_t                 schedule;
+
+    struct config_redis     *cr;
+    struct config_upstream  *cu;
+
+    uv_rwlock_t             rwlock;
 };
 
-void upstream_pool_init(struct upstream_pool *up);
-void upstream_pool_deinit(struct upstream_pool *up);
-void upstream_pool_dump(struct upstream_pool *up);
-rps_status_t upstream_pool_refresh(struct upstream_pool *up, 
+void upstream_pool_init(struct upstream_pool *up, 
         struct config_redis *cr, struct config_upstream *cu);
+void upstream_pool_deinit(struct upstream_pool *up);
+void upstream_pool_refresh(uv_timer_t *handle);
 struct upstream *upstream_pool_get(struct upstream_pool *up);
 
 #endif

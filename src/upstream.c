@@ -38,27 +38,33 @@ upstream_str(void *data) {
 }
 
 void
-upstream_pool_init(struct upstream_pool *up) {
+upstream_pool_init(struct upstream_pool *up, struct config_redis *cr, struct config_upstream *cu) {
     up->pool = NULL;
     up->index = 0;
     up->schedule = UPSTREAM_DEFAULT_SCHEDULE;
+    up->cr = cr;
+    up->cu = cu;
     uv_rwlock_init(&up->rwlock);
 }
 
 static rps_status_t
-upstream_pool_setup(struct upstream_pool *up, struct config_upstream *cu) {
+upstream_pool_setup(struct upstream_pool *up) {
+    rps_str_t *schedule;
+
     ASSERT(up->pool == NULL);
+
+    schedule = &up->cu->schedule;
 
     up->pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
     if (up->pool == NULL) {
         return RPS_ERROR;
     }
 
-    if (rps_strcmp(&cu->schedule, "rr") == 0) {
+    if (rps_strcmp(schedule, "rr") == 0) {
         up->schedule = up_rr;
-    } else if (rps_strcmp(&cu->schedule, "random") == 0) {
+    } else if (rps_strcmp(schedule, "random") == 0) {
         up->schedule = up_random;
-    } else if (rps_strcmp(&cu->schedule, "wrr") == 0) {
+    } else if (rps_strcmp(schedule, "wrr") == 0) {
         log_error("wrr algorithm have not implemented");
         abort();
     } else {
@@ -83,7 +89,15 @@ upstream_pool_deinit(struct upstream_pool *up) {
     up->pool = NULL;
     up->index = 0;
     uv_rwlock_destroy(&up->rwlock);
+    up->cu = NULL;
+    up->cr = NULL;
 } 
+
+static void
+upstream_pool_dump(struct upstream_pool *up) {
+    log_verb("[rps upstream proxy pool]");
+    array_foreach(up->pool, upstream_str);
+}
 
 static redisContext *
 upstream_redis_connect(struct config_redis *cfg) {
@@ -194,19 +208,18 @@ upstream_json_parse(const char *str, struct upstream *u) {
 }
 
 static rps_status_t
-upstream_pool_load(struct upstream_pool *up, 
-        struct config_redis *cr, struct config_upstream *cu) {
+upstream_pool_load(struct upstream_pool *up) {
     redisContext *c;
     redisReply  *reply;
     struct upstream *upstream;
     size_t i;
 
-    c =  upstream_redis_connect(cr);
+    c =  upstream_redis_connect(up->cr);
     if (c == NULL) {
         return RPS_ERROR;
     }
 
-    reply = redisCommand(c, "SMEMBERS %s", cu->rediskey.data);
+    reply = redisCommand(c, "SMEMBERS %s", up->cu->rediskey.data);
     if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
         if (reply) {
             freeReplyObject(reply);
@@ -229,22 +242,21 @@ upstream_pool_load(struct upstream_pool *up,
     return RPS_OK;
 }
 
-rps_status_t
-upstream_pool_refresh(struct upstream_pool *up, 
-        struct config_redis *cr, struct config_upstream *cu) {
+static rps_status_t
+upstream_pool_reload(struct upstream_pool *up) {
 
     struct upstream_pool new_up;
 
     /* Free current upstream pool only when new pool load successful */
 
-    upstream_pool_init(&new_up);
+    upstream_pool_init(&new_up, up->cr, up->cu);
 
-    if (upstream_pool_setup(&new_up, cu) != RPS_OK) {
+    if (upstream_pool_setup(&new_up) != RPS_OK) {
         log_error("setup new upstream pool failed");
         return RPS_ERROR;
     }
 
-    if (upstream_pool_load(&new_up, cr, cu) != RPS_OK) {
+    if (upstream_pool_load(&new_up) != RPS_OK) {
         upstream_pool_deinit(&new_up);
         log_error("load upstreams from redis failed.");
         return RPS_ERROR;
@@ -262,6 +274,21 @@ upstream_pool_refresh(struct upstream_pool *up,
     log_debug("refresh upstream pool, get <%d> proxys", array_n(up->pool));
 
     return RPS_OK;
+}
+
+void 
+upstream_pool_refresh(uv_timer_t *handle) {
+    struct upstream_pool *up;
+    
+    up = (struct upstream_pool *)handle->data;
+    
+    if (upstream_pool_reload(up) != RPS_OK) {
+        log_error("update upstream proxy pool failed");
+    }
+
+    #ifdef RPS_DEBUG_OPEN
+        upstream_pool_dump(up);
+    #endif
 }
 
 static struct upstream *
@@ -310,11 +337,5 @@ upstream_pool_get(struct upstream_pool *up) {
     }   
     
     return upstream;
-}
-
-void
-upstream_pool_dump(struct upstream_pool *up) {
-    log_verb("[rps upstream proxy pool]");
-    array_foreach(up->pool, upstream_str);
 }
 

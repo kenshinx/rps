@@ -66,8 +66,6 @@ rps_init(struct application *app) {
 
     log_init(app->log_level, app->log_filename);
 	
-	array_null(&app->servers);
-    upstream_pool_init(&app->upstreams);
 }
 
 static rps_status_t
@@ -143,6 +141,8 @@ rps_server_load(struct application *app) {
     struct config_server *cfg;
     struct server *s;
 
+	array_null(&app->servers);
+
     n = array_n(app->cfg.servers);
 
     status = array_init(&app->servers, n , sizeof(struct server));   
@@ -175,37 +175,22 @@ error:
     return RPS_ERROR;
 }
 
-static void
-rps_upstream_refresh(uv_timer_t *handle) {
-
-    struct application *app;
-    rps_status_t status;
-
-    app = (struct application *)handle->data;
-   
-    status = upstream_pool_refresh(&app->upstreams, app->cfg.redis, app->cfg.upstream);
-    if (status != RPS_OK) {
-        log_error("update upstream proxy pool failed");
-    }
-
-    #ifdef RPS_DEBUG_OPEN
-        upstream_pool_dump(&app->upstreams);
-    #endif
-}
 
 static void
-rps_upstream_loader(struct application *app) {
+rps_upstream_load(struct application *app) {
     uv_loop_t *loop;
     uv_timer_t *timer;
 
+    upstream_pool_init(&app->upstreams, app->cfg.redis, app->cfg.upstream);
+    
     loop = uv_default_loop();
 
     timer = (uv_timer_t *)rps_alloc(sizeof(*timer));
     
-    timer->data = app;
+    timer->data = &app->upstreams;
 
     uv_timer_init(loop, timer);
-    uv_timer_start(timer, (uv_timer_cb)rps_upstream_refresh, 0, app->cfg.upstream->refresh);
+    uv_timer_start(timer, (uv_timer_cb)upstream_pool_refresh, 0, app->cfg.upstream->refresh);
     
 
     uv_run(loop, UV_RUN_DEFAULT);
@@ -254,7 +239,7 @@ rps_run(struct application *app) {
     }
 
     tid = (uv_thread_t *)array_push(&threads);
-    uv_thread_create(tid, (uv_thread_cb)rps_upstream_loader, app);
+    uv_thread_create(tid, (uv_thread_cb)rps_upstream_load, app);
     
     for (i = 0; i < array_n(&app->servers); i++) {
         tid = (uv_thread_t *)array_push(&threads);
