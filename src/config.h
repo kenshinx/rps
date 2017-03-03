@@ -1,7 +1,6 @@
 #ifndef _RPS_CONFIG_H
 #define _RPS_CONFIG_H
 
-#include "core.h"
 #include "array.h"
 #include "_string.h"
 
@@ -60,7 +59,7 @@ struct config {
 };
 
 
-rps_status_t config_init(char *config_file, struct config *cfg);
+int config_init(char *config_file, struct config *cfg);
 void config_deinit(struct config *cfg);
 void config_dump(struct config *cfg);
 

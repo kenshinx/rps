@@ -574,7 +574,7 @@ config_dump(struct config *cfg) {
    
 }
 
-rps_status_t
+int
 config_init(char *filename, struct config *cfg) {
     rps_status_t status;
     
