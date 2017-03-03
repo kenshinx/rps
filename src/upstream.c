@@ -4,6 +4,7 @@
 #include "config.h"
 #include "_string.h"
 
+#include <uv.h>
 #include <hiredis.h>
 #include <jansson.h>
 
@@ -13,6 +14,7 @@ upstream_init(struct upstream *u) {
     string_init(&u->uname);   
     string_init(&u->passwd);   
     u->weight = UPSTREAM_DEFAULT_WEIGHT;
+    u->count = 0;
 
 }
 
@@ -20,6 +22,19 @@ static void
 upstream_deinit(struct upstream *u) {
     string_deinit(&u->uname);
     string_deinit(&u->passwd);
+    u->count = 0;
+}
+
+static void
+upstream_str(void *data) {
+    char name[MAX_HOSTNAME_LEN];
+    struct upstream *u;
+
+    u = (struct upstream *)data;
+
+    rps_unresolve_addr(&u->server, name);
+    log_verb("\t%s://%s:%s@%s:%d ", rps_proto_str(u->proto), 
+            u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server));
 }
 
 void
@@ -27,6 +42,7 @@ upstream_pool_init(struct upstream_pool *up) {
     up->pool = NULL;
     up->index = 0;
     up->schedule = UPSTREAM_DEFAULT_SCHEDULE;
+    uv_rwlock_init(&up->rwlock);
 }
 
 static rps_status_t
@@ -43,7 +59,8 @@ upstream_pool_setup(struct upstream_pool *up, struct config_upstream *cu) {
     } else if (rps_strcmp(&cu->schedule, "random") == 0) {
         up->schedule = up_random;
     } else if (rps_strcmp(&cu->schedule, "wrr") == 0) {
-        ASSERT(0 && "wrr have not implemented");
+        log_error("wrr algorithm have not implemented");
+        abort();
     } else {
         NOT_REACHED();
     }
@@ -65,6 +82,7 @@ upstream_pool_deinit(struct upstream_pool *up) {
     upstream_pool_teardown(up);
     up->pool = NULL;
     up->index = 0;
+    uv_rwlock_destroy(&up->rwlock);
 } 
 
 static redisContext *
@@ -232,9 +250,11 @@ upstream_pool_refresh(struct upstream_pool *up,
         return RPS_ERROR;
     }
 
+    uv_rwlock_wrlock(&up->rwlock);
     array_swap(&up->pool, &new_up.pool);
+    uv_rwlock_wrunlock(&up->rwlock);
 
-    if (new_up.pool != NULL) {
+    if (!upstream_pool_is_null(&new_up)) {
         upstream_pool_deinit(&new_up);
     }
     
@@ -244,17 +264,52 @@ upstream_pool_refresh(struct upstream_pool *up,
     return RPS_OK;
 }
 
-static void
-upstream_str(void *data) {
-    char name[MAX_HOSTNAME_LEN];
-    struct upstream *u;
+static struct upstream *
+upstream_pool_get_rr(struct upstream_pool *up) {
+    struct upstream *upstream;
 
-    u = (struct upstream *)data;
+    if (up->pool == NULL) {
+        log_error("upstream pool is null");
+        return NULL;
+    }
+    
+    if (up->index >= array_n(up->pool)) {
+        up->index = 0;
+    }
 
-    rps_unresolve_addr(&u->server, name);
-    log_verb("\t%s://%s:%s@%s:%d ", rps_proto_str(u->proto), 
-            u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server));
+    uv_rwlock_rdlock(&up->rwlock);
+    upstream = array_get(up->pool, up->index++);
+    uv_rwlock_rdunlock(&up->rwlock);
 
+    upstream_str(upstream);
+
+    return upstream;
+}
+
+static struct upstream *
+upstream_pool_get_random(struct upstream_pool *up) {
+    
+}
+
+struct upstream *
+upstream_pool_get(struct upstream_pool *up) {
+    struct upstream *upstream;
+
+    upstream = NULL;
+
+    switch (up->schedule) {
+        case up_rr:
+            upstream = upstream_pool_get_rr(up);
+            break;
+        case up_random:
+            upstream = upstream_pool_get_random(up);       
+            break;
+        case up_wrr:
+        default:
+            NOT_REACHED();
+    }   
+    
+    return upstream;
 }
 
 void

@@ -157,7 +157,7 @@ rps_server_load(struct application *app) {
             goto error;
         }
         
-        status = server_init(s, cfg);
+        status = server_init(s, cfg, &app->upstreams);
         if (status != RPS_OK) {
             goto error;
         }
@@ -209,6 +209,9 @@ rps_upstream_loader(struct application *app) {
     
 
     uv_run(loop, UV_RUN_DEFAULT);
+
+    uv_loop_close(loop);
+    uv_loop_delete(loop);
 }
 
 static void
@@ -219,6 +222,8 @@ rps_teardown(struct application *app) {
     array_deinit(&app->servers);
 
 	upstream_pool_deinit(&app->upstreams);
+    config_deinit(&app->cfg);
+	log_deinit();
 }
 
 
@@ -271,8 +276,6 @@ rps_post_run(struct application *app) {
     /*
      * remove pidfile, signal_deinit
      */
-    config_deinit(&app->cfg);
-	log_deinit();
 }
 
 int

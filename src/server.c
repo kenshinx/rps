@@ -2,12 +2,13 @@
 #include "core.h"
 #include "_string.h"
 #include "util.h"
+#include "upstream.h"
 #include "proto/s5.h"
 #include "proto/http.h"
 
 
 rps_status_t
-server_init(struct server *s, struct config_server *cfg) {
+server_init(struct server *s, struct config_server *cfg, struct upstream_pool *up) {
     int err;
     int status;
 
@@ -39,6 +40,7 @@ server_init(struct server *s, struct config_server *cfg) {
     }
 
     s->cfg = cfg;
+    s->upstreams = up;
 
     return RPS_OK;
 }
@@ -416,6 +418,7 @@ error:
 static ctx_state_t
 server_upstream_kickoff(rps_ctx_t *ctx) {
     struct server *s;
+    struct upstream *upstream;
     rps_sess_t *sess;
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
@@ -428,6 +431,9 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
     if (sess->forward == NULL) {
         return c_kill;
     }
+
+    upstream_pool_get(s->upstreams);
+
 
 }
 

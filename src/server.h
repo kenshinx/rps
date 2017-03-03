@@ -5,6 +5,7 @@
 #include "config.h"
 #include "util.h"
 #include "_string.h"
+#include "upstream.h"
 
 #include <uv.h>
 
@@ -23,9 +24,11 @@ struct server {
     rps_addr_t              listen;
     
     struct config_server    *cfg;
+
+    struct upstream_pool    *upstreams;
 };
 
-rps_status_t server_init(struct server *s, struct config_server *cs);
+rps_status_t server_init(struct server *s, struct config_server *cs, struct upstream_pool *up);
 void server_deinit(struct server *s);
 void server_run(struct server *s);
 // void server_stop(struct server *);
