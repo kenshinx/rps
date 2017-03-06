@@ -17,7 +17,8 @@
 #define CONFIG_DEFAULT_ARGS  3
 
 #define CONFIG_ROOT_PATH    1
-#define CONFIG_MAX_PATH     CONFIG_ROOT_PATH + 1
+#define CONFIG_MIN_PATH     CONFIG_ROOT_PATH + 1
+#define CONFIG_MAX_PATH     CONFIG_ROOT_PATH + 2
 
 
 static  rps_status_t
@@ -80,15 +81,42 @@ config_pop_scalar(struct config *cfg) {
 
 static void
 config_upstream_init(struct config_upstream *upstream) {
+    string_init(&upstream->proto);
     string_init(&upstream->rediskey);
-    upstream->refresh = UPSTREAM_DEFAULT_REFRESH;
-    string_init(&upstream->schedule);
 }
 
 static void
 config_upstream_deinit(struct config_upstream *upstream) {
+    string_deinit(&upstream->proto);
     string_deinit(&upstream->rediskey);
-    string_deinit(&upstream->schedule);
+}
+
+static rps_status_t
+config_upstreams_init(struct config_upstreams *upstreams) {
+    upstreams->refresh = UPSTREAM_DEFAULT_REFRESH;
+    string_init(&upstreams->schedule);
+    upstreams->hybrid = UPSTREAM_DEFAULT_BYBRID;
+#ifdef SOCKS4_PROXY_SUPPORT
+    upstreams->pools = array_create(2, sizeof(struct config_upstream));
+#else
+    upstreams->pools = array_create(3, sizeof(struct config_upstream));
+#endif 
+
+    if (upstreams->pools == NULL) {
+        string_deinit(&upstreams->schedule);
+        return RPS_ENOMEM;
+    }
+
+    return RPS_OK;
+}
+
+static void
+config_upstreams_deinit(struct config_upstreams *upstreams) {
+    string_deinit(&upstreams->schedule);
+    while (array_n(upstreams->pools)) {
+        config_upstream_deinit((struct config_upstream *)array_pop(upstreams->pools));
+    }
+    array_destroy(upstreams->pools);
 }
 
 static void 
@@ -136,23 +164,23 @@ config_server_deinit(struct config_server *server) {
     string_deinit(&server->password);
 }
 
-static rps_status_t
-config_set_daemon(struct config *cfg, rps_str_t *str) {
+static int
+config_parse_bool(rps_str_t *str) {
     if (rps_strcmp(str, "true") == 0 ) {
-        cfg->daemon = 1;
+        return 1;
     } else if (rps_strcmp(str, "false") == 0 ) {
-        cfg->daemon = 0;
+        return 0;
     } else {
-        return RPS_ERROR;
+        return -1;
     }
-    
-    return RPS_OK;
 }
 
 static rps_status_t
 config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t *section) {
     rps_status_t status;
     struct config_server *server;
+    struct config_upstream *upstream;
+    int _bool;
 
     status = RPS_OK;
 
@@ -162,7 +190,12 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         } else if (rps_strcmp(key, "pidfile") == 0) {
             status = string_copy(&cfg->pidfile, val);
         } else if (rps_strcmp(key, "daemon") == 0) {
-            status = config_set_daemon(cfg, val);
+            _bool = config_parse_bool(val);
+            if (_bool < 0) {
+                status  = RPS_ERROR;
+            } else {
+                cfg->daemon = _bool;
+            }
         } else {
             status = RPS_ERROR;
         }
@@ -185,34 +218,48 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
             status = RPS_ERROR;
         }
     } else if (rps_strcmp(section, "upstreams") == 0) {
-        if (rps_strcmp(key, "rediskey") == 0) {
-            status = string_copy(&cfg->upstream->rediskey, val);
-        } else if (rps_strcmp(key, "refresh") == 0) {
-            cfg->upstream->refresh = (atoi((char *)val->data)) * 1000;
+        if (rps_strcmp(key, "refresh") == 0) {
+            cfg->upstreams.refresh = (atoi((char *)val->data)) * 1000;
         } else if (rps_strcmp(key, "schedule") == 0) {
-            status = string_copy(&cfg->upstream->schedule, val);
+            status = string_copy(&cfg->upstreams.schedule, val);
+        } else if (rps_strcmp(key, "hybrid") == 0) {
+            _bool = config_parse_bool(val);
+            if (_bool < 0) {
+                status  = RPS_ERROR;
+            } else {
+                cfg->upstreams.hybrid = (unsigned)_bool;
+            }
+        } else {
+            status = RPS_ERROR;
+        }
+    } else if (rps_strcmp(section, "pools") == 0) { 
+        upstream = (struct config_upstream *)array_head(cfg->upstreams.pools);
+        if (rps_strcmp(key, "proto") == 0) {
+            status = string_copy(&upstream->proto, val);
+        } else if (rps_strcmp(key, "rediskey") == 0) {
+            status = string_copy(&upstream->rediskey, val);
         } else {
             status = RPS_ERROR;
         }
     } else if (rps_strcmp(section, "redis") == 0) {
         if (rps_strcmp(key, "host") == 0) {
-            status = string_copy(&cfg->redis->host, val);
+            status = string_copy(&cfg->redis.host, val);
         } else if (rps_strcmp(key, "port") == 0) {
-            cfg->redis->port = atoi((char *)val->data);
+            cfg->redis.port = atoi((char *)val->data);
         } else if (rps_strcmp(key, "db") == 0) {
-            cfg->redis->db = atoi((char *)val->data);
+            cfg->redis.db = atoi((char *)val->data);
         } else if (rps_strcmp(key, "password") == 0){
-            status = string_copy(&cfg->redis->password, val);
+            status = string_copy(&cfg->redis.password, val);
         } else if (rps_strcmp(key, "timeout") == 0) {
-            cfg->redis->timeout = atoi((char *)val->data);
+            cfg->redis.timeout = atoi((char *)val->data);
         } else {
             status = RPS_ERROR;
         }
     } else if (rps_strcmp(section, "log") == 0) {
         if(rps_strcmp(key, "file") == 0) {
-            status = string_copy(&cfg->log->file, val);
+            status = string_copy(&cfg->log.file, val);
         } else if (rps_strcmp(key, "level") == 0) {
-            status = string_copy(&cfg->log->level, val);
+            status = string_copy(&cfg->log.level, val);
         } else {
             status = RPS_ERROR;
         }
@@ -229,7 +276,7 @@ config_handler(struct config *cfg, rps_str_t *section) {
     rps_status_t status;
     rps_str_t *key, *val;
 
-    ASSERT(array_n(cfg->args) == 2);
+    ASSERT(array_n(cfg->args) <= CONFIG_MAX_PATH);
 
     val = config_pop_scalar(cfg);
     key = config_pop_scalar(cfg);
@@ -258,26 +305,19 @@ config_load(char *filename, struct config *cfg) {
 
     cfg->args = array_create(CONFIG_DEFAULT_ARGS, sizeof(rps_str_t));
     if (cfg->args == NULL) {
+        array_destroy(cfg->servers);
         goto error;
     }
 
-    cfg->upstream = rps_alloc(sizeof(struct config_upstream));
-    if (cfg->upstream == NULL) {
+    if (config_upstreams_init(&cfg->upstreams) != RPS_OK) {
+        array_destroy(cfg->servers);
+        array_destroy(cfg->args);
         goto error;
     }
-    config_upstream_init(cfg->upstream);
 
-    cfg->redis = rps_alloc(sizeof(struct config_redis));
-    if (cfg->redis == NULL) {
-        goto error;
-    }
-    config_redis_init(cfg->redis);
+    config_redis_init(&cfg->redis);
 
-    cfg->log = rps_alloc(sizeof(struct config_log));
-    if (cfg->log == NULL) {
-        goto error;
-    }
-    config_log_init(cfg->log);
+    config_log_init(&cfg->log);
 
     cfg->fname = filename;
     cfg->fd = fd;
@@ -292,16 +332,6 @@ error:
     log_stderr("config: initial configuration failed.");
 
     fclose(fd);
-
-    if (cfg->servers != NULL) {
-        array_destroy(cfg->servers);
-    }
-    if (cfg->args !=  NULL) {
-        array_destroy(cfg->args);
-    }
-    if (cfg->log != NULL) {
-        rps_free(cfg->log);
-    }
 
     return RPS_ERROR;
 }
@@ -376,6 +406,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
     rps_status_t status;
     rps_str_t *node;
     struct config_server *server;
+    struct config_upstream *upstream;
     bool done, leaf;
 
     status = config_event_next(cfg);
@@ -392,7 +423,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
     case YAML_MAPPING_START_EVENT:
         cfg->depth++;
 
-        if (cfg->depth == CONFIG_MAX_PATH && array_n(cfg->args)) {
+        if (cfg->depth >= CONFIG_MIN_PATH && array_n(cfg->args)) {
             ASSERT(array_n(cfg->args) == 1);   
             section = string_new();
             node = config_pop_scalar(cfg);
@@ -412,6 +443,16 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
                 }
                 config_server_init(server);
             }
+
+            if (rps_strcmp(section, "pools") == 0 ) {
+                /* new pool block */
+                upstream = (struct config_upstream *)array_push(cfg->upstreams.pools);
+                if (upstream == NULL) {
+                    status = RPS_ENOMEM;
+                }
+                config_upstream_init(upstream);
+            }
+            
         }
         break;
 
@@ -436,16 +477,13 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
         cfg->seq = 0;
         ASSERT(section != NULL);
         string_free(section);
+        section = NULL;
         break;
 
     case YAML_SCALAR_EVENT:
         status = config_push_scalar(cfg);
-        
-        if (status != RPS_OK) {
-            break;
-        }
 
-        if (array_n(cfg->args) == CONFIG_MAX_PATH) {
+        if (array_n(cfg->args) == CONFIG_MIN_PATH) {
             leaf = true;
         }
         break;
@@ -466,6 +504,9 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
 
     if (leaf) {
         status = config_handler(cfg, section);
+        if (status != RPS_OK) {
+            return status;
+        }
     }
 
     return config_parse_core(cfg, section);
@@ -536,11 +577,20 @@ config_dump_server(void *data) {
     struct config_server *server = data;    
 
     log_debug("\t - proto: %s", server->proto.data);
-    log_debug("\t listen: %s", server->listen.data);
-    log_debug("\t port: %d", server->port);
-    log_debug("\t username: %s", server->username.data);
-    log_debug("\t password: %s", server->password.data);
-    log_debug("\t timeout: %d (millseconds)", server->timeout);
+    log_debug("\t   listen: %s", server->listen.data);
+    log_debug("\t   port: %d", server->port);
+    log_debug("\t   username: %s", server->username.data);
+    log_debug("\t   password: %s", server->password.data);
+    log_debug("\t   timeout: %d (millseconds)", server->timeout);
+    log_debug("");
+}
+
+static void
+config_dump_upstream(void *data) {
+    struct config_upstream *upstream = data;
+
+    log_debug("\t - proto: %s", upstream->proto.data);
+    log_debug("\t   rediskey: %s", upstream->rediskey.data);
     log_debug("");
 }
 
@@ -551,26 +601,27 @@ config_dump(struct config *cfg) {
     log_debug("demon: %d", cfg->daemon);
 
     log_debug("[servers]");
+    log_debug("");
     array_foreach(cfg->servers, config_dump_server);
 
     log_debug("[upstreams]");
-    log_debug("\t rediskey: %s", cfg->upstream->rediskey.data);
-    log_debug("\t refresh: %d", cfg->upstream->refresh);
-    log_debug("\t schedule: %s", cfg->upstream->schedule.data);
-    log_debug("");
+    log_debug("\t schedule: %s", cfg->upstreams.schedule.data);
+    log_debug("\t refresh: %d", cfg->upstreams.refresh);
+    log_debug("\t hybrid: %d", cfg->upstreams.hybrid);
+    array_foreach(cfg->upstreams.pools, config_dump_upstream);
 
     
     log_debug("[redis]");
-    log_debug("\t host: %s", cfg->redis->host.data);
-    log_debug("\t port: %d", cfg->redis->port);
-    log_debug("\t db: %d", cfg->redis->db);
-    log_debug("\t password: %s", cfg->redis->password.data);
-    log_debug("\t timeout: %d", cfg->redis->timeout);
+    log_debug("\t host: %s", cfg->redis.host.data);
+    log_debug("\t port: %d", cfg->redis.port);
+    log_debug("\t db: %d", cfg->redis.db);
+    log_debug("\t password: %s", cfg->redis.password.data);
+    log_debug("\t timeout: %d", cfg->redis.timeout);
     log_debug("");
     
     log_debug("[log]");
-    log_debug("\t file: %s", cfg->log->file.data);
-    log_debug("\t level: %s", cfg->log->level.data);
+    log_debug("\t file: %s", cfg->log.file.data);
+    log_debug("\t level: %s", cfg->log.level.data);
    
 }
 
@@ -615,13 +666,9 @@ config_deinit(struct config *cfg) {
     }
     array_destroy(cfg->servers);
 
-    config_upstream_deinit(cfg->upstream);
-    rps_free(cfg->upstream);
+    config_upstreams_deinit(&cfg->upstreams);
 
-    config_redis_deinit(cfg->redis);
-    rps_free(cfg->redis);
-    
+    config_redis_deinit(&cfg->redis);
 
-    config_log_deinit(cfg->log);
-    rps_free(cfg->log);
+    config_log_deinit(&cfg->log);
 }

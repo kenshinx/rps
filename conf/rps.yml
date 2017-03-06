@@ -3,7 +3,7 @@ title: Rotating Proxy Server
 
 daemon: false
 
-pidfile: /var/run/rps.log
+pidfile: /var/run/rps.pid
 
 servers:
     - proto: socks5
@@ -20,13 +20,21 @@ servers:
       timeout: 30 #30 seconds
 
 upstreams:
-    rediskey: rps:upstream:pool
     refresh: 30 #30 seconds
 
     #rr: round-robin
     #random: random schedule
     #wrr: weighted round robin
-    schedule: rr 
+    schedule: rr
+
+    hybrid: true
+
+    pools:
+        - proto: socks5
+          rediskey: rps:upstream:socks5
+
+        - proto: http
+          rediskey: rps:upstream:http
 
 redis:
     host: dev1

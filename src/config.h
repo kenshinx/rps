@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #define UPSTREAM_DEFAULT_REFRESH    60
+#define UPSTREAM_DEFAULT_BYBRID     0
 
 struct config_server {
     rps_str_t       proto;
@@ -21,9 +22,15 @@ struct config_server {
 };
 
 struct config_upstream {
+    rps_str_t       proto;
     rps_str_t       rediskey;
+};
+
+struct config_upstreams {
     uint32_t        refresh;
     rps_str_t       schedule;
+    unsigned        hybrid:1;
+    rps_array_t     *pools;
 };
 
 struct config_redis {
@@ -46,9 +53,9 @@ struct config {
     rps_str_t               pidfile;
     FILE                    *fd;
     unsigned                daemon:1;
-    struct config_upstream  *upstream;
-    struct config_redis     *redis;
-    struct config_log       *log;
+    struct config_upstreams upstreams;
+    struct config_redis     redis;
+    struct config_log       log;
     rps_array_t             *servers;
     rps_array_t             *args;
     uint32_t                depth;
