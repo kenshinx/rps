@@ -42,10 +42,12 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
         struct config_redis *cr) {
     up->index = 0;
     up->cr = cr;
+    up->pool = NULL;
     uv_rwlock_init(&up->rwlock);
 
     up->proto = rps_proto_int((const char *)cu->proto.data);
     if (up->proto < 0) {
+        log_error("unsupport proto:%s", cu->proto.data);
         return RPS_ERROR;
     }
     
@@ -65,10 +67,12 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
 
 static void
 upstream_pool_deinit(struct upstream_pool *up) {
-	while(array_n(up->pool)) {
-		upstream_deinit((struct upstream *)array_pop(up->pool));
-	}
-    array_destroy(up->pool);
+    if (up->pool != NULL) {
+        while(array_n(up->pool)) {
+            upstream_deinit((struct upstream *)array_pop(up->pool));
+        }
+        array_destroy(up->pool);
+    }
     up->pool = NULL;
     up->index = 0;
     up->cr = NULL;
@@ -127,7 +131,8 @@ error:
     while(array_n(&us->pools)) {
         upstream_pool_deinit((struct upstream_pool *)array_pop(&us->pools));
     }
-
+    
+    log_error("upstreams init failed");
     return RPS_ERROR;
 }
 
