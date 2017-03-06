@@ -22,7 +22,7 @@
 struct application {
     rps_array_t             servers;
 
-    struct upstream_pool    upstreams;
+    struct upstreams        upstreams;
 
     int                     log_level;
     char                    *log_filename;

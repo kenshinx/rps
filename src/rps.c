@@ -113,14 +113,14 @@ static rps_status_t
 rps_set_log(struct application *app) {
     log_level level;
 
-    level = log_level_to_int((char *)app->cfg.log->level.data);
+    level = log_level_to_int((char *)app->cfg.log.level.data);
     if (level == LOG_LEVEL_UNDEFINED) {
-        log_stderr("invalid log level: %s", app->cfg.log->level.data);
+        log_stderr("invalid log level: %s", app->cfg.log.level.data);
         return RPS_ERROR;
     }
     app->log_level = MAX(app->log_level, level);   
 
-    app->log_filename = strdup((char *)app->cfg.log->file.data);
+    app->log_filename = strdup((char *)app->cfg.log.file.data);
     if (app->log_filename == NULL) {
         return RPS_ERROR;
     }
@@ -181,7 +181,7 @@ rps_upstream_load(struct application *app) {
     uv_loop_t *loop;
     uv_timer_t *timer;
 
-    upstream_pool_init(&app->upstreams, app->cfg.redis, app->cfg.upstream);
+    upstreams_init(&app->upstreams, &app->cfg.redis, &app->cfg.upstreams);
     
     loop = uv_default_loop();
 
@@ -190,8 +190,7 @@ rps_upstream_load(struct application *app) {
     timer->data = &app->upstreams;
 
     uv_timer_init(loop, timer);
-    uv_timer_start(timer, (uv_timer_cb)upstream_pool_refresh, 0, app->cfg.upstream->refresh);
-    
+    uv_timer_start(timer, (uv_timer_cb)upstreams_refresh, 0, app->cfg.upstreams.refresh);
 
     uv_run(loop, UV_RUN_DEFAULT);
 
@@ -206,7 +205,7 @@ rps_teardown(struct application *app) {
     }
     array_deinit(&app->servers);
 
-	upstream_pool_deinit(&app->upstreams);
+	upstreams_deinit(&app->upstreams);
     config_deinit(&app->cfg);
 	log_deinit();
 }

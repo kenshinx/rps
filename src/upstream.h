@@ -23,28 +23,32 @@ enum upstream_schedule {
 
 struct upstream  {
     rps_addr_t  server;
+    rps_proto_t proto;
     rps_str_t   uname;
     rps_str_t   passwd;
-    rps_proto_t proto;
     uint16_t    weight;
     uint32_t    count;
 };
 
 struct upstream_pool {
     rps_array_t             *pool;
-    uint32_t                index;
-    uint8_t                 schedule;
-
+    rps_proto_t             proto;
+    rps_str_t               rediskey;
     struct config_redis     *cr;
-    struct config_upstream  *cu;
-
+    uint32_t                index;
     uv_rwlock_t             rwlock;
 };
 
-void upstream_pool_init(struct upstream_pool *up, 
-        struct config_redis *cr, struct config_upstream *cu);
-void upstream_pool_deinit(struct upstream_pool *up);
-void upstream_pool_refresh(uv_timer_t *handle);
-struct upstream *upstream_pool_get(struct upstream_pool *up);
+struct upstreams {
+    uint8_t                 schedule;
+    bool                    hybrid;
+    rps_array_t             pools;
+};
+
+rps_status_t upstreams_init(struct upstreams *us, 
+        struct config_redis *cr, struct config_upstreams *cu);
+void upstreams_deinit(struct upstreams *us);
+void upstreams_refresh(uv_timer_t *handle);
+struct upstream *upstreams_get(struct upstreams *us);
 
 #endif

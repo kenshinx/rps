@@ -25,10 +25,10 @@ struct server {
     
     struct config_server    *cfg;
 
-    struct upstream_pool    *upstreams;
+    struct upstreams        *upstreams;
 };
 
-rps_status_t server_init(struct server *s, struct config_server *cs, struct upstream_pool *up);
+rps_status_t server_init(struct server *s, struct config_server *cs, struct upstreams *us);
 void server_deinit(struct server *s);
 void server_run(struct server *s);
 // void server_stop(struct server *);

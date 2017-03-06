@@ -8,7 +8,7 @@
 
 
 rps_status_t
-server_init(struct server *s, struct config_server *cfg, struct upstream_pool *up) {
+server_init(struct server *s, struct config_server *cfg, struct upstreams *us) {
     int err;
     int status;
 
@@ -40,7 +40,7 @@ server_init(struct server *s, struct config_server *cfg, struct upstream_pool *u
     }
 
     s->cfg = cfg;
-    s->upstreams = up;
+    s->upstreams = us;
 
     return RPS_OK;
 }
@@ -435,7 +435,7 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
         return c_kill;
     }
 
-    upstream = upstream_pool_get(s->upstreams);
+    upstream = upstreams_get(s->upstreams);
 
     rps_unresolve_addr(&upstream->server, name);
     log_debug("upstream %s://%s:%d ", rps_proto_str(upstream->proto), name, 

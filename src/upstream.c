@@ -37,33 +37,67 @@ upstream_str(void *data) {
             u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server));
 }
 
-void
-upstream_pool_init(struct upstream_pool *up, struct config_redis *cr, struct config_upstream *cu) {
-    up->pool = NULL;
-    up->index = 0;
-    up->schedule = UPSTREAM_DEFAULT_SCHEDULE;
-    up->cr = cr;
-    up->cu = cu;
-    uv_rwlock_init(&up->rwlock);
-}
-
 static rps_status_t
-upstream_pool_setup(struct upstream_pool *up) {
-    rps_str_t *schedule;
+upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu, 
+        struct config_redis *cr) {
+    up->index = 0;
+    up->cr = cr;
+    uv_rwlock_init(&up->rwlock);
 
-    ASSERT(up->pool == NULL);
-
-    schedule = &up->cu->schedule;
+    up->proto = rps_proto_int((const char *)cu->proto.data);
+    if (up->proto < 0) {
+        return RPS_ERROR;
+    }
+    
+    string_init(&up->rediskey);
+    if (string_copy(&up->rediskey, &cu->rediskey) != RPS_OK) {
+        return RPS_ERROR;
+    }
 
     up->pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
     if (up->pool == NULL) {
         return RPS_ERROR;
     }
 
+    return RPS_OK;
+}
+
+
+static void
+upstream_pool_deinit(struct upstream_pool *up) {
+	while(array_n(up->pool)) {
+		upstream_deinit((struct upstream *)array_pop(up->pool));
+	}
+    array_destroy(up->pool);
+    up->pool = NULL;
+    up->index = 0;
+    up->cr = NULL;
+    uv_rwlock_destroy(&up->rwlock);
+} 
+
+static void
+upstream_pool_dump(struct upstream_pool *up) {
+    log_verb("[rps upstream proxy pool]");
+    array_foreach(up->pool, upstream_str);
+}
+
+rps_status_t 
+upstreams_init(struct upstreams *us, struct config_redis *cr, 
+        struct config_upstreams *cus) {
+
+    rps_status_t status;
+    rps_str_t   *schedule;
+    int i, len;
+    struct upstream_pool *up;
+    struct config_upstream *cu;
+
+    us->hybrid = cus->hybrid;   
+
+    schedule = &cus->schedule;
     if (rps_strcmp(schedule, "rr") == 0) {
-        up->schedule = up_rr;
+        us->schedule = up_rr;
     } else if (rps_strcmp(schedule, "random") == 0) {
-        up->schedule = up_random;
+        us->schedule = up_random;
     } else if (rps_strcmp(schedule, "wrr") == 0) {
         log_error("wrr algorithm have not implemented");
         abort();
@@ -71,32 +105,37 @@ upstream_pool_setup(struct upstream_pool *up) {
         NOT_REACHED();
     }
 
+    len = array_n(cus->pools);
 
-    return RPS_OK;
+    status = array_init(&us->pools, len, sizeof(struct upstream_pool));
+    if (status != RPS_OK) {
+        return status;
+    }
+    
+    for (i=0; i<len; i++) {
+        up = (struct upstream_pool *)array_push(&us->pools);
+        cu = (struct config_upstream *)array_get(cus->pools, i);
+        
+        if (upstream_pool_init(up, cu, cr) != RPS_OK) {
+            goto error;
+        }
+    }
+
+    return  RPS_OK;
+
+error:
+    while(array_n(&us->pools)) {
+        upstream_pool_deinit((struct upstream_pool *)array_pop(&us->pools));
+    }
+
+    return RPS_ERROR;
 }
 
-static void
-upstream_pool_teardown(struct upstream_pool *up) {
-	while(array_n(up->pool)) {
-		upstream_deinit((struct upstream *)array_pop(up->pool));
-	}
-    array_destroy(up->pool);
-}
-
-void
-upstream_pool_deinit(struct upstream_pool *up) {
-    upstream_pool_teardown(up);
-    up->pool = NULL;
-    up->index = 0;
-    uv_rwlock_destroy(&up->rwlock);
-    up->cu = NULL;
-    up->cr = NULL;
-} 
-
-static void
-upstream_pool_dump(struct upstream_pool *up) {
-    log_verb("[rps upstream proxy pool]");
-    array_foreach(up->pool, upstream_str);
+void 
+upstreams_deinit(struct upstreams *us) {
+    while(array_n(&us->pools)) {
+        upstream_pool_deinit((struct upstream_pool *)array_pop(&us->pools));
+    }
 }
 
 static redisContext *
@@ -208,18 +247,18 @@ upstream_json_parse(const char *str, struct upstream *u) {
 }
 
 static rps_status_t
-upstream_pool_load(struct upstream_pool *up) {
+upstream_pool_load(rps_array_t *pool, struct config_redis *cr, rps_str_t *rediskey) {
     redisContext *c;
     redisReply  *reply;
     struct upstream *upstream;
     size_t i;
 
-    c =  upstream_redis_connect(up->cr);
+    c =  upstream_redis_connect(cr);
     if (c == NULL) {
         return RPS_ERROR;
     }
 
-    reply = redisCommand(c, "SMEMBERS %s", up->cu->rediskey.data);
+    reply = redisCommand(c, "SMEMBERS %s", rediskey->data);
     if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
         if (reply) {
             freeReplyObject(reply);
@@ -232,7 +271,7 @@ upstream_pool_load(struct upstream_pool *up) {
 	redisFree(c);
 
     for (i = 0; i < reply->elements; i++) {
-        upstream = (struct upstream *)array_push(up->pool);
+        upstream = (struct upstream *)array_push(pool);
         upstream_init(upstream);
         if (upstream_json_parse(reply->element[i]->str, upstream) != RPS_OK) {
             return RPS_ERROR;
@@ -243,54 +282,68 @@ upstream_pool_load(struct upstream_pool *up) {
 }
 
 static rps_status_t
-upstream_pool_reload(struct upstream_pool *up) {
+upstream_pool_refresh(struct upstream_pool *up) {
 
-    struct upstream_pool new_up;
+    rps_array_t *new_pool;
 
     /* Free current upstream pool only when new pool load successful */
 
-    upstream_pool_init(&new_up, up->cr, up->cu);
-
-    if (upstream_pool_setup(&new_up) != RPS_OK) {
-        log_error("setup new upstream pool failed");
+    new_pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
+    if (new_pool == NULL) {
         return RPS_ERROR;
     }
 
-    if (upstream_pool_load(&new_up) != RPS_OK) {
-        upstream_pool_deinit(&new_up);
-        log_error("load upstreams from redis failed.");
+
+    if (upstream_pool_load(new_pool, up->cr, &up->rediskey) != RPS_OK) {
+        while(array_n(new_pool)) {
+            upstream_deinit((struct upstream *)array_pop(new_pool));
+        }
+        array_destroy(new_pool);
+        log_error("load %s upstreams from redis failed.", rps_proto_str(up->proto));
         return RPS_ERROR;
     }
 
     uv_rwlock_wrlock(&up->rwlock);
-    array_swap(&up->pool, &new_up.pool);
+    array_swap(&up->pool, &new_pool);
     uv_rwlock_wrunlock(&up->rwlock);
     
-    up->schedule = new_up.schedule;
-
-    if (!upstream_pool_is_null(&new_up)) {
-        upstream_pool_deinit(&new_up);
+    if (new_pool != NULL) {
+        while(array_n(new_pool)) {
+            upstream_deinit((struct upstream *)array_pop(new_pool));
+        }
+        array_destroy(new_pool);
     }
     
-
-    log_debug("refresh upstream pool, get <%d> proxys", array_n(up->pool));
-
-    return RPS_OK;
-}
-
-void 
-upstream_pool_refresh(uv_timer_t *handle) {
-    struct upstream_pool *up;
-    
-    up = (struct upstream_pool *)handle->data;
-    
-    if (upstream_pool_reload(up) != RPS_OK) {
-        log_error("update upstream proxy pool failed");
-    }
 
     #ifdef RPS_DEBUG_OPEN
         upstream_pool_dump(up);
     #endif
+
+    return RPS_OK;
+}
+
+void
+upstreams_refresh(uv_timer_t *handle) {
+    struct upstreams *us;
+    struct upstream_pool *up;
+    int i, len;
+    const char *proto;
+
+    us = (struct upstreams *)handle->data;
+
+    len = array_n(&us->pools);
+
+    for (i=0; i< len; i++) {
+        up = (struct upstream_pool *)array_get(&us->pools, i);
+
+        proto = rps_proto_str(up->proto);
+
+        if (upstream_pool_refresh(up) != RPS_OK) { 
+            log_error("update %s upstream proxy pool failed", proto) ;
+        } else {
+            log_debug("refresh %s upstream pool, get <%d> proxys", proto, array_n(up->pool));
+        }
+    }
 }
 
 static struct upstream *
@@ -331,14 +384,16 @@ upstream_pool_get_random(struct upstream_pool *up) {
 }
 
 struct upstream *
-upstream_pool_get(struct upstream_pool *up) {
+upstreams_get(struct upstreams *us) {
     struct upstream *upstream;
+    struct upstream_pool *up;
 
     upstream = NULL;
 
-    uv_rwlock_rdlock(&up->rwlock);
+    up = array_head(&us->pools);
 
-    switch (up->schedule) {
+    uv_rwlock_rdlock(&up->rwlock);
+    switch (us->schedule) {
         case up_rr:
             upstream = upstream_pool_get_rr(up);
             break;
@@ -349,7 +404,6 @@ upstream_pool_get(struct upstream_pool *up) {
         default:
             NOT_REACHED();
     }   
-    
     uv_rwlock_rdunlock(&up->rwlock);
 
 #if RPS_DEBUG_OPEN
@@ -360,4 +414,3 @@ upstream_pool_get(struct upstream_pool *up) {
 
     return upstream;
 }
-
