@@ -9,7 +9,7 @@ REDIS_HOST = "dev1"
 REDIS_PORT = 6379
 REDIS_PASSWD = "tfqmcA0JvG04EHKDj"
 
-REDIS_KEY = "rps:upstream:pool"
+REDIS_KEY = "rps:upstream:"
 
 def add(host, port, proto="socks5", username=None, password=None):
 
@@ -21,8 +21,11 @@ def add(host, port, proto="socks5", username=None, password=None):
                 "password": password})
 
     print data
+    
+    key = "%s%s" %(REDIS_KEY, proto)
+
     r = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWD)
-    r.sadd(REDIS_KEY, data)
+    r.sadd(key, data)
 
     print "sucess"
 
