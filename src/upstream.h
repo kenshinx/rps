@@ -13,8 +13,6 @@
 #define UPSTREAM_DEFAULT_POOL_LENGTH 64
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
-#define upstream_pool_is_null(up)  ((up)->pool == NULL)
-
 enum upstream_schedule {
     up_rr,         /* round-robin */
     up_wrr,        /* weighted round-robin*/
