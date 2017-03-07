@@ -243,8 +243,7 @@ upstream_json_parse(const char *str, struct upstream *u) {
     status = rps_resolve_inet((const char *)host.data, port, &u->server);
     if (status != RPS_OK) {
         log_error("jason parse error, invalid upstream address, %s:%d", host, port);
-		/* Avoid single invalid record  result in process exit */
-		// return status;  
+        return status;
     }
 
     return RPS_OK;
@@ -279,7 +278,8 @@ upstream_pool_load(rps_array_t *pool, struct config_redis *cr, rps_str_t *redisk
         upstream = (struct upstream *)array_push(pool);
         upstream_init(upstream);
         if (upstream_json_parse(reply->element[i]->str, upstream) != RPS_OK) {
-            return RPS_ERROR;
+            array_pop(pool);
+            upstream_deinit(upstream);
         }
     }
 
@@ -345,6 +345,7 @@ upstreams_refresh(uv_timer_t *handle) {
 
         if (upstream_pool_refresh(up) != RPS_OK) { 
             log_error("update %s upstream proxy pool failed", proto) ;
+    log_debug("");
         } else {
             log_debug("refresh %s upstream pool, get <%d> proxys", proto, array_n(up->pool));
         }
