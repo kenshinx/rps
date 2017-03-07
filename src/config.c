@@ -608,6 +608,7 @@ config_dump(struct config *cfg) {
     log_debug("\t schedule: %s", cfg->upstreams.schedule.data);
     log_debug("\t refresh: %d", cfg->upstreams.refresh);
     log_debug("\t hybrid: %d", cfg->upstreams.hybrid);
+    log_debug("");
     array_foreach(cfg->upstreams.pools, config_dump_upstream);
 
     
