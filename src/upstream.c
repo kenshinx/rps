@@ -390,13 +390,25 @@ upstream_pool_get_random(struct upstream_pool *up) {
 }
 
 struct upstream *
-upstreams_get(struct upstreams *us) {
+upstreams_get(struct upstreams *us, rps_proto_t proto) {
     struct upstream *upstream;
     struct upstream_pool *up;
+    int i, len;
 
     upstream = NULL;
+    up = NULL;
 
-    up = array_head(&us->pools);
+    if (us->hybrid) {
+        up = array_random(&us->pools);
+    } else {
+        len = array_n(&us->pools);
+        for (i=0; i<len; i++) {
+            up = array_get(&us->pools, i);
+            if (up->proto == proto) {
+                break;
+            }
+        }
+    }
 
     uv_rwlock_rdlock(&up->rwlock);
     switch (us->schedule) {

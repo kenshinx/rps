@@ -27,7 +27,9 @@ upstreams:
     #wrr: weighted round robin
     schedule: rr
 
-    hybrid: true
+    # Just make hybrid=false if you don't understand what will happen 
+    # after enable hybrid
+    hybrid: false
 
     pools:
         - proto: socks5

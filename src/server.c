@@ -435,7 +435,7 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
         return c_kill;
     }
 
-    upstream = upstreams_get(s->upstreams);
+    upstream = upstreams_get(s->upstreams, request->proto);
 
     rps_unresolve_addr(&upstream->server, name);
     log_debug("upstream %s://%s:%d ", rps_proto_str(upstream->proto), name, 
