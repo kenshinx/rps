@@ -116,6 +116,19 @@ array_head(rps_array_t *a) {
     return array_get(a, a->nelts-1);
 }
 
+void *
+array_random(rps_array_t *a) {
+    int i;
+
+    if (array_is_empty(a)) {
+        return NULL;
+    }
+
+    i = rps_random(array_n(a));
+
+    return array_get(a, i);
+}
+
 void
 array_foreach(rps_array_t *a, array_foreach_t func) {
     uint32_t i, nelts;
