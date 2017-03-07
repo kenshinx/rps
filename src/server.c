@@ -436,10 +436,16 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
     }
 
     upstream = upstreams_get(s->upstreams, request->proto);
+    if (upstream == NULL) {
+        log_error("no available %s upstream proxy.", rps_proto_str(request->proto));
+        return c_kill;
+    }
 
     rps_unresolve_addr(&upstream->server, name);
     log_debug("upstream %s://%s:%d ", rps_proto_str(upstream->proto), name, 
             rps_unresolve_port(&upstream->server));
+
+    
 
 }
 
