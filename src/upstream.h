@@ -19,6 +19,10 @@ enum upstream_schedule {
     up_random,     /* raondom schedule */
 };
 
+/*
+ * upstreams.pools -> {2-3}upstream_pool.pool -> {n}upstream
+ */
+
 struct upstream  {
     rps_addr_t  server;
     rps_proto_t proto;
@@ -40,6 +44,7 @@ struct upstream_pool {
 struct upstreams {
     uint8_t                 schedule;
     bool                    hybrid;
+    uint32_t                maxretry;
     rps_array_t             pools;
 };
 
