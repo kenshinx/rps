@@ -11,6 +11,7 @@
 
 #define UPSTREAM_DEFAULT_REFRESH    60
 #define UPSTREAM_DEFAULT_BYBRID     0
+#define UPSTREAM_DEFAULT_MAXRETRY   3
 
 struct config_server {
     rps_str_t       proto;
@@ -30,6 +31,7 @@ struct config_upstreams {
     uint32_t        refresh;
     rps_str_t       schedule;
     unsigned        hybrid:1;
+    uint32_t        maxretry;
     rps_array_t     *pools;
 };
 

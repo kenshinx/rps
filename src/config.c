@@ -94,6 +94,7 @@ config_upstream_deinit(struct config_upstream *upstream) {
 static rps_status_t
 config_upstreams_init(struct config_upstreams *upstreams) {
     upstreams->refresh = UPSTREAM_DEFAULT_REFRESH;
+    upstreams->maxretry = UPSTREAM_DEFAULT_MAXRETRY;
     string_init(&upstreams->schedule);
     upstreams->hybrid = UPSTREAM_DEFAULT_BYBRID;
 #ifdef SOCKS4_PROXY_SUPPORT
@@ -229,6 +230,8 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
             } else {
                 cfg->upstreams.hybrid = (unsigned)_bool;
             }
+        } else if (rps_strcmp(key, "maxretry") == 0) { 
+            cfg->upstreams.maxretry = atoi((char *)val->data);
         } else {
             status = RPS_ERROR;
         }
@@ -581,7 +584,7 @@ config_dump_server(void *data) {
     log_debug("\t   port: %d", server->port);
     log_debug("\t   username: %s", server->username.data);
     log_debug("\t   password: %s", server->password.data);
-    log_debug("\t   timeout: %d (millseconds)", server->timeout);
+    log_debug("\t   timeout: %d", server->timeout/1000);
     log_debug("");
 }
 
@@ -606,8 +609,9 @@ config_dump(struct config *cfg) {
 
     log_debug("[upstreams]");
     log_debug("\t schedule: %s", cfg->upstreams.schedule.data);
-    log_debug("\t refresh: %d", cfg->upstreams.refresh);
+    log_debug("\t refresh: %d", cfg->upstreams.refresh/1000);
     log_debug("\t hybrid: %d", cfg->upstreams.hybrid);
+    log_debug("\t maxretry: %d", cfg->upstreams.maxretry);
     log_debug("");
     array_foreach(cfg->upstreams.pools, config_dump_upstream);
 

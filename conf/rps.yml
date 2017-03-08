@@ -31,6 +31,8 @@ upstreams:
     # after enable hybrid
     hybrid: false
 
+    maxretry: 3
+
     pools:
         - proto: socks5
           rediskey: rps:upstream:socks5
