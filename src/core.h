@@ -65,16 +65,17 @@ typedef enum context_flag {
 
 typedef enum context_state {
     c_init = (1 << 0),
-	c_handshake = (1 << 1),
-	c_auth = (1 << 2),
-    c_requests = (1 << 3),
-    c_reply_pre = (1 << 4),
-    c_reply = (1 << 5),
-	c_established = (1 << 6),
-    c_kill = (1 << 7),
-    c_dead = (1 << 8),
-    c_closing = (1 << 9),
-    c_closed = (1 << 10)
+    c_conn = (1 << 1),
+	c_handshake = (1 << 2),
+	c_auth = (1 << 3),
+    c_requests = (1 << 4),
+    c_reply_pre = (1 << 5),
+    c_reply = (1 << 6),
+	c_established = (1 << 7),
+    c_kill = (1 << 8),
+    c_dead = (1 << 9),
+    c_closing = (1 << 10),
+    c_closed = (1 << 11)
 } ctx_state_t;
 
 
@@ -93,6 +94,7 @@ struct context {
 
     uv_timer_t      	timer;
     uv_write_t      	write_req;
+    uv_connect_t        conn_req;
 
     rps_proto_t     	proto;
 
@@ -105,6 +107,7 @@ struct context {
     ctx_state_t        	state;
 
     int                 last_status;
+    uint32_t            retry;
 };
 
 struct session {
