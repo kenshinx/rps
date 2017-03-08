@@ -191,6 +191,7 @@ rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
 
 int 
 rps_random(int max) {
+    ASSERT(max > 0);
     srand(time(NULL));
     return rand() %max;
 }

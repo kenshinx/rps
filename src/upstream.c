@@ -381,6 +381,11 @@ upstream_pool_get_random(struct upstream_pool *up) {
         return NULL;
     }
 
+    if (array_is_empty(up->pool)) {
+        log_error("upstream pool is null");
+        return NULL;
+    }
+
     i = rps_random(array_n(up->pool));
     
     upstream = array_get(up->pool, i);
