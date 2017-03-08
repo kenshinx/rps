@@ -88,9 +88,11 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->proto = proto;
     ctx->nread = 0;
     ctx->last_status = 0;
+    ctx->retry = 0;
     ctx->handle.handle.data  = ctx;
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
+    ctx->connect_req.data = ctx;
 
     if (ctx->proto == SOCKS5) {
         switch (ctx->flag) {
@@ -185,7 +187,13 @@ server_on_ctx_close(uv_handle_t* handle) {
 
 static void
 server_ctx_close(rps_ctx_t *ctx) {
-    //ASSERT((ctx->state & c_connect));
+    rps_ctx_t *request;
+
+    if (ctx->flag == c_forward) {
+        request = ctx->sess->request;
+        server_ctx_close(request);
+    }
+
     ctx->state = c_closing;
     uv_read_stop(&ctx->handle.stream);
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
@@ -324,6 +332,45 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
     return RPS_OK;
 }
 
+static void
+server_on_connect_done(uv_connect_t *req, int err) {
+    rps_ctx_t *ctx;
+
+    ctx = req->data;
+
+    if (err) {
+        UV_SHOW_ERROR(err, "on connect done");
+        ctx->last_status = err;
+    }
+
+    server_do_next(ctx);
+}
+
+
+static rps_status_t
+server_connect(rps_ctx_t *ctx) {
+    int err;
+
+    err = uv_tcp_connect(&ctx->connect_req, 
+            &ctx->handle.tcp, 
+            (const struct sockaddr *)&ctx->peer.addr,
+            server_on_connect_done);
+
+    if (err) {
+        UV_SHOW_ERROR(err, "tcp connect");
+        return RPS_ERROR;
+    }
+
+    server_timer_reset(ctx);
+
+#if RPS_DEBUG_OPEN
+    log_verb("begin connect %s", ctx->peername);
+#endif
+
+
+    return RPS_OK;
+}
+
 
 /*
  *         request            forward
@@ -391,14 +438,16 @@ server_on_request_connect(uv_stream_t *us, int err) {
     }
     sess->client.family = s->listen.family;
     sess->client.addrlen = len;
+
+    memcpy(&request->peer, &sess->client, sizeof(sess->client));
     
-    err = rps_unresolve_addr(&sess->client, request->peername);
+    err = rps_unresolve_addr(&request->peer, request->peername);
     if (err < 0) {
         log_error("unresolve peername failer.");
         goto error;
     }
 
-    log_debug("accept request from %s:%d", request->peername, rps_unresolve_port(&sess->client));
+    log_debug("accept request from %s:%d", request->peername, rps_unresolve_port(&request->peer));
 
     request->state = c_handshake;
 
@@ -420,33 +469,89 @@ error:
 static ctx_state_t
 server_upstream_kickoff(rps_ctx_t *ctx) {
     struct server *s;
-    struct upstream *upstream;
     rps_sess_t *sess;
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
-    char name[MAX_HOSTNAME_LEN];
 
     sess = ctx->sess;
     s = sess->server;
     request = sess->request;
 
-    sess->forward = (struct context *)rps_alloc(sizeof(struct context));
-    if (sess->forward == NULL) {
-        return c_kill;
-    }
-
-    upstream = upstreams_get(s->upstreams, request->proto);
-    if (upstream == NULL) {
-        log_error("no available %s upstream proxy.", rps_proto_str(request->proto));
-        return c_kill;
-    }
-
-    rps_unresolve_addr(&upstream->server, name);
-    log_debug("upstream %s://%s:%d ", rps_proto_str(upstream->proto), name, 
-            rps_unresolve_port(&upstream->server));
-
     
+    forward = (struct context *)rps_alloc(sizeof(struct context));
+    if (forward == NULL) {
+        return c_kill;
+    }
+    server_ctx_init(forward, sess, c_forward, request->proto);
+    sess->forward = forward;
+    
+    uv_tcp_init(&s->loop, &forward->handle.tcp);
+    uv_timer_init(&s->loop, &forward->timer);
 
+    /*
+     *  conext switch from reuqest to forward 
+     */
+    forward->state = c_conn;
+    server_do_next(forward);
+
+    return c_ignore;
+}
+
+static ctx_state_t
+server_upstream_connect(rps_ctx_t *ctx) {
+    rps_sess_t *sess;
+    struct server *s;
+    struct upstream *upstream;
+    rps_ctx_t   *forward;
+
+    sess = ctx->sess;
+    s = sess->server;
+    forward = sess->forward;
+
+    ASSERT(ctx == forward);
+
+    /* Be called after connect finished */
+    if (ctx->retry > 0) {
+        /* Last connect failed */
+        if (ctx->last_status < 0) {
+            log_debug("connect upstream %s:%d failed.", forward->peername, 
+                    rps_unresolve_port(&forward->peer));
+        } else {
+            log_debug("upstream %s://%s:%d ", rps_proto_str(forward->proto), forward->peername, 
+                    rps_unresolve_port(&forward->peer));
+
+            return c_handshake;
+        }
+
+        if (ctx->retry >= s->upstreams->maxretry) {
+            log_error("upstream connect failed after %d retry.", ctx->retry);
+            return c_kill;
+        }
+
+    }
+
+    upstream = upstreams_get(s->upstreams, forward->proto);
+    if (upstream == NULL) {
+        log_error("no available %s upstream proxy.", rps_proto_str(forward->proto));
+        return c_kill;
+    }
+
+    /* upstream proto may be changed in hybrid mode */
+    forward->proto = upstream->proto;
+
+    memcpy(&forward->peer, &upstream->server, sizeof(upstream->server));
+
+    if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
+        return c_kill;
+     }
+
+    if (server_connect(forward) != RPS_OK) {
+        return c_kill;
+    }
+    
+    ctx->retry++;
+
+    return c_ignore;
 }
 
 
@@ -454,7 +559,8 @@ void
 server_do_next(rps_ctx_t *ctx) {
     ctx_state_t new_state;
 
-    if (ctx->last_status < 0) {
+    /* ignore connect error, we need retry */
+    if (ctx->last_status < 0 && ctx->state != c_conn) {
         ctx->state = c_kill;
     }
 
@@ -462,9 +568,13 @@ server_do_next(rps_ctx_t *ctx) {
         case c_reply_pre:
             new_state = server_upstream_kickoff(ctx);
             break;
+        case c_conn:
+            new_state = server_upstream_connect(ctx);
+            break;
         case c_kill:
             server_ctx_close(ctx);
             return;
+        case c_ignore:
         case c_closing:
         case c_closed:
             return;
@@ -473,9 +583,13 @@ server_do_next(rps_ctx_t *ctx) {
             break;
     }
 
+    if (new_state == c_ignore) {
+        return;
+    }
+
     ctx->state = new_state;
 
-    if (ctx->state & (c_kill | c_reply_pre)) {
+    if (ctx->state & (c_kill | c_reply_pre | c_conn)) {
         server_do_next(ctx);
     }
 }

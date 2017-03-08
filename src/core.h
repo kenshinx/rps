@@ -72,10 +72,11 @@ typedef enum context_state {
     c_reply_pre = (1 << 5),
     c_reply = (1 << 6),
 	c_established = (1 << 7),
-    c_kill = (1 << 8),
-    c_dead = (1 << 9),
-    c_closing = (1 << 10),
-    c_closed = (1 << 11)
+    c_ignore  = (1 << 8),
+    c_kill = (1 << 9),
+    c_dead = (1 << 10),
+    c_closing = (1 << 11),
+    c_closed = (1 << 12)
 } ctx_state_t;
 
 
@@ -94,13 +95,14 @@ struct context {
 
     uv_timer_t      	timer;
     uv_write_t      	write_req;
-    uv_connect_t        conn_req;
+    uv_connect_t        connect_req;
 
     rps_proto_t     	proto;
 
 	char 				buf[READ_BUF_SIZE];
 	ssize_t				nread;
 
+    rps_addr_t          peer;
     char            	peername[MAX_INET_ADDRSTRLEN];
 
     ctx_flag_t         	flag;

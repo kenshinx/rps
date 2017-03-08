@@ -7,6 +7,7 @@
 
 ctx_state_t 
 s5_client_do_next(struct context *ctx) {
+    printf("%s switch to forward conext", ctx->peername);
 }
 
 ctx_state_t
