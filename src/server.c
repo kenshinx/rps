@@ -1,5 +1,5 @@
-#include "server.h"
 #include "core.h"
+#include "server.h"
 #include "_string.h"
 #include "util.h"
 #include "upstream.h"
@@ -529,7 +529,6 @@ static ctx_state_t
 server_upstream_connect(rps_ctx_t *ctx) {
     rps_sess_t *sess;
     struct server *s;
-    struct upstream *upstream;
     rps_ctx_t   *forward;
 
     sess = ctx->sess;
@@ -565,16 +564,15 @@ server_upstream_connect(rps_ctx_t *ctx) {
 
     }
 
-    upstream = upstreams_get(s->upstreams, forward->proto);
-    if (upstream == NULL) {
+    if (upstreams_get(s->upstreams, forward->proto, &sess->upstream) != RPS_OK) {
         log_error("no available %s upstream proxy.", rps_proto_str(forward->proto));
         return c_kill;
     }
 
     /* upstream proto may be changed in hybrid mode */
-    forward->proto = upstream->proto;
+    forward->proto = sess->upstream.proto;
 
-    memcpy(&forward->peer, &upstream->server, sizeof(upstream->server));
+    memcpy(&forward->peer, &sess->upstream.server, sizeof(sess->upstream.server));
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
         return c_kill;

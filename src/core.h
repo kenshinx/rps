@@ -9,6 +9,7 @@
 #define RPS_OK      0
 #define RPS_ERROR   -1
 #define RPS_ENOMEM  -2
+#define RPS_EUPSTREAM   -3
 
 #define	READ_BUF_SIZE 2048 //2k
 
@@ -55,6 +56,7 @@ typedef struct session rps_sess_t;
 #include "log.h"
 #include "array.h"
 #include "server.h"
+#include "upstream.h"
 
 
 
@@ -110,17 +112,20 @@ struct context {
 
     int                 last_status;
     uint32_t            retry;
+
+    uint8_t             connected:1;
 };
 
 struct session {
-    rps_addr_t client;
-    rps_addr_t upstream;
-    rps_addr_t remote;
-
     struct server  *server;
 
     struct context *request;
     struct context *forward;
+
+    struct upstream  upstream;
+
+    rps_addr_t client;
+    rps_addr_t remote;
 };
 
 #endif

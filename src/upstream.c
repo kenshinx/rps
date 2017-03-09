@@ -1,6 +1,6 @@
+#include "core.h"
 #include "upstream.h"
 #include "util.h"
-#include "core.h"
 #include "config.h"
 #include "_string.h"
 
@@ -399,8 +399,8 @@ upstream_pool_get_random(struct upstream_pool *up) {
     
 }
 
-struct upstream *
-upstreams_get(struct upstreams *us, rps_proto_t proto) {
+rps_status_t
+upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
     struct upstream *upstream;
     struct upstream_pool *up;
     int i, len;
@@ -421,6 +421,7 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     }
 
     uv_rwlock_rdlock(&up->rwlock);
+
     switch (us->schedule) {
         case up_rr:
             upstream = upstream_pool_get_rr(up);
@@ -432,13 +433,20 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
         default:
             NOT_REACHED();
     }   
-    uv_rwlock_rdunlock(&up->rwlock);
+
+    if (upstream == NULL) {
+        uv_rwlock_rdunlock(&up->rwlock);
+        return RPS_EUPSTREAM;
+    }
+
+    upstream->count++;
+    memcpy(u, upstream, sizeof(struct upstream));
 
 #if RPS_DEBUG_OPEN
-    if (upstream != NULL) {
-        upstream_str(upstream);
-    }
+    upstream_str(upstream);
 #endif
+    
+    uv_rwlock_rdunlock(&up->rwlock);
 
-    return upstream;
+    return RPS_OK;
 }

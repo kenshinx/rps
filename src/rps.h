@@ -1,9 +1,9 @@
 #ifndef _RPS_H
 #define _RPS_H
 
+#include "core.h"
 #include "array.h"
 #include "config.h"
-#include "upstream.h"
 
 #include <sys/types.h>
 
