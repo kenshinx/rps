@@ -189,15 +189,21 @@ static void
 server_ctx_close(rps_ctx_t *ctx) {
     rps_ctx_t *request;
 
+    if (ctx->state & (c_closing | c_closed)) {
+        return;
+    }
+
     if (ctx->flag == c_forward) {
         request = ctx->sess->request;
-        server_ctx_close(request);
+        if (request != NULL) {
+            server_ctx_close(request);
+        }
     }
 
     ctx->state = c_closing;
     uv_read_stop(&ctx->handle.stream);
-    uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
     uv_timer_stop(&ctx->timer);
+    uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
 }
 
 
@@ -220,6 +226,7 @@ server_on_timer_expire(uv_timer_t *handle) {
     rps_ctx_t *ctx;
 
     ctx = handle->data;
+    
 
     if (ctx->flag == c_request) {
         log_debug("request from %s timeout", ctx->peername);
@@ -293,6 +300,10 @@ static void
 server_on_write_done(uv_write_t *req, int err) {
     rps_ctx_t *ctx;
 
+    if (err == UV_ECANCELED) {
+        return;  /* Handle has been closed. */
+    }
+
     ctx = req->data;
     
     ctx->last_status = err;
@@ -337,11 +348,15 @@ static void
 server_on_connect_done(uv_connect_t *req, int err) {
     rps_ctx_t *ctx;
 
-    ctx = req->data;
+    if (err == UV_ECANCELED) {
+        return;  /* Handle has been closed. */
+    }
 
     if (err) {
         UV_SHOW_ERROR(err, "on connect done");
     }
+
+    ctx = req->data;
     
     ctx->last_status = err;
 
@@ -521,6 +536,8 @@ server_upstream_connect(rps_ctx_t *ctx) {
             log_warn("connect upstream %s:%d failed.", forward->peername, 
                     rps_unresolve_port(&forward->peer));
         } else {
+
+            /* Connect success */
             log_debug("connect upstream %s://%s:%d ", rps_proto_str(forward->proto), forward->peername, 
                     rps_unresolve_port(&forward->peer));
 
