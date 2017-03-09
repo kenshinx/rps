@@ -182,7 +182,7 @@ server_on_ctx_close(uv_handle_t* handle) {
             NOT_REACHED();
     }
 
-    server_sess_free(sess);
+    server_do_next(ctx);
 }
 
 static void
@@ -234,7 +234,8 @@ server_on_timer_expire(uv_timer_t *handle) {
         log_debug("forward to %s timeout", ctx->peername);
     }
 
-    server_ctx_close(ctx);
+    ctx->state = c_kill;
+    server_do_next(ctx);
 }
 
 static void 
@@ -510,7 +511,7 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
     forward->state = c_conn;
     server_do_next(forward);
 
-    return c_ignore;
+    return c_wait;
 }
 
 static ctx_state_t
@@ -574,7 +575,7 @@ server_upstream_connect(rps_ctx_t *ctx) {
     
     ctx->retry++;
 
-    return c_ignore;
+    return c_wait;
 }
 
 
@@ -597,16 +598,18 @@ server_do_next(rps_ctx_t *ctx) {
         case c_kill:
             server_ctx_close(ctx);
             return;
-        case c_ignore:
+        case c_wait:
         case c_closing:
+            return;
         case c_closed:
+            server_sess_free(ctx->sess);
             return;
         default:
             new_state = ctx->do_next(ctx);
             break;
     }
 
-    if (new_state == c_ignore) {
+    if (new_state == c_wait) {
         return;
     }
 

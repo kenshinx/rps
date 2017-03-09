@@ -72,7 +72,7 @@ typedef enum context_state {
     c_reply_pre = (1 << 5),
     c_reply = (1 << 6),
 	c_established = (1 << 7),
-    c_ignore  = (1 << 8),
+    c_wait  = (1 << 8),
     c_kill = (1 << 9),
     c_dead = (1 << 10),
     c_closing = (1 << 11),
