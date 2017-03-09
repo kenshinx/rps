@@ -20,7 +20,7 @@ servers:
       timeout: 30 #30 seconds
 
 upstreams:
-    refresh: 30 #30 seconds
+    refresh: 300 #5 minutes
 
     #rr: round-robin
     #random: random schedule

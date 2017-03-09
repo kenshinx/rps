@@ -295,9 +295,10 @@ server_on_write_done(uv_write_t *req, int err) {
 
     ctx = req->data;
     
+    ctx->last_status = err;
+
     if (err) {
         UV_SHOW_ERROR(err, "on write done");
-        ctx->last_status = err;
         server_do_next(ctx);
         return;
     }
@@ -340,8 +341,9 @@ server_on_connect_done(uv_connect_t *req, int err) {
 
     if (err) {
         UV_SHOW_ERROR(err, "on connect done");
-        ctx->last_status = err;
     }
+    
+    ctx->last_status = err;
 
     server_do_next(ctx);
 }
@@ -514,10 +516,10 @@ server_upstream_connect(rps_ctx_t *ctx) {
     if (ctx->retry > 0) {
         /* Last connect failed */
         if (ctx->last_status < 0) {
-            log_debug("connect upstream %s:%d failed.", forward->peername, 
+            log_warn("connect upstream %s:%d failed.", forward->peername, 
                     rps_unresolve_port(&forward->peer));
         } else {
-            log_debug("upstream %s://%s:%d ", rps_proto_str(forward->proto), forward->peername, 
+            log_debug("connect upstream %s://%s:%d ", rps_proto_str(forward->proto), forward->peername, 
                     rps_unresolve_port(&forward->peer));
 
             return c_handshake;
@@ -539,13 +541,18 @@ server_upstream_connect(rps_ctx_t *ctx) {
     /* upstream proto may be changed in hybrid mode */
     forward->proto = upstream->proto;
 
-    memcpy(&forward->peer, &upstream->server, sizeof(upstream->server));
+    memset(&forward->peer, 0, sizeof(forward->peer));
+    forward->peer.family = upstream->server.family;
+    forward->peer.addrlen = upstream->server.addrlen;
+    memcpy(&forward->peer.addr, &upstream->server.addr, forward->peer.addrlen);
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
         return c_kill;
      }
 
     if (server_connect(forward) != RPS_OK) {
+        log_warn("connect upstream %s:%d failed.", forward->peername, 
+               rps_unresolve_port(&forward->peer));
         return c_kill;
     }
     

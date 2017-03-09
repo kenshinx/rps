@@ -60,8 +60,8 @@ void _rps_assert(const char *cond, const char *file, int line);
 
 struct sockaddr_name {
     uint16_t    family;
-    char        host[255];
     uint16_t    port;
+    char        host[255];
 };
 
 typedef struct sockinfo {
