@@ -25,6 +25,7 @@ upstream_deinit(struct upstream *u) {
     u->count = 0;
 }
 
+#ifdef RPS_DEBUG_OPEN
 static void
 upstream_str(void *data) {
     char name[MAX_HOSTNAME_LEN];
@@ -36,6 +37,7 @@ upstream_str(void *data) {
     log_verb("\t%s://%s:%s@%s:%d ", rps_proto_str(u->proto), 
             u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server));
 }
+#endif
 
 static rps_status_t
 upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu, 
@@ -79,11 +81,13 @@ upstream_pool_deinit(struct upstream_pool *up) {
     uv_rwlock_destroy(&up->rwlock);
 } 
 
+#ifdef RPS_DEBUG_OPEN
 static void
 upstream_pool_dump(struct upstream_pool *up) {
     log_verb("[rps upstream proxy pool]");
     array_foreach(up->pool, upstream_str);
 }
+#endif
 
 rps_status_t 
 upstreams_init(struct upstreams *us, struct config_redis *cr, 
