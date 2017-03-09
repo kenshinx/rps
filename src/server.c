@@ -89,6 +89,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->nread = 0;
     ctx->last_status = 0;
     ctx->retry = 0;
+    ctx->connected = 0;
     ctx->handle.handle.data  = ctx;
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
@@ -170,6 +171,7 @@ server_on_ctx_close(uv_handle_t* handle) {
     ctx = handle->data;
     sess = ctx->sess;
     ctx->state = c_closed;
+    ctx->connected = 0;
 
     switch (ctx->flag) {
         case c_request:
@@ -187,23 +189,30 @@ server_on_ctx_close(uv_handle_t* handle) {
 
 static void
 server_ctx_close(rps_ctx_t *ctx) {
-    rps_ctx_t *request;
-
     if (ctx->state & (c_closing | c_closed)) {
         return;
     }
 
-    if (ctx->flag == c_forward) {
-        request = ctx->sess->request;
-        if (request != NULL) {
-            server_ctx_close(request);
-        }
+    if (!ctx->connected) {
+        return;
     }
 
     ctx->state = c_closing;
     uv_read_stop(&ctx->handle.stream);
     uv_timer_stop(&ctx->timer);
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
+}
+
+static void
+server_close(rps_sess_t *sess) {
+
+    if (sess->request != NULL) {
+        server_ctx_close(sess->request);
+    }
+
+    if (sess->forward != NULL) {
+        server_ctx_close(sess->forward);
+    }
 }
 
 
@@ -267,7 +276,7 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         }
 
         //Client close connect
-        server_ctx_close(ctx);
+        server_close(ctx->sess);
         return;
 
     }
@@ -360,7 +369,7 @@ server_on_connect_done(uv_connect_t *req, int err) {
     ctx = req->data;
     
     ctx->last_status = err;
-
+    ctx->connected = 1;
     server_do_next(ctx);
 }
 
@@ -435,6 +444,8 @@ server_on_request_connect(uv_stream_t *us, int err) {
         goto error;
     }
 
+    request->connected = 1;
+
     #ifdef REQUEST_TCP_KEEPALIVE
     err = uv_tcp_keepalive(&request->handle, 1, TCP_KEEPALIVE_DELAY);
     if (err) {
@@ -480,7 +491,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
     return;
 
 error:
-    server_ctx_close(request);
+    server_close(request->sess);
     return;
 }
 
@@ -601,7 +612,7 @@ server_do_next(rps_ctx_t *ctx) {
             new_state = server_upstream_connect(ctx);
             break;
         case c_kill:
-            server_ctx_close(ctx);
+            server_close(ctx->sess);
             return;
         case c_wait:
         case c_closing:
