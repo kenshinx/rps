@@ -527,8 +527,6 @@ server_upstream_connect(rps_ctx_t *ctx) {
 
     ASSERT(ctx == forward);
 
-    //uv_tcp_init must be called before call uv_tcp_connect each time.
-    uv_tcp_init(&s->loop, &forward->handle.tcp);
 
     /* Be called after connect finished */
     if (ctx->retry > 0) {
@@ -541,6 +539,10 @@ server_upstream_connect(rps_ctx_t *ctx) {
             /* Connect success */
             log_debug("connect upstream %s://%s:%d ", rps_proto_str(forward->proto), forward->peername, 
                     rps_unresolve_port(&forward->peer));
+            
+            if (server_read(forward) != RPS_OK) {
+                return c_kill;
+            }
 
             return c_handshake;
         }
@@ -566,6 +568,9 @@ server_upstream_connect(rps_ctx_t *ctx) {
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
         return c_kill;
      }
+
+    //uv_tcp_init must be called before call uv_tcp_connect each time.
+    uv_tcp_init(&s->loop, &forward->handle.tcp);
 
     if (server_connect(forward) != RPS_OK) {
         log_warn("connect upstream %s:%d failed.", forward->peername, 
@@ -615,7 +620,7 @@ server_do_next(rps_ctx_t *ctx) {
 
     ctx->state = new_state;
 
-    if (ctx->state & (c_kill | c_reply_pre | c_conn)) {
+    if (ctx->state & (c_kill | c_reply_pre | c_conn | c_handshake)) {
         server_do_next(ctx);
     }
 }
