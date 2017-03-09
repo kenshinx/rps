@@ -243,7 +243,7 @@ upstream_json_parse(const char *str, struct upstream *u) {
 
     status = rps_resolve_inet((const char *)host.data, port, &u->server);
     if (status != RPS_OK) {
-        log_error("jason parse error, invalid upstream address, %s:%d", host, port);
+        log_error("jason parse error, invalid upstream address, %s:%d", host.data, port);
         return status;
     }
 
