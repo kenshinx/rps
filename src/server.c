@@ -543,10 +543,7 @@ server_upstream_connect(rps_ctx_t *ctx) {
     /* upstream proto may be changed in hybrid mode */
     forward->proto = upstream->proto;
 
-    memset(&forward->peer, 0, sizeof(forward->peer));
-    forward->peer.family = upstream->server.family;
-    forward->peer.addrlen = upstream->server.addrlen;
-    memcpy(&forward->peer.addr, &upstream->server.addr, forward->peer.addrlen);
+    memcpy(&forward->peer, &upstream->server, sizeof(upstream->server));
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
         return c_kill;
