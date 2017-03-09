@@ -487,7 +487,6 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
     server_ctx_init(forward, sess, c_forward, request->proto);
     sess->forward = forward;
     
-    uv_tcp_init(&s->loop, &forward->handle.tcp);
     uv_timer_init(&s->loop, &forward->timer);
 
     /*
@@ -511,6 +510,9 @@ server_upstream_connect(rps_ctx_t *ctx) {
     forward = sess->forward;
 
     ASSERT(ctx == forward);
+
+    //uv_tcp_init must be called before call uv_tcp_connect each time.
+    uv_tcp_init(&s->loop, &forward->handle.tcp);
 
     /* Be called after connect finished */
     if (ctx->retry > 0) {
