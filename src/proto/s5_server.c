@@ -234,7 +234,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     }
     log_debug("remote %s:%d", remoteip, rps_unresolve_port(remote));
 
-    ctx->state = c_reply_pre;
+    ctx->state = c_exchange;
     server_do_next(ctx);
     return;
 

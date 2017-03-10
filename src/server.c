@@ -608,7 +608,8 @@ server_do_next(rps_ctx_t *ctx) {
     }
 
     switch (ctx->state) {
-        case c_reply_pre:
+        case c_exchange:
+            /* exchange from request context to forward context */
             server_upstream_kickoff(ctx);
             break;
         case c_conn:

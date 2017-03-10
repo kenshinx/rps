@@ -73,7 +73,7 @@ typedef enum context_state {
 	c_auth = (1 << 4),
     c_auth_reply = (1 << 5),
     c_requests = (1 << 6),
-    c_reply_pre = (1 << 7),
+    c_exchange = (1 << 7),
     c_reply = (1 << 8),
 	c_established = (1 << 9),
     c_kill = (1 << 10),
