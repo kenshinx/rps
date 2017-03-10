@@ -206,8 +206,12 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
             return c_kill;
     }
 
-    /* ver(1) + cmd(1) + rsv(1) + atyp(1) +daddr(alen) + dport(2) */
-    if ((6 + alen) != size) {
+    /*
+     * ver(1) + cmd(1) + rsv(1) + atyp(1) +daddr(alen) + dport(2) 
+     * In some case of atyp_domain, alen didn't calculate the last '\0' 
+     * suffix with hostname, in order fix this pattern, so we need size -1.
+     */
+    if ((6 + alen) != size && (6 + alen) != (size-1)) {
         log_error("junk in request");
         return c_kill;
     }
