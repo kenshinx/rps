@@ -34,8 +34,8 @@ upstream_str(void *data) {
     u = (struct upstream *)data;
 
     rps_unresolve_addr(&u->server, name);
-    log_verb("\t%s://%s:%s@%s:%d ", rps_proto_str(u->proto), 
-            u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server));
+    log_verb("\t%s://%s:%s@%s:%d #%d", rps_proto_str(u->proto), u->uname.data, 
+            u->passwd.data, name, rps_unresolve_port(&u->server), u->count);
 }
 #endif
 
