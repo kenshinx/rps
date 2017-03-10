@@ -9,7 +9,7 @@
 #include <jansson.h>
 
 
-static void
+void
 upstream_init(struct upstream *u) {
     string_init(&u->uname);   
     string_init(&u->passwd);   
@@ -18,11 +18,26 @@ upstream_init(struct upstream *u) {
 
 }
 
-static void
+void
 upstream_deinit(struct upstream *u) {
     string_deinit(&u->uname);
     string_deinit(&u->passwd);
     u->count = 0;
+}
+
+static void
+upstream_copy(struct upstream *dst, struct upstream *src) {
+    dst->proto = src->proto;
+    dst->weight = src->weight;
+    dst->count = src->count;
+
+    memcpy(&dst->server, &src->server, sizeof(src->server));
+    if (!string_empty(&src->uname)) {
+        string_copy(&dst->uname, &src->uname);
+    }
+    if (!string_empty(&src->passwd)) {
+        string_copy(&dst->passwd, &src->passwd);
+    }
 }
 
 #ifdef RPS_DEBUG_OPEN
@@ -440,7 +455,8 @@ upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
     }
 
     upstream->count++;
-    memcpy(u, upstream, sizeof(struct upstream));
+
+    upstream_copy(u, upstream);
 
 #if RPS_DEBUG_OPEN
     upstream_str(upstream);

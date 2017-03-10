@@ -59,6 +59,7 @@ server_sess_init(rps_sess_t *sess, struct server *s) {
     sess->server = s;
     sess->request = NULL;
     sess->forward = NULL;
+    upstream_init(&sess->upstream);
 }
 
 static void
@@ -77,6 +78,7 @@ server_sess_free(rps_sess_t *sess) {
         return;
     }
 
+    upstream_deinit(&sess->upstream);
     rps_free(sess);
 }
 
@@ -601,7 +603,6 @@ kill:
 
 void
 server_do_next(rps_ctx_t *ctx) {
-
     /* ignore connect error, we need retry */
     if (ctx->last_status < 0 && ctx->state != c_conn) {
         ctx->state = c_kill;
@@ -627,7 +628,6 @@ server_do_next(rps_ctx_t *ctx) {
             ctx->do_next(ctx);
             break;
     }
-
 }
 
 

@@ -48,6 +48,9 @@ struct upstreams {
     rps_array_t             pools;
 };
 
+void upstream_init(struct upstream *u);
+void upstream_deinit(struct upstream *u);
+
 rps_status_t upstreams_init(struct upstreams *us, 
         struct config_redis *cr, struct config_upstreams *cu);
 rps_status_t upstreams_get(struct upstreams *us, rps_proto_t proto, 
