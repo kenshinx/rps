@@ -189,6 +189,10 @@ server_on_ctx_close(uv_handle_t* handle) {
 
 static void
 server_ctx_close(rps_ctx_t *ctx) {
+    if (ctx == NULL) {
+        return;
+    }
+
     if (ctx->state & (c_closing | c_closed)) {
         return;
     }
@@ -206,13 +210,8 @@ server_ctx_close(rps_ctx_t *ctx) {
 static void
 server_close(rps_sess_t *sess) {
 
-    if (sess->request != NULL) {
-        server_ctx_close(sess->request);
-    }
-
-    if (sess->forward != NULL) {
-        server_ctx_close(sess->forward);
-    }
+    server_ctx_close(sess->request);
+    server_ctx_close(sess->forward);
 }
 
 
