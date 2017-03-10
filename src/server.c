@@ -494,7 +494,7 @@ error:
     return;
 }
 
-static ctx_state_t
+static void
 server_upstream_kickoff(rps_ctx_t *ctx) {
     struct server *s;
     rps_sess_t *sess;
@@ -508,8 +508,11 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
     
     forward = (struct context *)rps_alloc(sizeof(struct context));
     if (forward == NULL) {
-        return c_kill;
+        request->state = c_kill;
+        server_do_next(request);
+        return;
     }
+
     server_ctx_init(forward, sess, c_forward, request->proto);
     sess->forward = forward;
     
@@ -520,11 +523,9 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
      */
     forward->state = c_conn;
     server_do_next(forward);
-
-    return c_wait;
 }
 
-static ctx_state_t
+static void
 server_upstream_connect(rps_ctx_t *ctx) {
     rps_sess_t *sess;
     struct server *s;
@@ -535,6 +536,7 @@ server_upstream_connect(rps_ctx_t *ctx) {
     forward = sess->forward;
 
     ASSERT(ctx == forward);
+    ASSERT(ctx->state = c_conn);
 
 
     /* Be called after connect finished */
@@ -550,22 +552,24 @@ server_upstream_connect(rps_ctx_t *ctx) {
                     rps_unresolve_port(&forward->peer));
             
             if (server_read(forward) != RPS_OK) {
-                return c_kill;
+                goto error;
             }
 
-            return c_handshake;
+            ctx->state = c_handshake;
+            server_do_next(ctx);
+            return;
         }
 
         if (ctx->retry >= s->upstreams->maxretry) {
             log_error("upstream connect failed after %d retry.", ctx->retry);
-            return c_kill;
+            goto error;
         }
 
     }
 
     if (upstreams_get(s->upstreams, forward->proto, &sess->upstream) != RPS_OK) {
         log_error("no available %s upstream proxy.", rps_proto_str(forward->proto));
-        return c_kill;
+        goto error;
     }
 
     /* upstream proto may be changed in hybrid mode */
@@ -574,7 +578,7 @@ server_upstream_connect(rps_ctx_t *ctx) {
     memcpy(&forward->peer, &sess->upstream.server, sizeof(sess->upstream.server));
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
-        return c_kill;
+        goto error;
      }
 
     //uv_tcp_init must be called before call uv_tcp_connect each time.
@@ -583,12 +587,16 @@ server_upstream_connect(rps_ctx_t *ctx) {
     if (server_connect(forward) != RPS_OK) {
         log_warn("connect upstream %s:%d failed.", forward->peername, 
                rps_unresolve_port(&forward->peer));
-        return c_kill;
+        goto error;
     }
     
     ctx->retry++;
+    return;
 
-    return c_wait;
+error:
+    ctx->state = c_kill;
+    server_do_next(ctx);
+    return;
 }
 
 
@@ -603,11 +611,11 @@ server_do_next(rps_ctx_t *ctx) {
 
     switch (ctx->state) {
         case c_reply_pre:
-            new_state = server_upstream_kickoff(ctx);
-            break;
+            server_upstream_kickoff(ctx);
+            return;
         case c_conn:
-            new_state = server_upstream_connect(ctx);
-            break;
+            server_upstream_connect(ctx);
+            return;
         case c_kill:
             server_close(ctx->sess);
             return;
@@ -628,7 +636,7 @@ server_do_next(rps_ctx_t *ctx) {
 
     ctx->state = new_state;
 
-    if (ctx->state & (c_kill | c_reply_pre | c_conn | c_handshake)) {
+    if (ctx->state & (c_kill | c_reply_pre)) {
         server_do_next(ctx);
     }
 }
