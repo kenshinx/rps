@@ -619,7 +619,6 @@ server_do_next(rps_ctx_t *ctx) {
         case c_kill:
             server_close(ctx->sess);
             return;
-        case c_wait:
         case c_closing:
             return;
         case c_closed:
@@ -628,10 +627,6 @@ server_do_next(rps_ctx_t *ctx) {
         default:
             new_state = ctx->do_next(ctx);
             break;
-    }
-
-    if (new_state == c_wait) {
-        return;
     }
 
     ctx->state = new_state;
