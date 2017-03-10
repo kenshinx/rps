@@ -11,7 +11,7 @@ servers:
       port: 9890
       #username: rps
       #password: secret
-      timeout: 300 #30 seconds
+      timeout: 30 #30 seconds
       
 
     - proto: http
