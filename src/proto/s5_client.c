@@ -6,10 +6,9 @@
 
 
 
-static ctx_state_t
+static void
 s5_do_handshake(struct context *ctx) {
     rps_status_t status;
-    ctx_state_t new_state;
     struct session  *sess;
     struct s5_method_request req;
 
@@ -28,42 +27,95 @@ s5_do_handshake(struct context *ctx) {
     }
 
     if (status != RPS_OK) {
-        return c_kill;
+        ctx->state = c_kill;
+        server_do_next(ctx);
+        return;
     }
     
-    return c_handshake_reply;
+    ctx->state = c_handshake_reply;
+    return;
 }
 
-static ctx_state_t
+static void
 s5_do_handshake_reply(struct context *ctx) {
-    printf("cliet into do handshake reply phase\n");
-    return c_requests;
-}
-
-
-
-static ctx_state_t
-s5_do_auth() {
-
-}
-
-
-ctx_state_t 
-s5_client_do_next(struct context *ctx) {
+    uint8_t    *data;
+    size_t     size;
     ctx_state_t new_state;
+    struct s5_method_response *resp;
+    
+    data = (uint8_t *)ctx->buf;
+    size = (size_t)ctx->nread;
+
+    resp = (struct s5_method_response *)data;
+    if (resp->ver != SOCKS5_VERSION) {
+        log_error("s5 handshake error: bad protocol version.");
+        goto kill;
+    }
+
+    if (size != 2) {
+        log_error("junk in handshake");
+        goto kill;
+    }
+
+    switch (resp->method) {
+        case s5_auth_none:
+            new_state = c_requests;
+            break;
+        case s5_auth_passwd:
+            new_state = c_auth;
+            break;
+        case s5_auth_gssapi:
+        case s5_auth_unacceptable:
+        default:
+            new_state = c_kill;
+            log_error("s5 handshake error: unacceptable authentication.");
+            break;
+    }
+
+#ifdef RPS_DEBUG_OPEN
+    log_verb("s5 client handshake finish.");
+#endif
+
+    ctx->state = new_state;
+    server_do_next(ctx);
+    return;
+
+kill:
+    ctx->state = c_kill;
+    server_do_next(ctx);
+}
+
+static void
+s5_do_auth(struct context *ctx) {
+    printf("begin do auth\n");
+    
+}
+
+
+static void
+s5_do_request(struct context *ctx) {
+    printf("begin do request\n");
+}
+
+
+void 
+s5_client_do_next(struct context *ctx) {
 
     switch(ctx->state) {
         case c_handshake:
-            new_state = s5_do_handshake(ctx);
+            s5_do_handshake(ctx);
             break;
         case c_handshake_reply:
-            new_state = s5_do_handshake_reply(ctx);
+            s5_do_handshake_reply(ctx);
+            break;
+        case c_auth:
+            s5_do_auth(ctx);
+            break;
+        case c_requests:
+            s5_do_request(ctx);
             break;
         default:
             NOT_REACHED();
-            new_state = c_kill;
     }
-
-    return new_state;
     
 }

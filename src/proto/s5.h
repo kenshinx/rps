@@ -234,7 +234,7 @@ typedef enum {
     s5_cmd_udp_assoc   = 0x03
 } s5_cmd;
 
-ctx_state_t s5_server_do_next(struct context *ctx);
-ctx_state_t s5_client_do_next(struct context *ctx);
+void s5_server_do_next(struct context *ctx);
+void s5_client_do_next(struct context *ctx);
 
 #endif

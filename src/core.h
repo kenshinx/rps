@@ -83,7 +83,7 @@ typedef enum context_state {
 } ctx_state_t;
 
 
-typedef ctx_state_t (*rps_next_t)(struct context *);
+typedef void (*rps_next_t)(struct context *);
 
 struct context {
     struct session 		*sess;

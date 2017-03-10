@@ -27,7 +27,7 @@ s5_select_auth(struct s5_method_request *req) {
     return s5_auth_unacceptable;
 }
 
-static ctx_state_t
+static void
 s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     ctx_state_t new_state;
     struct server *s;
@@ -38,13 +38,13 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     req = (struct s5_method_request *)data;
     if (req->ver != SOCKS5_VERSION) {
         log_error("s5 handshake error: bad protocol version.");
-        return c_kill;
+        goto kill;
     }
 
     /* ver(1) + nmethods(1) + methods(nmethods) */
     if (size != (2 + req->nmethods)) {
         log_error("junk in handshake");
-        return c_kill;
+        goto kill;
     }
 
     memset(&resp, 0, sizeof(struct s5_method_response));
@@ -64,7 +64,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
 
     status = server_write(ctx, &resp, sizeof(resp));
     if (status != RPS_OK) {
-        return c_kill;
+        goto kill;
     }
 
     switch (resp.method) {
@@ -84,11 +84,17 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
 #ifdef RPS_DEBUG_OPEN
     log_verb("s5 handshake finish.");
 #endif
+    
+    ctx->state = new_state;
+    return;
 
-    return new_state;
+kill:
+    ctx->state=c_kill;
+    server_do_next(ctx);
+    return;
 }
 
-static ctx_state_t
+static void
 s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     ctx_state_t new_state;
     struct server *s;
@@ -99,7 +105,7 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     req = (struct s5_auth_request *)data;
     if (req->ver != SOCKS5_AUTH_PASSWD_VERSION) {
         log_error("s5 handshake error: bad password auth version.");
-        return c_kill;
+        goto kill;
     } 
 
     /* Reset the req struct memory layout */
@@ -111,13 +117,13 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     /* ver(1) + ulen(1) + uname(ulen) + plen(1) + passwd(plen) */
     if ((3 + req->ulen + req->plen) != size) {
         log_error("junk in auth");
-        return c_kill;
+        goto kill;
     }
 
     if ((strlen((const char *)req->uname) != req->ulen) || 
         (strlen((const char *)req->passwd) != req->plen)) {
         log_error("invalid auth packet");
-        return c_kill;
+        goto kill;
         
     }
 
@@ -137,7 +143,7 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
 
     status = server_write(ctx, &resp, sizeof(resp));
     if (status != RPS_OK) {
-        return c_kill;
+        goto kill;
     }
 
 #ifdef RPS_DEBUG_OPEN
@@ -148,10 +154,16 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     }
 #endif
 
-    return new_state;
+    ctx->state = new_state;
+    return;
+
+kill:
+    ctx->state=c_kill;
+    server_do_next(ctx);
+    return;
 }
 
-static ctx_state_t
+static void
 s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     uint8_t alen;
     struct s5_request *req;
@@ -163,7 +175,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     req = (struct s5_request *)data;
     if (req->ver != SOCKS5_VERSION) {
         log_error("s5 request error: bad protocol version.");
-        return c_kill;
+        goto kill;
     }
 
     s5_in4_response_init(&resp);
@@ -173,7 +185,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
         resp.rep = 0x07;
         server_write(ctx, &resp, sizeof(struct s5_in4_response));
         log_error("s5 request error: only support tcp connect verify.");
-        return c_kill;
+        goto kill;
     }
 
     remote = &ctx->sess->remote;
@@ -203,7 +215,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
             /* Address type not supported */
             resp.rep = 0x08;
             server_write(ctx, &resp, sizeof(struct s5_in4_response));
-            return c_kill;
+            goto kill;
     }
 
     /*
@@ -213,49 +225,53 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
      */
     if ((6 + alen) != size && (6 + alen) != (size-1)) {
         log_error("junk in request");
-        return c_kill;
+        goto kill;
     }
 
     err = rps_unresolve_addr(remote, remoteip);
     if (err < 0) {
-        return c_kill;
+        goto kill;
     }
     log_debug("remote %s:%d", remoteip, rps_unresolve_port(remote));
 
-    return c_reply_pre;
+    ctx->state = c_reply_pre;
+    server_do_next(ctx);
+    return;
+
+kill:
+    ctx->state=c_kill;
+    server_do_next(ctx);
+    return;
 }
 
-static ctx_state_t
+static void
 s5_do_reply() {
-    return c_kill;
+    return;
 }
 
-ctx_state_t 
+void 
 s5_server_do_next(struct context *ctx) {
     uint8_t    *data;
     size_t     size;
-    ctx_state_t new_state; 
 
     data = (uint8_t *)ctx->buf;
     size = (size_t)ctx->nread;
 
     switch (ctx->state) {
         case c_handshake:
-            new_state = s5_do_handshake(ctx, data, size);
+            s5_do_handshake(ctx, data, size);
             break;
         case c_auth:
-            new_state = s5_do_auth(ctx, data, size);
+            s5_do_auth(ctx, data, size);
             break;
         case c_requests:
-            new_state = s5_do_request(ctx, data, size);
+            s5_do_request(ctx, data, size);
             break;
         case c_reply:
-            new_state = s5_do_reply();
+            s5_do_reply();
             break;
         default:
             NOT_REACHED();
-            new_state = c_kill;
     }
-    
-    return new_state;
+
 }

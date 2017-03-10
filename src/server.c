@@ -552,7 +552,7 @@ server_upstream_connect(rps_ctx_t *ctx) {
                     rps_unresolve_port(&forward->peer));
             
             if (server_read(forward) != RPS_OK) {
-                goto error;
+                goto kill;
             }
 
             ctx->state = c_handshake;
@@ -562,14 +562,14 @@ server_upstream_connect(rps_ctx_t *ctx) {
 
         if (ctx->retry >= s->upstreams->maxretry) {
             log_error("upstream connect failed after %d retry.", ctx->retry);
-            goto error;
+            goto kill;
         }
 
     }
 
     if (upstreams_get(s->upstreams, forward->proto, &sess->upstream) != RPS_OK) {
         log_error("no available %s upstream proxy.", rps_proto_str(forward->proto));
-        goto error;
+        goto kill;
     }
 
     /* upstream proto may be changed in hybrid mode */
@@ -578,7 +578,7 @@ server_upstream_connect(rps_ctx_t *ctx) {
     memcpy(&forward->peer, &sess->upstream.server, sizeof(sess->upstream.server));
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
-        goto error;
+        goto kill;
      }
 
     //uv_tcp_init must be called before call uv_tcp_connect each time.
@@ -587,22 +587,20 @@ server_upstream_connect(rps_ctx_t *ctx) {
     if (server_connect(forward) != RPS_OK) {
         log_warn("connect upstream %s:%d failed.", forward->peername, 
                rps_unresolve_port(&forward->peer));
-        goto error;
+        goto kill;
     }
     
     ctx->retry++;
     return;
 
-error:
+kill:
     ctx->state = c_kill;
     server_do_next(ctx);
-    return;
 }
 
 
 void
 server_do_next(rps_ctx_t *ctx) {
-    ctx_state_t new_state;
 
     /* ignore connect error, we need retry */
     if (ctx->last_status < 0 && ctx->state != c_conn) {
@@ -612,28 +610,23 @@ server_do_next(rps_ctx_t *ctx) {
     switch (ctx->state) {
         case c_reply_pre:
             server_upstream_kickoff(ctx);
-            return;
+            break;
         case c_conn:
             server_upstream_connect(ctx);
-            return;
+            break;
         case c_kill:
             server_close(ctx->sess);
-            return;
+            break;
         case c_closing:
-            return;
+            break;
         case c_closed:
             server_sess_free(ctx->sess);
-            return;
+            break;
         default:
-            new_state = ctx->do_next(ctx);
+            ctx->do_next(ctx);
             break;
     }
 
-    ctx->state = new_state;
-
-    if (ctx->state & (c_kill | c_reply_pre)) {
-        server_do_next(ctx);
-    }
 }
 
 
