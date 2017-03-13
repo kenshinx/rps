@@ -1,5 +1,6 @@
 #include "s5.h"
 #include "core.h"
+#include "upstream.h"
 
 #include <stdio.h>
 
@@ -32,12 +33,12 @@ s5_do_handshake(struct context *ctx) {
         return;
     }
     
-    ctx->state = c_handshake_reply;
+    ctx->state = c_handshake_resp;
     return;
 }
 
 static void
-s5_do_handshake_reply(struct context *ctx) {
+s5_do_handshake_resp(struct context *ctx) {
     uint8_t    *data;
     size_t     size;
     ctx_state_t new_state;
@@ -48,12 +49,12 @@ s5_do_handshake_reply(struct context *ctx) {
 
     resp = (struct s5_method_response *)data;
     if (resp->ver != SOCKS5_VERSION) {
-        log_error("s5 handshake error: bad protocol version.");
+        log_warn("s5 handshake error: bad protocol version.");
         goto kill;
     }
 
     if (size != 2) {
-        log_error("junk in handshake");
+        log_wan("junk in handshake");
         goto kill;
     }
 
@@ -68,7 +69,7 @@ s5_do_handshake_reply(struct context *ctx) {
         case s5_auth_unacceptable:
         default:
             new_state = c_kill;
-            log_error("s5 handshake error: unacceptable authentication.");
+            log_wan("s5 handshake error: unacceptable authentication.");
             break;
     }
 
@@ -87,8 +88,72 @@ kill:
 
 static void
 s5_do_auth(struct context *ctx) {
-    printf("begin do auth\n");
-    
+    //struct s5_auth_request req;
+    uint8_t req[512];
+    struct upstream *u;
+    int len;
+
+    len = 0;
+    u = &ctx->sess->upstream;
+
+    req[len++] = SOCKS5_AUTH_PASSWD_VERSION;
+    req[len++] = u->uname.len;
+
+    if (!string_empty(&u->uname)) {
+        memcpy(&req[len], u->uname.data, u->uname.len);
+        len += u->uname.len;
+    }
+
+    req[len++] = u->passwd.len;
+
+    if (!string_empty(&u->passwd)) {
+        memcpy(&req[len], u->passwd.data, u->passwd.len);
+        len += u->passwd.len;
+    } 
+
+    if (server_write(ctx, req, len) != RPS_OK) {
+        ctx->state = c_kill;
+    } else {
+        ctx->state = c_auth_resp;
+    }
+}
+
+static void
+s5_do_auth_resp(struct context *ctx) {
+    uint8_t    *data;
+    size_t     size;
+    struct s5_auth_response *resp;
+
+    data = (uint8_t *)ctx->buf;
+    size = (size_t)ctx->nread;
+
+    resp = (struct s5_auth_response *)data;
+
+    if (size != 2) {
+        log_warn("junk in auth response");
+        goto kill;
+    }
+
+    if (resp->ver != SOCKS5_AUTH_PASSWD_VERSION){
+        log_warn("auth version is invalid: %d", resp->ver);
+        goto kill;
+    }
+
+    if (resp->status != s5_auth_allow) {
+        log_warn("auth denied");
+        goto kill;
+    }
+
+#ifdef RPS_DEBUG_OPEN
+    log_verb("s5 client auth allow.");
+#endif
+
+    ctx->state = c_requests;
+    server_do_next(ctx);
+
+kill:
+    ctx->state = c_kill;
+    server_do_next(ctx);
 }
 
 
@@ -105,11 +170,14 @@ s5_client_do_next(struct context *ctx) {
         case c_handshake:
             s5_do_handshake(ctx);
             break;
-        case c_handshake_reply:
-            s5_do_handshake_reply(ctx);
+        case c_handshake_resp:
+            s5_do_handshake_resp(ctx);
             break;
         case c_auth:
             s5_do_auth(ctx);
+            break;
+        case c_auth_resp:
+            s5_do_auth_resp(ctx);
             break;
         case c_requests:
             s5_do_request(ctx);
