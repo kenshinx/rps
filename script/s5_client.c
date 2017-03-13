@@ -37,6 +37,7 @@ void _recv(int sockfd) {
     char recvBuf[MAXLINE];
 
     n  = read(sockfd, recvBuf, MAXLINE);
+    printf("recv %zd bytes\n", n);
     print_hex(recvBuf, n);
 }
 

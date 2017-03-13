@@ -47,14 +47,14 @@ s5_do_handshake_resp(struct context *ctx) {
     data = (uint8_t *)ctx->buf;
     size = (size_t)ctx->nread;
 
-    resp = (struct s5_method_response *)data;
-    if (resp->ver != SOCKS5_VERSION) {
-        log_warn("s5 handshake error: bad protocol version.");
+    if (size != 2) {
+        log_warn("junk in handshake");
         goto kill;
     }
 
-    if (size != 2) {
-        log_wan("junk in handshake");
+    resp = (struct s5_method_response *)data;
+    if (resp->ver != SOCKS5_VERSION) {
+        log_warn("s5 handshake error: bad protocol version.");
         goto kill;
     }
 
@@ -69,7 +69,7 @@ s5_do_handshake_resp(struct context *ctx) {
         case s5_auth_unacceptable:
         default:
             new_state = c_kill;
-            log_wan("s5 handshake error: unacceptable authentication.");
+            log_warn("s5 handshake error: unacceptable authentication.");
             break;
     }
 
@@ -127,12 +127,12 @@ s5_do_auth_resp(struct context *ctx) {
     data = (uint8_t *)ctx->buf;
     size = (size_t)ctx->nread;
 
-    resp = (struct s5_auth_response *)data;
-
     if (size != 2) {
         log_warn("junk in auth response");
         goto kill;
     }
+
+    resp = (struct s5_auth_response *)data;
 
     if (resp->ver != SOCKS5_AUTH_PASSWD_VERSION){
         log_warn("auth version is invalid: %d", resp->ver);
@@ -159,9 +159,62 @@ kill:
 
 static void
 s5_do_request(struct context *ctx) {
-    printf("begin do request\n");
+    //struct s5_request *req;
+    uint8_t req[512];
+    struct session  *sess;
+    rps_addr_t *remote;
+    int len, alen;
+
+    len = 0;
+    sess = ctx->sess;
+    remote = &sess->remote;
+    
+    req[len++] = SOCKS5_VERSION;
+    req[len++] = s5_cmd_tcp_connect; //cmd
+    req[len++] = 0x00; //rsv
+    
+    switch (remote->family) {
+        case AF_INET:
+            req[len++] = s5_atyp_ipv4;
+            memcpy(&req[len], &remote->addr.in.sin_addr, 4);
+            len += 4;
+            memcpy(&req[len], &remote->addr.in.sin_port, 2);
+            break;
+        case AF_INET6:
+            req[len++] = s5_atyp_ipv6;
+            memcpy(&req[len], &remote->addr.in.sin_addr, 16);
+            len += 16;
+            memcpy(&req[len], &remote->addr.in6.sin6_port, 2);
+            break;
+        case AF_DOMAIN:
+            req[len++] = s5_atyp_domain;
+            alen = strlen(remote->addr.name.host);
+            req[len++] = alen;
+            memcpy(&req[len], (const char *)remote->addr.name.host, alen);
+            len += alen;
+            memcpy(&req[len], &remote->addr.name.port, 2);
+            break;
+        default:
+            NOT_REACHED();
+    }
+
+    len += 2; //port length = 2
+
+    if (server_write(ctx, req, len) != RPS_OK) {
+        ctx->state = c_kill;
+    } else {
+        ctx->state = c_reply;
+    }
 }
 
+
+static void
+s5_do_reply(struct context *ctx) {
+    printf("begin do s5 clent reply\n");
+    uint8_t    *data;
+    size_t     size;
+    struct s5_in4_response *resp;
+}
 
 void 
 s5_client_do_next(struct context *ctx) {
@@ -181,6 +234,9 @@ s5_client_do_next(struct context *ctx) {
             break;
         case c_requests:
             s5_do_request(ctx);
+            break;
+        case c_reply:
+            s5_do_reply(ctx);
             break;
         default:
             NOT_REACHED();
