@@ -150,6 +150,7 @@ s5_do_auth_resp(struct context *ctx) {
 
     ctx->state = c_requests;
     server_do_next(ctx);
+    return;
 
 kill:
     ctx->state = c_kill;
@@ -210,10 +211,34 @@ s5_do_request(struct context *ctx) {
 
 static void
 s5_do_reply(struct context *ctx) {
-    printf("begin do s5 clent reply\n");
     uint8_t    *data;
     size_t     size;
     struct s5_in4_response *resp;
+
+    data = (uint8_t *)ctx->buf;
+    size = (size_t)ctx->nread;
+
+    resp = (struct s5_in4_response *)data; 
+    if (resp->ver != SOCKS5_VERSION) {
+        log_warn("s5 reply error: bad protocol version.");
+        goto kill;
+    }
+
+    if (resp->rep != s5_rep_success) {
+        log_warn("s5 reply failed by error id: '%d'", resp->rep);
+    } else {
+    #ifdef RPS_DEBUG_OPEN
+        log_verb("s5 reply success.");
+    #endif
+    }
+
+    ctx->state = c_exchange;
+    server_do_next(ctx);
+    return;
+    
+kill:
+    ctx->state = c_kill;
+    server_do_next(ctx);
 }
 
 void 

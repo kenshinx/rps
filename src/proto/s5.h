@@ -234,6 +234,19 @@ typedef enum {
     s5_cmd_udp_assoc   = 0x03
 } s5_cmd;
 
+typedef enum {
+    s5_rep_success =                0x00,
+    s5_rep_socks_failure =          0x01,
+    s5_rep_conn_deny =              0x02,
+    s5_rep_network_unreachable =    0x03,
+    s5_rep_host_unreachable =       0x04,
+    s5_rep_conn_refused =           0x05,
+    s5_rep_ttl_expired =            0x06,
+    s5_rep_cmd_not_support =        0x07,
+    s5_rep_addr_typ_not_support =   0x08,
+    s5_rep_unassigned =             0x09
+} s5_rep;
+
 void s5_server_do_next(struct context *ctx);
 void s5_client_do_next(struct context *ctx);
 
