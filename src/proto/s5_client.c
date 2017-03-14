@@ -229,7 +229,7 @@ s5_do_reply(struct context *ctx) {
         ctx->established = 0;
     } else {
     #ifdef RPS_DEBUG_OPEN
-        log_verb("s5 reply success.");
+        log_verb("s5 client reply success.");
     #endif
         ctx->established = 1;
     }

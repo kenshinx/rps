@@ -499,13 +499,11 @@ error:
 }
 
 static void
-server_forward_kickoff(rps_ctx_t *ctx) {
+server_forward_kickoff(rps_sess_t *sess) {
     struct server *s;
-    rps_sess_t *sess;
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
 
-    sess = ctx->sess;
     s = sess->server;
     request = sess->request;
 
@@ -530,23 +528,20 @@ server_forward_kickoff(rps_ctx_t *ctx) {
 }
 
 static void
-server_forward_connect(rps_ctx_t *ctx) {
-    rps_sess_t *sess;
+server_forward_connect(rps_sess_t *sess) {
     struct server *s;
     rps_ctx_t   *forward;
 
-    sess = ctx->sess;
     s = sess->server;
     forward = sess->forward;
 
-    ASSERT(ctx == forward);
-    ASSERT(ctx->state = c_conn);
+    ASSERT(forward->state = c_conn);
 
 
     /* Be called after connect finished */
-    if (ctx->retry > 0) {
+    if (forward->retry > 0) {
         /* Last connect failed */
-        if (ctx->last_status < 0) {
+        if (forward->last_status < 0) {
             log_warn("connect upstream %s:%d failed.", forward->peername, 
                     rps_unresolve_port(&forward->peer));
         } else {
@@ -559,13 +554,13 @@ server_forward_connect(rps_ctx_t *ctx) {
                 goto kill;
             }
 
-            ctx->state = c_handshake;
-            server_do_next(ctx);
+            forward->state = c_handshake;
+            server_do_next(forward);
             return;
         }
 
-        if (ctx->retry >= s->upstreams->maxretry) {
-            log_error("upstream connect failed after %d retry.", ctx->retry);
+        if (forward->retry >= s->upstreams->maxretry) {
+            log_error("upstream connect failed after %d retry.", forward->retry);
             goto kill;
         }
 
@@ -594,21 +589,19 @@ server_forward_connect(rps_ctx_t *ctx) {
         goto kill;
     }
     
-    ctx->retry++;
+    forward->retry++;
     return;
 
 kill:
-    ctx->state = c_kill;
-    server_do_next(ctx);
+    forward->state = c_kill;
+    server_do_next(forward);
 }
 
 static void
-server_request_reply(rps_ctx_t *ctx) {
-    rps_sess_t *sess;
+server_sess_establish(rps_sess_t *sess) {
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
 
-    sess = ctx->sess;
     request = sess->request;
     forward = sess->forward;
 
@@ -637,14 +630,14 @@ server_do_next(rps_ctx_t *ctx) {
         case c_exchange:
             if (ctx->flag == c_request) {
                 /* exchange from request context to forward context */
-                server_forward_kickoff(ctx);
+                server_forward_kickoff(ctx->sess);
             } else {
-                /* exchange back to request context */
-                server_request_reply(ctx);
+                /* finish dural context handshake, session established */
+                server_sess_establish(ctx->sess);
             }
             break;
         case c_conn:
-            server_forward_connect(ctx);
+            server_forward_connect(ctx->sess);
             break;
         case c_established:
             break;

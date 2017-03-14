@@ -245,8 +245,27 @@ kill:
 }
 
 static void
-s5_do_reply() {
+s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
+    struct s5_in4_response *resp;
+    
+    resp = (struct s5_in4_response *)data;
+    if (resp->rep != s5_rep_success) {
+        goto kill;
+    }
+
+    if (server_write(ctx, data, size) != RPS_OK) {
+        goto kill;
+    }
+
+    ctx->established = 1;
+    ctx->state = c_established;
+    server_do_next(ctx);
     return;
+       
+kill:
+    ctx->established = 0;
+    ctx->state = c_kill;
+    server_do_next(ctx);
 }
 
 void 
@@ -268,7 +287,7 @@ s5_server_do_next(struct context *ctx) {
             s5_do_request(ctx, data, size);
             break;
         case c_reply:
-            s5_do_reply();
+            s5_do_reply(ctx, data, size);
             break;
         default:
             NOT_REACHED();
