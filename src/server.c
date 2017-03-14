@@ -92,6 +92,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->last_status = 0;
     ctx->retry = 0;
     ctx->connected = 0;
+    ctx->established = 0;
     ctx->handle.handle.data  = ctx;
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
@@ -174,6 +175,7 @@ server_on_ctx_close(uv_handle_t* handle) {
     sess = ctx->sess;
     ctx->state = c_closed;
     ctx->connected = 0;
+    ctx->established = 0;
 
     switch (ctx->flag) {
         case c_request:
@@ -497,7 +499,7 @@ error:
 }
 
 static void
-server_upstream_kickoff(rps_ctx_t *ctx) {
+server_forward_kickoff(rps_ctx_t *ctx) {
     struct server *s;
     rps_sess_t *sess;
     rps_ctx_t *request;  /* client -> rps */
@@ -528,7 +530,7 @@ server_upstream_kickoff(rps_ctx_t *ctx) {
 }
 
 static void
-server_upstream_connect(rps_ctx_t *ctx) {
+server_forward_connect(rps_ctx_t *ctx) {
     rps_sess_t *sess;
     struct server *s;
     rps_ctx_t   *forward;
@@ -600,6 +602,29 @@ kill:
     server_do_next(ctx);
 }
 
+static void
+server_request_reply(rps_ctx_t *ctx) {
+    rps_sess_t *sess;
+    rps_ctx_t   *request;
+    rps_ctx_t   *forward;
+
+    sess = ctx->sess;
+    request = sess->request;
+    forward = sess->forward;
+
+    request->state = c_reply;
+    request->nread = forward->nread;
+    memcpy(request->buf, forward->buf, request->nread);
+    server_do_next(request);
+
+    if (forward->established) {
+        forward->state = c_established;
+    } else {
+        forward->state = c_kill;
+    }
+    
+    server_do_next(forward);
+}
 
 void
 server_do_next(rps_ctx_t *ctx) {
@@ -610,11 +635,18 @@ server_do_next(rps_ctx_t *ctx) {
 
     switch (ctx->state) {
         case c_exchange:
-            /* exchange from request context to forward context */
-            server_upstream_kickoff(ctx);
+            if (ctx->flag == c_request) {
+                /* exchange from request context to forward context */
+                server_forward_kickoff(ctx);
+            } else {
+                /* exchange back to request context */
+                server_request_reply(ctx);
+            }
             break;
         case c_conn:
-            server_upstream_connect(ctx);
+            server_forward_connect(ctx);
+            break;
+        case c_established:
             break;
         case c_kill:
             server_close(ctx->sess);

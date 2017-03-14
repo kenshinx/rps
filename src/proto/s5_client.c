@@ -226,10 +226,12 @@ s5_do_reply(struct context *ctx) {
 
     if (resp->rep != s5_rep_success) {
         log_warn("s5 reply failed by error id: '%d'", resp->rep);
+        ctx->established = 0;
     } else {
     #ifdef RPS_DEBUG_OPEN
         log_verb("s5 reply success.");
     #endif
+        ctx->established = 1;
     }
 
     ctx->state = c_exchange;

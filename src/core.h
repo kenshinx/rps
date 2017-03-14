@@ -115,6 +115,7 @@ struct context {
     uint32_t            retry;
 
     uint8_t             connected:1;
+    uint8_t             established:1;
 };
 
 struct session {
