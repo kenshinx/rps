@@ -179,10 +179,10 @@ server_on_ctx_close(uv_handle_t* handle) {
 
     switch (ctx->flag) {
         case c_request:
-            log_debug("request from %s be closed", ctx->peername);
+            log_debug("Request from %s be closed", ctx->peername);
             break;
         case c_forward:
-            log_debug("forward to %s be closed.", ctx->peername);
+            log_debug("Forward to %s be closed.", ctx->peername);
             break;
         default:
             NOT_REACHED();
@@ -241,9 +241,9 @@ server_on_timer_expire(uv_timer_t *handle) {
     
 
     if (ctx->flag == c_request) {
-        log_debug("request from %s timeout", ctx->peername);
+        log_debug("Request from %s timeout", ctx->peername);
     } else {
-        log_debug("forward to %s timeout", ctx->peername);
+        log_debug("Forward to %s timeout", ctx->peername);
     }
 
     ctx->state = c_kill;
@@ -393,11 +393,6 @@ server_connect(rps_ctx_t *ctx) {
 
     server_timer_reset(ctx);
 
-#if RPS_DEBUG_OPEN
-    log_verb("begin connect %s", ctx->peername);
-#endif
-
-
     return RPS_OK;
 }
 
@@ -479,7 +474,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
         goto error;
     }
 
-    log_debug("accept request from %s:%d", request->peername, rps_unresolve_port(&request->peer));
+    log_debug("Accept request from %s:%d", request->peername, rps_unresolve_port(&request->peer));
 
     request->state = c_handshake;
 
@@ -542,12 +537,12 @@ server_forward_connect(rps_sess_t *sess) {
     if (forward->retry > 0) {
         /* Last connect failed */
         if (forward->last_status < 0) {
-            log_warn("connect upstream %s:%d failed.", forward->peername, 
+            log_warn("Connect upstream %s:%d failed.", forward->peername, 
                     rps_unresolve_port(&forward->peer));
         } else {
 
             /* Connect success */
-            log_debug("connect upstream %s://%s:%d ", rps_proto_str(forward->proto), forward->peername, 
+            log_debug("Connect upstream %s://%s:%d success", rps_proto_str(forward->proto), forward->peername, 
                     rps_unresolve_port(&forward->peer));
             
             if (server_read(forward) != RPS_OK) {
@@ -560,7 +555,7 @@ server_forward_connect(rps_sess_t *sess) {
         }
 
         if (forward->retry >= s->upstreams->maxretry) {
-            log_error("upstream connect failed after %d retry.", forward->retry);
+            log_error("Upstream connect failed after %d retry.", forward->retry);
             goto kill;
         }
 
@@ -584,7 +579,7 @@ server_forward_connect(rps_sess_t *sess) {
     uv_tcp_init(&s->loop, &forward->handle.tcp);
 
     if (server_connect(forward) != RPS_OK) {
-        log_warn("connect upstream %s:%d failed.", forward->peername, 
+        log_warn("Connect upstream %s:%d failed.", forward->peername, 
                rps_unresolve_port(&forward->peer));
         goto kill;
     }
@@ -601,6 +596,7 @@ static void
 server_sess_establish(rps_sess_t *sess) {
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
+    char remoteip[MAX_INET_ADDRSTRLEN];
 
     request = sess->request;
     forward = sess->forward;
@@ -615,6 +611,13 @@ server_sess_establish(rps_sess_t *sess) {
     } else {
         forward->state = c_kill;
     }
+
+    rps_unresolve_addr(&sess->remote, remoteip);
+
+    log_info("Establish connect %s:%d -> rps -> %s:%d -> %s:%d",
+            request->peername, rps_unresolve_port(&request->peer), 
+            forward->peername, rps_unresolve_port(&forward->peer),
+            remoteip, rps_unresolve_port(&sess->remote));
     
     server_do_next(forward);
 }

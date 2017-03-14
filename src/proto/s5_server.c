@@ -82,7 +82,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 handshake finish.");
+    log_verb("s5 server handshake finish.");
 #endif
     
     ctx->state = new_state;
@@ -148,9 +148,9 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
 
 #ifdef RPS_DEBUG_OPEN
     if (resp.status ==  s5_auth_allow) {
-        log_verb("s5 username password authentication success.");
+        log_verb("s5 server authentication success.");
     } else {
-        log_verb("s5 username password authentication failed.");
+        log_verb("s5 server authentication failed.");
     }
 #endif
 
@@ -232,7 +232,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
     if (err < 0) {
         goto kill;
     }
-    log_debug("remote %s:%d", remoteip, rps_unresolve_port(remote));
+    log_debug("Remote %s:%d", remoteip, rps_unresolve_port(remote));
 
     ctx->state = c_exchange;
     server_do_next(ctx);
@@ -257,6 +257,11 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
         goto kill;
     }
 
+    
+#ifdef RPS_DEBUG_OPEN
+    log_verb("s5 server reply success.");
+#endif
+
     ctx->established = 1;
     ctx->state = c_established;
     server_do_next(ctx);
@@ -266,6 +271,7 @@ kill:
     ctx->established = 0;
     ctx->state = c_kill;
     server_do_next(ctx);
+    log_warn("s5 server reply failed");
 }
 
 void 
