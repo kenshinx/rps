@@ -276,12 +276,9 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     if (nread <0 ) {
         if (nread != UV_EOF) {
             UV_SHOW_ERROR(nread, "read error");
+            ctx->state = c_kill;
         }
-
-        //Client close connect
-        server_close(ctx->sess);
-        return;
-
+        
     }
     
     ctx->nread = nread;
@@ -591,7 +588,7 @@ kill:
 }
 
 static void
-server_sess_establish(rps_sess_t *sess) {
+server_establish(rps_sess_t *sess) {
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
     char remoteip[MAX_INET_ADDRSTRLEN];
@@ -608,16 +605,55 @@ server_sess_establish(rps_sess_t *sess) {
         forward->state = c_established;
     } else {
         forward->state = c_kill;
+        server_do_next(forward);
+        return;
     }
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Establish connect %s:%d -> rps -> %s:%d -> %s:%d",
+    log_info("Tunnel established %s:%d -> rps -> %s:%d -> %s:%d",
             request->peername, rps_unresolve_port(&request->peer), 
             forward->peername, rps_unresolve_port(&forward->peer),
             remoteip, rps_unresolve_port(&sess->remote));
     
-    server_do_next(forward);
+}
+
+static void
+server_do_cycle(rps_ctx_t *ctx) {
+    uint8_t    *data;
+    size_t     size;
+    rps_sess_t  *sess;
+    rps_ctx_t   *endpoint;
+
+    ASSERT(ctx->state & c_established);
+    ASSERT(ctx->connected && ctx->established);
+    
+    data = (uint8_t *)ctx->buf;
+    size = (size_t)ctx->nread;
+
+    sess = ctx->sess;
+
+    endpoint = ctx->flag == c_request? sess->forward:sess->request;
+    
+
+    if (server_write(endpoint, data, size) != RPS_OK) {
+        ctx->state = c_kill;
+        server_do_next(ctx);
+        return;
+    }
+
+    if ((ssize_t)size == UV_EOF) {
+        if (ctx->flag == c_request) {
+            log_info("Request finished %s", sess->request->peername);
+        } else {
+            log_info("Forward finished %s", sess->forward->peername);
+        }
+        /* Just close single side context, the endpoint will be close after receive EOF signal */
+        server_ctx_close(ctx);
+        return;
+    }
+
+    log_debug("redirect %d bytes to %s", size, endpoint->peername);
 }
 
 void
@@ -634,13 +670,14 @@ server_do_next(rps_ctx_t *ctx) {
                 server_forward_kickoff(ctx->sess);
             } else {
                 /* finish dural context handshake, session established */
-                server_sess_establish(ctx->sess);
+                server_establish(ctx->sess);
             }
             break;
         case c_conn:
             server_forward_connect(ctx->sess);
             break;
         case c_established:
+            server_do_cycle(ctx);
             break;
         case c_kill:
             server_close(ctx->sess);

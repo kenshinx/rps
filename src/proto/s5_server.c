@@ -264,7 +264,6 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
 
     ctx->established = 1;
     ctx->state = c_established;
-    server_do_next(ctx);
     return;
        
 kill:
