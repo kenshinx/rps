@@ -458,15 +458,13 @@ server_on_request_connect(uv_stream_t *us, int err) {
      */
     len = (int)s->listen.addrlen;
     err = uv_tcp_getpeername(&request->handle.tcp, 
-            (struct sockaddr *)&sess->client.addr, &len);
+            (struct sockaddr *)&request->peer.addr, &len);
     if (err) {
         UV_SHOW_ERROR(err, "getpeername");
         goto error;
     }
-    sess->client.family = s->listen.family;
-    sess->client.addrlen = len;
-
-    memcpy(&request->peer, &sess->client, sizeof(sess->client));
+    request->peer.family = s->listen.family;
+    request->peer.addrlen = len;
     
     err = rps_unresolve_addr(&request->peer, request->peername);
     if (err < 0) {

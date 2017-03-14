@@ -126,7 +126,6 @@ struct session {
 
     struct upstream  upstream;
 
-    rps_addr_t client;
     rps_addr_t remote;
 };
 
