@@ -575,6 +575,7 @@ server_forward_connect(rps_sess_t *sess) {
                 goto kill;
             }
 
+            forward->retry = 0;
             forward->state = c_handshake;
             server_do_next(forward);
             return;

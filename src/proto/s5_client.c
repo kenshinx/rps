@@ -68,8 +68,8 @@ s5_do_handshake_resp(struct context *ctx) {
         case s5_auth_gssapi:
         case s5_auth_unacceptable:
         default:
-            new_state = c_kill;
-            log_warn("s5 handshake error: unacceptable authentication.");
+            new_state = c_conn;
+            log_warn("s5 handshake error: unacceptable authentication. select new upstream retry");
             break;
     }
 
@@ -135,13 +135,13 @@ s5_do_auth_resp(struct context *ctx) {
     resp = (struct s5_auth_response *)data;
 
     if (resp->ver != SOCKS5_AUTH_PASSWD_VERSION){
-        log_warn("auth version is invalid: %d", resp->ver);
-        goto kill;
+        log_warn("auth version is invalid: %d, select a new upstream retry", resp->ver);
+        ctx->state = c_conn;
     }
 
     if (resp->status != s5_auth_allow) {
-        log_warn("auth denied");
-        goto kill;
+        log_warn("auth denied, select a new upstream retry");
+        ctx->state = c_conn;
     }
 
 #ifdef RPS_DEBUG_OPEN
