@@ -631,13 +631,11 @@ server_establish(rps_sess_t *sess) {
     memcpy(request->rbuf, forward->rbuf, request->nread);
     server_do_next(request);
 
-    if (forward->established) {
-        forward->state = c_established;
-    } else {
-        forward->state = c_kill;
-        server_do_next(forward);
+    if (!forward->established) {
         return;
     }
+
+    forward->state = c_established;
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
