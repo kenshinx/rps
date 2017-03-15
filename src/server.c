@@ -268,7 +268,7 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 #ifdef RPS_DEBUG_OPEN
     if (nread > 0) {
         log_verb("read %zd bytes", ctx->nread);
-        log_hex(LOG_VERBOSE, ctx->rbuf, ctx->nread);
+        //log_hex(LOG_VERBOSE, ctx->rbuf, ctx->nread);
     }
 #endif
 
@@ -351,7 +351,7 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
 
 #if RPS_DEBUG_OPEN
     log_verb("write %zd bytes", len);
-    log_hex(LOG_VERBOSE, (char *)data, len);
+    //log_hex(LOG_VERBOSE, (char *)data, len);
 #endif
 
     ctx->wstat = c_busy;
