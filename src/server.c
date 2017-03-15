@@ -132,6 +132,21 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     
 }
 
+static bool
+server_ctx_closed(rps_ctx_t *ctx) {
+
+    if (ctx == NULL) {
+        return true;
+    }
+
+    if (ctx->state & (c_closing | c_closed)) {
+        return true;
+    }
+
+    return false;
+    
+}
+
 static void 
 server_on_ctx_close(uv_handle_t* handle) {
     //Set flag be closed and 
@@ -158,13 +173,12 @@ server_on_ctx_close(uv_handle_t* handle) {
     server_do_next(ctx);
 }
 
+
+
 static void
 server_ctx_close(rps_ctx_t *ctx) {
-    if (ctx == NULL) {
-        return;
-    }
 
-    if (ctx->state & (c_closing | c_closed)) {
+    if (server_ctx_closed(ctx)) {
         return;
     }
 
@@ -636,6 +650,10 @@ server_cycle(rps_ctx_t *ctx) {
     }
 
     endpoint = ctx->flag == c_request? sess->forward:sess->request;
+
+    if (server_ctx_closed(endpoint)) {
+        return;
+    }
     
     if (server_write(endpoint, data, size) != RPS_OK) {
         ctx->state = c_kill;
