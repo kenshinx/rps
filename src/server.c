@@ -639,11 +639,13 @@ server_cycle(rps_ctx_t *ctx) {
     sess = ctx->sess;
 
     if ((ssize_t)size == UV_EOF) {
+#ifdef RPS_DEBUG_OPEN
         if (ctx->flag == c_request) {
-            log_info("Request finished %s", sess->request->peername);
+            log_verb("Request finished %s", sess->request->peername);
         } else {
-            log_info("Forward finished %s", sess->forward->peername);
+            log_verb("Forward finished %s", sess->forward->peername);
         }
+#endif
         /* Just close single side context, the endpoint will be close after receive EOF signal */
         server_ctx_close(ctx);
         return;

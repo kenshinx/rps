@@ -97,6 +97,35 @@ s5_strerr(s5_err_t err) {
     return "Unknown error.";
 }
 
+#define S5_REP_MAP(V)                                               \
+    V(0x00, s5_rep_success, "success")                              \
+    V(0x01, s5_rep_socks_fail, "socks failure")                     \
+    V(0x02, s5_rep_conn_deny, "connect denied")                     \
+    V(0x03, s5_rep_net_unreach, "network unreachable")              \
+    V(0x04, s5_rep_host_unreach, "host unreachable")                \
+    V(0x05, s5_rep_conn_refuse, "connect refused")                  \
+    V(0x06, s5_rep_ttl_expire, "ttl expired")                       \
+    V(0x07, s5_rep_cmd_not_support, "cmd not support")              \
+    V(0x08, s5_rep_addr_not_support, "address type not support")    \
+    V(0x09, s5_rep_unassigned, "unassigned")                        \
+
+typedef enum {
+#define S5_REP_GEN(code, name, _) name = code,
+      S5_REP_MAP(S5_REP_GEN)
+#undef S5_REP_GEN
+} s5_rep_t;
+
+static inline const char * 
+s5_strrep(s5_rep_t code) {
+#define S5_REP_GEN(_, name, str) case name: return str;
+    switch (code) {
+        S5_REP_MAP(S5_REP_GEN)
+        default: ;
+    }
+#undef S5_REP_GEN
+    return "Unknown rep.";
+}
+
 #define SOCKS5_VERSION  5
 #define SOCKS5_AUTH_PASSWD_VERSION 1
 
@@ -233,19 +262,6 @@ typedef enum {
     s5_cmd_tcp_bind    = 0x02,
     s5_cmd_udp_assoc   = 0x03
 } s5_cmd;
-
-typedef enum {
-    s5_rep_success =                0x00,
-    s5_rep_socks_failure =          0x01,
-    s5_rep_conn_deny =              0x02,
-    s5_rep_network_unreachable =    0x03,
-    s5_rep_host_unreachable =       0x04,
-    s5_rep_conn_refused =           0x05,
-    s5_rep_ttl_expired =            0x06,
-    s5_rep_cmd_not_support =        0x07,
-    s5_rep_addr_typ_not_support =   0x08,
-    s5_rep_unassigned =             0x09
-} s5_rep;
 
 void s5_server_do_next(struct context *ctx);
 void s5_client_do_next(struct context *ctx);

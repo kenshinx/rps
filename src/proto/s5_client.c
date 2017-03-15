@@ -225,11 +225,11 @@ s5_do_reply(struct context *ctx) {
     }
 
     if (resp->rep != s5_rep_success) {
-        log_warn("s5 reply failed by error id: '%d'", resp->rep);
+        log_warn("s5 reply, request remote failed : %s", s5_strrep(resp->rep));
         ctx->established = 0;
     } else {
     #ifdef RPS_DEBUG_OPEN
-        log_verb("s5 client reply success.");
+        log_verb("s5 client, reuqest remote success.");
     #endif
         ctx->established = 1;
     }

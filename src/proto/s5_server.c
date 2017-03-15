@@ -260,7 +260,7 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
 
     
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 server reply success.");
+    log_verb("s5 server reply, request remote success.");
 #endif
 
     ctx->established = 1;
@@ -271,7 +271,6 @@ kill:
     ctx->established = 0;
     ctx->state = c_kill;
     server_do_next(ctx);
-    log_warn("s5 server reply failed");
 }
 
 void 
