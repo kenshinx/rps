@@ -44,7 +44,7 @@ s5_do_handshake_resp(struct context *ctx) {
     ctx_state_t new_state;
     struct s5_method_response *resp;
     
-    data = (uint8_t *)ctx->buf;
+    data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
     if (size != 2) {
@@ -124,7 +124,7 @@ s5_do_auth_resp(struct context *ctx) {
     size_t     size;
     struct s5_auth_response *resp;
 
-    data = (uint8_t *)ctx->buf;
+    data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
     if (size != 2) {
@@ -215,7 +215,7 @@ s5_do_reply(struct context *ctx) {
     size_t     size;
     struct s5_in4_response *resp;
 
-    data = (uint8_t *)ctx->buf;
+    data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
     resp = (struct s5_in4_response *)data; 

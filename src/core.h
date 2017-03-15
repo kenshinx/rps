@@ -12,6 +12,8 @@
 #define RPS_EUPSTREAM   -3
 
 #define	READ_BUF_SIZE 2048 //2k
+#define	WRITE_BUF_SIZE 40960 //40k
+#define WRITE_UV_BUF_SIZE   20
 
 typedef int rps_status_t;
 
@@ -59,7 +61,6 @@ typedef struct session rps_sess_t;
 #include "upstream.h"
 
 
-
 typedef enum context_flag {
     c_request,
     c_forward
@@ -83,6 +84,12 @@ typedef enum context_state {
 } ctx_state_t;
 
 
+typedef enum {
+    c_busy,
+    c_done,
+    c_stop,
+} ctx_io_state_t;
+
 typedef void (*rps_next_t)(struct context *);
 
 struct context {
@@ -102,8 +109,17 @@ struct context {
 
     rps_proto_t     	proto;
 
-	char 				buf[READ_BUF_SIZE];
+	char 				rbuf[READ_BUF_SIZE];
 	ssize_t				nread;
+
+    char                wbuf[WRITE_BUF_SIZE];
+    ssize_t             nwrite;
+
+    /* The memory pointed to by the buffers must remain valid until the write callback gets called.
+     * So we use a buffer for write buffer ensure the wbuf is safe and won't be overwritten before write callback called.
+     */
+    char                wbuf2[WRITE_BUF_SIZE];
+    ssize_t             nwrite2;
 
     rps_addr_t          peer;
     char            	peername[MAX_INET_ADDRSTRLEN];
@@ -113,6 +129,9 @@ struct context {
 
     int                 last_status;
     uint32_t            retry;
+
+    uint8_t             rstat;
+    uint8_t             wstat;
 
     uint8_t             connected:1;
     uint8_t             established:1;

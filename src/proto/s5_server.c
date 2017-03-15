@@ -278,7 +278,7 @@ s5_server_do_next(struct context *ctx) {
     uint8_t    *data;
     size_t     size;
 
-    data = (uint8_t *)ctx->buf;
+    data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
     switch (ctx->state) {

@@ -89,10 +89,14 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->state = c_init;
     ctx->proto = proto;
     ctx->nread = 0;
+    ctx->nwrite = 0;
+    ctx->nwrite2 = 0;
     ctx->last_status = 0;
     ctx->retry = 0;
     ctx->connected = 0;
     ctx->established = 0;
+    ctx->rstat = c_stop;
+    ctx->wstat = c_stop;
     ctx->handle.handle.data  = ctx;
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
@@ -227,8 +231,8 @@ server_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
 
     ctx = handle->data;
 
-    buf->base = ctx->buf;
-    buf->len = sizeof(ctx->buf);
+    buf->base = ctx->rbuf;
+    buf->len = sizeof(ctx->rbuf);
 
     return buf;
 }
@@ -271,7 +275,10 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     
     ctx = stream->data;
     ASSERT(&ctx->handle.stream == stream);
-    ASSERT(ctx->buf == buf->base);
+    ASSERT(ctx->rbuf == buf->base);
+
+    ctx->rstat = c_done;
+    ctx->nread = nread;
 
     if (nread <0 ) {
         if (nread != UV_EOF) {
@@ -280,12 +287,12 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         }
         
     }
-    
-    ctx->nread = nread;
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("read %zd bytes", ctx->nread);
-    log_hex(LOG_VERBOSE, ctx->buf, ctx->nread);
+    if (nread > 0) {
+        log_verb("read %zd bytes", ctx->nread);
+        log_hex(LOG_VERBOSE, ctx->rbuf, ctx->nread);
+    }
 #endif
 
     server_timer_reset(ctx);
@@ -303,6 +310,8 @@ server_read(rps_ctx_t *ctx) {
         return RPS_ERROR;
     }
     
+    ctx->rstat = c_busy;
+
     return RPS_OK;
 }
 
@@ -315,7 +324,7 @@ server_on_write_done(uv_write_t *req, int err) {
     }
 
     ctx = req->data;
-    
+    ctx->wstat = c_done;
     ctx->last_status = err;
 
     if (err) {
@@ -329,10 +338,22 @@ rps_status_t
 server_write(rps_ctx_t *ctx, const void *data, size_t len) {
     int err;
     uv_buf_t buf;
-    
-    buf.base = (char *)data;
+
+    if (ctx->wstat == c_busy) {
+        memcpy(&ctx->wbuf2[ctx->nwrite2], data, len);
+        ctx->nwrite2 += len;
+        printf("xxxx, nwrite2: %zd\n", ctx->nwrite2);
+        return RPS_OK;
+    }
+
+
+    memcpy(ctx->wbuf, data, len);
+    ctx->nwrite = len;
+
+    buf.base = (char *)ctx->wbuf;
     buf.len = len;
 
+    
     err = uv_write(&ctx->write_req, 
              &ctx->handle.stream, 
              &buf, 
@@ -343,11 +364,14 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
         UV_SHOW_ERROR(err, "write");
         return RPS_ERROR;
     }
+    
 
 #if RPS_DEBUG_OPEN
     log_verb("write %zd bytes", len);
     log_hex(LOG_VERBOSE, (char *)data, len);
 #endif
+
+    ctx->wstat = c_busy;
 
     server_timer_reset(ctx);
     
@@ -598,7 +622,7 @@ server_establish(rps_sess_t *sess) {
 
     request->state = c_reply;
     request->nread = forward->nread;
-    memcpy(request->buf, forward->buf, request->nread);
+    memcpy(request->rbuf, forward->rbuf, request->nread);
     server_do_next(request);
 
     if (forward->established) {
@@ -619,7 +643,7 @@ server_establish(rps_sess_t *sess) {
 }
 
 static void
-server_do_cycle(rps_ctx_t *ctx) {
+server_cycle(rps_ctx_t *ctx) {
     uint8_t    *data;
     size_t     size;
     rps_sess_t  *sess;
@@ -628,19 +652,10 @@ server_do_cycle(rps_ctx_t *ctx) {
     ASSERT(ctx->state & c_established);
     ASSERT(ctx->connected && ctx->established);
     
-    data = (uint8_t *)ctx->buf;
+    data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
     sess = ctx->sess;
-
-    endpoint = ctx->flag == c_request? sess->forward:sess->request;
-    
-
-    if (server_write(endpoint, data, size) != RPS_OK) {
-        ctx->state = c_kill;
-        server_do_next(ctx);
-        return;
-    }
 
     if ((ssize_t)size == UV_EOF) {
         if (ctx->flag == c_request) {
@@ -650,6 +665,14 @@ server_do_cycle(rps_ctx_t *ctx) {
         }
         /* Just close single side context, the endpoint will be close after receive EOF signal */
         server_ctx_close(ctx);
+        return;
+    }
+
+    endpoint = ctx->flag == c_request? sess->forward:sess->request;
+    
+    if (server_write(endpoint, data, size) != RPS_OK) {
+        ctx->state = c_kill;
+        server_do_next(ctx);
         return;
     }
 
@@ -677,7 +700,7 @@ server_do_next(rps_ctx_t *ctx) {
             server_forward_connect(ctx->sess);
             break;
         case c_established:
-            server_do_cycle(ctx);
+            server_cycle(ctx);
             break;
         case c_kill:
             server_close(ctx->sess);
