@@ -130,43 +130,6 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
         NOT_REACHED();
     }
     
-/*
-    if (ctx->flag == c_request) {
-        switch (ctx->proto) {
-            case SOCKS5:
-                ctx->do_next = s5_server_do_next;
-                break;
-            case HTTP:
-                ctx->do_next = http_server_do_next;
-                break;
-            #ifdef SOCKS4_PROXY_SUPPORT
-            case SOCKS4:
-                ctx->do_next = s4_server_do_next;
-               break;
-            #endif
-            default:
-               NOT_REACHED();
-        }
-    } else if (ctx->flag == c_forward) {
-        switch (ctx->proto) {
-            case SOCKS5:
-                ctx->do_next = s5_client_do_next;
-                break;
-            case HTTP:
-                ctx->do_next = http_client_do_next;
-                break;
-            #ifdef SOCKS4_PROXY_SUPPORT
-            case SOCKS4:
-                ctx->do_next = s4_client_do_next;
-               break;
-            #endif
-            default:
-               NOT_REACHED();
-        }
-    } else {
-        NOT_REACHED();
-    }
-*/
 }
 
 static void 
