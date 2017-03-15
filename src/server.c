@@ -588,6 +588,8 @@ server_forward_connect(rps_sess_t *sess) {
 
     }
 
+    upstream_deinit(&sess->upstream);
+
     if (upstreams_get(s->upstreams, forward->proto, &sess->upstream) != RPS_OK) {
         log_error("no available %s upstream proxy.", rps_proto_str(forward->proto));
         goto kill;
@@ -597,6 +599,7 @@ server_forward_connect(rps_sess_t *sess) {
     forward->proto = sess->upstream.proto;
 
     memcpy(&forward->peer, &sess->upstream.server, sizeof(sess->upstream.server));
+
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
         goto kill;
