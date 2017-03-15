@@ -249,11 +249,12 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
     struct s5_in4_response *resp;
     
     resp = (struct s5_in4_response *)data;
-    if (resp->rep != s5_rep_success) {
+
+    if (server_write(ctx, data, size) != RPS_OK) {
         goto kill;
     }
 
-    if (server_write(ctx, data, size) != RPS_OK) {
+    if (resp->rep != s5_rep_success) {
         goto kill;
     }
 
