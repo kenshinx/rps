@@ -101,6 +101,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
     ctx->connect_req.data = ctx;
+    ctx->shutdown_req.data = ctx;
 
     if (ctx->proto == SOCKS5) {
         switch (ctx->flag) {
@@ -197,6 +198,28 @@ server_close(rps_sess_t *sess) {
 
     server_ctx_close(sess->request);
     server_ctx_close(sess->forward);
+}
+
+static void
+server_on_ctx_shutdown(uv_shutdown_t* req, int err) {
+    
+    if (err) {
+        UV_SHOW_ERROR(err, "on shutdown done");
+        return;
+    }
+
+    server_ctx_close((rps_ctx_t *)req->data);
+}
+
+static void
+server_ctx_shutdown(rps_ctx_t *ctx) {
+    /* uv_shutdown can ensure all the write-queue data has been sent out before close handle */
+    int err;
+    
+    err = uv_shutdown(&ctx->shutdown_req, &ctx->handle.stream, server_on_ctx_shutdown);
+    if (err) {
+        UV_SHOW_ERROR(err, "shutdown");
+    }
 }
 
 
@@ -314,6 +337,7 @@ server_on_write_done(uv_write_t *req, int err) {
         server_write(ctx, ctx->wbuf2, ctx->nwrite2);
         ctx->nwrite2 = 0;
     }
+
 }
 
 rps_status_t
@@ -638,6 +662,9 @@ server_cycle(rps_ctx_t *ctx) {
 
     sess = ctx->sess;
 
+    endpoint = ctx->flag == c_request? sess->forward:sess->request;
+
+
     if ((ssize_t)size == UV_EOF) {
 #ifdef RPS_DEBUG_OPEN
         if (ctx->flag == c_request) {
@@ -648,10 +675,9 @@ server_cycle(rps_ctx_t *ctx) {
 #endif
         /* Just close single side context, the endpoint will be close after receive EOF signal */
         server_ctx_close(ctx);
+        server_ctx_shutdown(endpoint);
         return;
     }
-
-    endpoint = ctx->flag == c_request? sess->forward:sess->request;
 
     if (server_ctx_closed(endpoint)) {
         return;

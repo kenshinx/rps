@@ -106,6 +106,7 @@ struct context {
     uv_timer_t      	timer;
     uv_write_t      	write_req;
     uv_connect_t        connect_req;
+    uv_shutdown_t       shutdown_req;
 
     rps_proto_t     	proto;
 
