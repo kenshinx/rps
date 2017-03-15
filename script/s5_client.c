@@ -9,6 +9,7 @@
 #define SERVER_HOST "127.0.0.1"
 #define SERVER_PORT 9890
 
+
 #define MAXLINE 2024
 
 
@@ -46,14 +47,13 @@ void _readloop(int sockfd) {
     char recvBuf[MAXLINE];
 
     while ((n = read(sockfd, recvBuf, MAXLINE)) > 0) {
-        printf("read %zd bytes\n", n);
-        printf("%s\n", recvBuf);
+        printf("%.*s\n",n, recvBuf);
     }
     
     if (n < 0) {
         printf("Read error\n");
     } else {
-        printf("Close connect\n");
+        return;
     }
     
 }
