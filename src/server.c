@@ -332,6 +332,11 @@ server_on_write_done(uv_write_t *req, int err) {
         server_do_next(ctx);
         return;
     }
+
+    if (ctx->nwrite2 > 0) {
+        server_write(ctx, ctx->wbuf2, ctx->nwrite2);
+        ctx->nwrite2 = 0;
+    }
 }
 
 rps_status_t
@@ -339,10 +344,11 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
     int err;
     uv_buf_t buf;
 
+    ASSERT(len > 0);
+
     if (ctx->wstat == c_busy) {
         memcpy(&ctx->wbuf2[ctx->nwrite2], data, len);
         ctx->nwrite2 += len;
-        printf("xxxx, nwrite2: %zd\n", ctx->nwrite2);
         return RPS_OK;
     }
 
