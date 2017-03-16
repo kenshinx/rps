@@ -414,6 +414,7 @@ server_on_connect_done(uv_connect_t *req, int err) {
 
     if (err) {
         UV_SHOW_ERROR(err, "on connect done");
+        ctx->connected = 0;
     } else {
         ctx->connected = 1;
     }
@@ -663,7 +664,7 @@ server_establish(rps_sess_t *sess) {
     rps_unresolve_addr(&sess->remote, remoteip);
 
     log_info("Tunnel established %s:%d -> rps -> %s:%d -> %s:%d",
-            request->peername, rps_unresolve_port(&request->peer), 
+            request->peername, rps_unresolve_port(&request->peer),
             forward->peername, rps_unresolve_port(&forward->peer),
             remoteip, rps_unresolve_port(&sess->remote));
     
@@ -715,6 +716,38 @@ server_cycle(rps_ctx_t *ctx) {
     log_debug("redirect %d bytes to %s", size, endpoint->peername);
 }
 
+static void
+server_forward_retry(rps_sess_t *sess) {
+    struct server *s;
+    rps_ctx_t *forward;
+
+    s = sess->server;
+    forward = sess->forward;
+
+    ASSERT(forward->state == c_retry);
+    ASSERT(forward->connected);
+    ASSERT(!forward->established);
+
+    log_warn("Upstream %s establish tunnel failed.", forward->peername);
+
+    if (forward->retry++ >= s->upstreams->maxretry) {
+        log_error("Upstream establish tunnel failed after %d retry.", s->upstreams->maxretry);
+        forward->state = c_kill;
+        server_do_next(forward);
+        return;
+    }
+
+    uv_read_stop(&forward->handle.stream);
+    uv_timer_stop(&forward->timer);
+    uv_close(&forward->handle.handle, NULL);
+
+    forward->connected = 0;
+    forward->established = 0;
+
+    forward->state = c_conn;
+    server_do_next(forward);
+}
+
 void
 server_do_next(rps_ctx_t *ctx) {
     /* ignore connect error, we need reconn */
@@ -734,6 +767,9 @@ server_do_next(rps_ctx_t *ctx) {
             break;
         case c_conn:
             server_forward_connect(ctx->sess);
+            break;
+        case c_retry:
+            server_forward_retry(ctx->sess);
             break;
         case c_established:
             server_cycle(ctx);

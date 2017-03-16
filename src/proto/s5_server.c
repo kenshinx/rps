@@ -37,13 +37,13 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
 
     req = (struct s5_method_request *)data;
     if (req->ver != SOCKS5_VERSION) {
-        log_error("s5 handshake error: bad protocol version.");
+        log_error("s5 client handshake error: bad protocol version.");
         goto kill;
     }
 
     /* ver(1) + nmethods(1) + methods(nmethods) */
     if (size != (2 + req->nmethods)) {
-        log_error("junk in handshake");
+        log_error("s5 client handshake error: junk");
         goto kill;
     }
 
@@ -77,12 +77,12 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         case s5_auth_gssapi:
         case s5_auth_unacceptable:
             new_state = c_kill;
-            log_error("s5 handshake error: unacceptable authentication.");
+            log_error("s5 client handshake error: unacceptable authentication.");
             break;
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 server handshake finish.");
+    log_verb("s5 client handshake finish.");
 #endif
     
     ctx->state = new_state;
@@ -104,7 +104,7 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
 
     req = (struct s5_auth_request *)data;
     if (req->ver != SOCKS5_AUTH_PASSWD_VERSION) {
-        log_error("s5 handshake error: bad password auth version.");
+        log_error("s5 client handshake error: bad password auth version.");
         goto kill;
     } 
 
@@ -116,13 +116,13 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
 
     /* ver(1) + ulen(1) + uname(ulen) + plen(1) + passwd(plen) */
     if ((3 + req->ulen + req->plen) != size) {
-        log_error("junk in auth");
+        log_error("s5 client auth error: junk");
         goto kill;
     }
 
     if ((strlen((const char *)req->uname) != req->ulen) || 
         (strlen((const char *)req->passwd) != req->plen)) {
-        log_error("invalid auth packet");
+        log_error("s5 client auth error: invalid auth packet");
         goto kill;
         
     }
@@ -148,9 +148,9 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
 
 #ifdef RPS_DEBUG_OPEN
     if (resp.status ==  s5_auth_allow) {
-        log_verb("s5 server authentication success.");
+        log_verb("s5 client authentication success.");
     } else {
-        log_verb("s5 server authentication failed.");
+        log_verb("s5 client authentication failed.");
     }
 #endif
 
@@ -174,7 +174,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
 
     req = (struct s5_request *)data;
     if (req->ver != SOCKS5_VERSION) {
-        log_error("s5 request error: bad protocol version.");
+        log_error("s5 client request error: bad protocol version.");
         goto kill;
     }
 
@@ -184,7 +184,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
         /* Command not supported */
         resp.rep = 0x07;
         server_write(ctx, &resp, sizeof(struct s5_in4_response));
-        log_error("s5 request error: only support tcp connect verify.");
+        log_error("s5 client request error: only support tcp connect verify.");
         goto kill;
     }
 
@@ -224,7 +224,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
      * suffix with hostname, in order fix this pattern, so we need size -1.
      */
     if ((6 + alen) != size && (6 + alen) != (size-1)) {
-        log_error("junk in request");
+        log_error("s5 client request error: junk");
         goto kill;
     }
 
@@ -260,7 +260,7 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
 
     
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 server reply, request remote success.");
+    log_verb("s5 client reply, connect remote success.");
 #endif
 
     ctx->established = 1;

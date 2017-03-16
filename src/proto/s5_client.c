@@ -28,7 +28,7 @@ s5_do_handshake(struct context *ctx) {
     }
 
     if (status != RPS_OK) {
-        ctx->state = c_kill;
+        ctx->state = c_retry;
         server_do_next(ctx);
         return;
     }
@@ -48,14 +48,14 @@ s5_do_handshake_resp(struct context *ctx) {
     size = (size_t)ctx->nread;
 
     if (size != 2) {
-        log_warn("junk in handshake");
-        goto kill;
+        log_warn("s5 upstream handshake error: junk");
+        goto retry;
     }
 
     resp = (struct s5_method_response *)data;
     if (resp->ver != SOCKS5_VERSION) {
-        log_warn("s5 handshake error: bad protocol version.");
-        goto kill;
+        log_warn("s5 upstream handshake error: bad protocol version.");
+        goto retry;
     }
 
     switch (resp->method) {
@@ -68,21 +68,21 @@ s5_do_handshake_resp(struct context *ctx) {
         case s5_auth_gssapi:
         case s5_auth_unacceptable:
         default:
-            new_state = c_conn;
-            log_warn("s5 handshake error: unacceptable authentication. select new upstream retry");
+            new_state = c_retry;
+            log_warn("s5 upstream handshake error: unacceptable authentication.");
             break;
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 client handshake finish.");
+    log_verb("s5 upstream handshake finish.");
 #endif
 
     ctx->state = new_state;
     server_do_next(ctx);
     return;
 
-kill:
-    ctx->state = c_kill;
+retry:
+    ctx->state = c_retry;
     server_do_next(ctx);
 }
 
@@ -112,7 +112,8 @@ s5_do_auth(struct context *ctx) {
     } 
 
     if (server_write(ctx, req, len) != RPS_OK) {
-        ctx->state = c_kill;
+        ctx->state = c_retry;
+        server_do_next(ctx);
     } else {
         ctx->state = c_auth_resp;
     }
@@ -128,20 +129,20 @@ s5_do_auth_resp(struct context *ctx) {
     size = (size_t)ctx->nread;
 
     if (size != 2) {
-        log_warn("junk in auth response");
-        goto kill;
+        log_warn("s5 upstream auth error: junk");
+        goto retry;
     }
 
     resp = (struct s5_auth_response *)data;
 
     if (resp->ver != SOCKS5_AUTH_PASSWD_VERSION){
-        log_warn("auth version is invalid: %d, select a new upstream retry", resp->ver);
-        ctx->state = c_conn;
+        log_warn("s5 upstream auth error: invalid auth version : %d", resp->ver);
+        goto retry;
     }
 
     if (resp->status != s5_auth_allow) {
-        log_warn("auth denied, select a new upstream retry");
-        ctx->state = c_conn;
+        log_warn("s5 upstream auth error: auth denied");
+        goto retry;
     }
 
 #ifdef RPS_DEBUG_OPEN
@@ -152,8 +153,8 @@ s5_do_auth_resp(struct context *ctx) {
     server_do_next(ctx);
     return;
 
-kill:
-    ctx->state = c_kill;
+retry:
+    ctx->state = c_retry;
     server_do_next(ctx);
 }
 
@@ -202,7 +203,8 @@ s5_do_request(struct context *ctx) {
     len += 2; //port length = 2
 
     if (server_write(ctx, req, len) != RPS_OK) {
-        ctx->state = c_kill;
+        ctx->state = c_retry;
+        server_do_next(ctx);
     } else {
         ctx->state = c_reply;
     }
@@ -220,28 +222,29 @@ s5_do_reply(struct context *ctx) {
 
     resp = (struct s5_in4_response *)data; 
     if (resp->ver != SOCKS5_VERSION) {
-        log_warn("s5 reply error: bad protocol version.");
-        goto kill;
+        log_warn("s5 upstream reply error: bad protocol version.");
+        goto retry;
     }
 
     if (resp->rep != s5_rep_success) {
-        log_warn("s5 reply, request remote failed : %s", s5_strrep(resp->rep));
-        ctx->established = 0;
+        log_warn("s5 upstream reply error: connect remote failed : %s", s5_strrep(resp->rep));
+        goto retry;
     } else {
     #ifdef RPS_DEBUG_OPEN
-        log_verb("s5 client, reuqest remote success.");
+        log_verb("s5 upstream connect remote success.");
     #endif
         ctx->established = 1;
+        ctx->state = c_exchange;
     }
 
-    ctx->state = c_exchange;
     server_do_next(ctx);
     return;
     
-kill:
-    ctx->state = c_kill;
+retry:
+    ctx->state = c_retry;
     server_do_next(ctx);
 }
+
 
 void 
 s5_client_do_next(struct context *ctx) {
