@@ -215,6 +215,10 @@ static void
 server_ctx_shutdown(rps_ctx_t *ctx) {
     /* uv_shutdown can ensure all the write-queue data has been sent out before close handle */
     int err;
+
+    if (server_ctx_closed(ctx)) {
+        return;
+    }
     
     err = uv_shutdown(&ctx->shutdown_req, &ctx->handle.stream, server_on_ctx_shutdown);
     if (err) {
@@ -285,14 +289,17 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
             UV_SHOW_ERROR(nread, "read error");
             ctx->state = c_kill;
         }
-        
     }
 
-#ifdef RPS_DEBUG_OPEN
-    if (nread > 0) {
-        log_verb("read %zd bytes", ctx->nread);
-        //log_hex(LOG_VERBOSE, ctx->rbuf, ctx->nread);
+    /* nread equal 0 is equivalent to EAGAIN or EWOULDBLOCK */
+    if (nread == 0) {
+        return;
     }
+
+
+#ifdef RPS_DEBUG_OPEN
+    log_verb("read %zd bytes", ctx->nread);
+    //log_hex(LOG_VERBOSE, ctx->rbuf, ctx->nread);
 #endif
 
     server_timer_reset(ctx);
@@ -682,6 +689,7 @@ server_cycle(rps_ctx_t *ctx) {
         server_ctx_shutdown(endpoint);
         return;
     }
+        
 
     if (server_ctx_closed(endpoint)) {
         return;
