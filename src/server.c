@@ -93,6 +93,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->nwrite2 = 0;
     ctx->last_status = 0;
     ctx->reconn = 0;
+    ctx->retry = 0;
     ctx->connected = 0;
     ctx->established = 0;
     ctx->rstat = c_stop;
