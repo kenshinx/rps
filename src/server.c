@@ -351,10 +351,19 @@ rps_status_t
 server_write(rps_ctx_t *ctx, const void *data, size_t len) {
     int err;
     uv_buf_t buf;
+    size_t slot;
 
     ASSERT(len > 0);
 
     if (ctx->wstat == c_busy) {
+        slot = sizeof(ctx->wbuf2) - ctx->nwrite2;
+        if (slot == 0) {
+            log_debug("write buffer to %s full, drop %d bytes.", ctx->peername, len);
+            return RPS_OK; 
+        }
+
+        len = MIN(slot, len);
+
         memcpy(&ctx->wbuf2[ctx->nwrite2], data, len);
         ctx->nwrite2 += len;
         return RPS_OK;
@@ -400,14 +409,15 @@ server_on_connect_done(uv_connect_t *req, int err) {
         return;  /* Handle has been closed. */
     }
 
+    ctx = req->data;
+
     if (err) {
         UV_SHOW_ERROR(err, "on connect done");
+    } else {
+        ctx->connected = 1;
     }
 
-    ctx = req->data;
-    
     ctx->last_status = err;
-    ctx->connected = 1;
     server_do_next(ctx);
 }
 
