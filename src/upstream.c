@@ -116,6 +116,7 @@ upstreams_init(struct upstreams *us, struct config_redis *cr,
 
     us->hybrid = cus->hybrid;   
     us->maxreconn = cus->maxreconn;
+    us->maxretry = cus->maxretry;
 
     schedule = &cus->schedule;
     if (rps_strcmp(schedule, "rr") == 0) {
