@@ -129,7 +129,8 @@ struct context {
     ctx_state_t        	state;
 
     int                 last_status;
-    uint32_t            retry;
+    uint16_t            reconn;
+    uint16_t            retry;
 
     uint8_t             rstat;
     uint8_t             wstat;

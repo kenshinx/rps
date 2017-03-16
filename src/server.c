@@ -92,7 +92,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->nwrite = 0;
     ctx->nwrite2 = 0;
     ctx->last_status = 0;
-    ctx->retry = 0;
+    ctx->reconn = 0;
     ctx->connected = 0;
     ctx->established = 0;
     ctx->rstat = c_stop;
@@ -577,7 +577,7 @@ server_forward_connect(rps_sess_t *sess) {
 
 
     /* Be called after connect finished */
-    if (forward->retry > 0) {
+    if (forward->reconn > 0) {
         /* Last connect failed */
         if (forward->last_status < 0) {
             log_warn("Connect upstream %s:%d failed.", forward->peername, 
@@ -592,14 +592,14 @@ server_forward_connect(rps_sess_t *sess) {
                 goto kill;
             }
 
-            forward->retry = 0;
+            forward->reconn = 0;
             forward->state = c_handshake;
             server_do_next(forward);
             return;
         }
 
-        if (forward->retry >= s->upstreams->maxretry) {
-            log_error("Upstream connect failed after %d retry.", forward->retry);
+        if (forward->reconn >= s->upstreams->maxreconn) {
+            log_error("Upstream connect failed after %d reconn.", forward->reconn);
             goto kill;
         }
 
@@ -631,7 +631,7 @@ server_forward_connect(rps_sess_t *sess) {
         goto kill;
     }
     
-    forward->retry++;
+    forward->reconn++;
     return;
 
 kill:
@@ -716,7 +716,7 @@ server_cycle(rps_ctx_t *ctx) {
 
 void
 server_do_next(rps_ctx_t *ctx) {
-    /* ignore connect error, we need retry */
+    /* ignore connect error, we need reconn */
     if (ctx->last_status < 0 && ctx->state != c_conn) {
         ctx->state = c_kill;
     }

@@ -44,7 +44,7 @@ struct upstream_pool {
 struct upstreams {
     uint8_t                 schedule;
     bool                    hybrid;
-    uint32_t                maxretry;
+    uint32_t                maxreconn;
     rps_array_t             pools;
 };
 
