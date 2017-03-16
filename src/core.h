@@ -12,7 +12,7 @@
 #define RPS_EUPSTREAM   -3
 
 #define	READ_BUF_SIZE 2048 //2k
-#define	WRITE_BUF_SIZE 40960 //40k
+#define	WRITE_BUF_SIZE 20480 //20k
 #define WRITE_UV_BUF_SIZE   20
 
 typedef int rps_status_t;
