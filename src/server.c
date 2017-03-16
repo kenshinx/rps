@@ -717,6 +717,20 @@ server_cycle(rps_ctx_t *ctx) {
 }
 
 static void
+server_on_forward_retry(uv_handle_t* handle) {
+    rps_ctx_t *forward;
+
+    forward = handle->data;
+
+    forward->connected = 0;
+    forward->established = 0;
+
+    forward->state = c_conn;
+    server_do_next(forward);
+    return;
+}
+
+static void
 server_forward_retry(rps_sess_t *sess) {
     struct server *s;
     rps_ctx_t *forward;
@@ -739,13 +753,8 @@ server_forward_retry(rps_sess_t *sess) {
 
     uv_read_stop(&forward->handle.stream);
     uv_timer_stop(&forward->timer);
-    uv_close(&forward->handle.handle, NULL);
-
-    forward->connected = 0;
-    forward->established = 0;
-
-    forward->state = c_conn;
-    server_do_next(forward);
+    uv_close(&forward->handle.handle, server_on_forward_retry);
+    return;
 }
 
 void
