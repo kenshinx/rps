@@ -70,7 +70,7 @@ s5_do_handshake_resp(struct context *ctx) {
         default:
             new_state = c_retry;
             log_warn("s5 upstream handshake error: unacceptable authentication.");
-            break;
+            goto retry;
     }
 
 #ifdef RPS_DEBUG_OPEN
@@ -146,7 +146,7 @@ s5_do_auth_resp(struct context *ctx) {
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 client auth allow.");
+    log_verb("s5 upstream auth allow.");
 #endif
 
     ctx->state = c_requests;
