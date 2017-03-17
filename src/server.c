@@ -286,15 +286,22 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     ctx->nread = nread;
 
     if (nread <0 ) {
-        if (nread != UV_EOF) {
-            UV_SHOW_ERROR(nread, "read error");
-            if (ctx->flag == c_forward) {
-                ctx->state = c_retry;
-                server_do_next(ctx);
-                return;
-            }
-            ctx->state = c_kill;
+        
+        if (ctx->state == c_established) {
+            server_do_next(ctx);
+            return;
         }
+
+        if (ctx->flag == c_forward) {
+            ctx->state = c_retry;
+            server_do_next(ctx);
+            return;
+        }
+
+        ctx->state = c_kill;
+        server_do_next(ctx);
+        return;
+
     }
 
     /* nread equal 0 is equivalent to EAGAIN or EWOULDBLOCK */
@@ -549,10 +556,11 @@ server_forward_kickoff(rps_sess_t *sess) {
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
 
+    ASSERT(sess->forward == NULL);
+
     s = sess->server;
     request = sess->request;
 
-    
     forward = (struct context *)rps_alloc(sizeof(struct context));
     if (forward == NULL) {
         request->state = c_kill;
@@ -587,8 +595,8 @@ server_forward_connect(rps_sess_t *sess) {
     if (forward->reconn > 0) {
         /* Last connect failed */
         if (forward->last_status < 0) {
-            log_warn("Connect upstream %s:%d failed.", forward->peername, 
-                    rps_unresolve_port(&forward->peer));
+            log_warn("Connect upstream %s:%d failed. reconn: %d", forward->peername, 
+                    rps_unresolve_port(&forward->peer), forward->reconn);
         } else {
 
             /* Connect success */
@@ -668,7 +676,7 @@ server_establish(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Tunnel established %s:%d -> rps -> %s:%d -> %s:%d",
+    log_info("Establish tunnel %s:%d -> rps -> %s:%d -> %s:%d",
             request->peername, rps_unresolve_port(&request->peer),
             forward->peername, rps_unresolve_port(&forward->peer),
             remoteip, rps_unresolve_port(&sess->remote));
@@ -692,20 +700,26 @@ server_cycle(rps_ctx_t *ctx) {
 
     endpoint = ctx->flag == c_request? sess->forward:sess->request;
 
+    if ((ssize_t)size < 0) {
 
-    if ((ssize_t)size == UV_EOF) {
-#ifdef RPS_DEBUG_OPEN
-        if (ctx->flag == c_request) {
-            log_verb("Client %s finished", sess->request->peername);
+        if ((ssize_t)size == UV_EOF) {
+    #ifdef RPS_DEBUG_OPEN
+            if (ctx->flag == c_request) {
+                log_verb("Client %s finished", sess->request->peername);
+            } else {
+                log_verb("Upstream %s finished", sess->forward->peername);
+            }
+    #endif
+            server_ctx_close(ctx);
+            server_ctx_shutdown(endpoint);
         } else {
-            log_verb("Upstream %s finished", sess->forward->peername);
-        }
-#endif
-        /* Just close single side context, the endpoint will be close after receive EOF signal */
-        server_ctx_close(ctx);
-        server_ctx_shutdown(endpoint);
+            server_ctx_close(ctx);
+            server_ctx_close(endpoint);
+        } 
+
         return;
     }
+
         
 
     if (server_ctx_closed(endpoint)) {
@@ -722,7 +736,7 @@ server_cycle(rps_ctx_t *ctx) {
 }
 
 static void
-server_on_forward_retry(uv_handle_t* handle) {
+server_on_forward_close(uv_handle_t* handle) {
     rps_ctx_t *forward;
 
     forward = handle->data;
@@ -747,7 +761,7 @@ server_forward_retry(rps_sess_t *sess) {
     ASSERT(forward->connected);
     ASSERT(!forward->established);
 
-    log_warn("Upstream %s establish tunnel failed.", forward->peername);
+    log_warn("Upstream %s establish tunnel failed, retry: %d", forward->peername, forward->retry);
 
     if (forward->retry++ >= s->upstreams->maxretry) {
         log_error("Upstream establish tunnel failed after %d retry.", s->upstreams->maxretry);
@@ -758,7 +772,7 @@ server_forward_retry(rps_sess_t *sess) {
 
     uv_read_stop(&forward->handle.stream);
     uv_timer_stop(&forward->timer);
-    uv_close(&forward->handle.handle, server_on_forward_retry);
+    uv_close(&forward->handle.handle, server_on_forward_close);
     return;
 }
 
