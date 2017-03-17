@@ -288,6 +288,11 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     if (nread <0 ) {
         if (nread != UV_EOF) {
             UV_SHOW_ERROR(nread, "read error");
+            if (ctx->flag == c_forward) {
+                ctx->state = c_retry;
+                server_do_next(ctx);
+                return;
+            }
             ctx->state = c_kill;
         }
     }
@@ -691,9 +696,9 @@ server_cycle(rps_ctx_t *ctx) {
     if ((ssize_t)size == UV_EOF) {
 #ifdef RPS_DEBUG_OPEN
         if (ctx->flag == c_request) {
-            log_verb("Request finished %s", sess->request->peername);
+            log_verb("Client %s finished", sess->request->peername);
         } else {
-            log_verb("Forward finished %s", sess->forward->peername);
+            log_verb("Upstream %s finished", sess->forward->peername);
         }
 #endif
         /* Just close single side context, the endpoint will be close after receive EOF signal */
