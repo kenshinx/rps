@@ -241,7 +241,13 @@ s5_do_reply(struct context *ctx) {
     return;
     
 retry:
-    ctx->state = c_retry;
+    if (ctx->retry >= ctx->sess->server->upstreams->maxretry) {
+        /* We still need write result to client even if the request is failed. */
+        ctx->state = c_exchange;
+    } else { 
+        ctx->state = c_retry;
+    }
+    ctx->established = 0;
     server_do_next(ctx);
 }
 
