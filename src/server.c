@@ -203,6 +203,10 @@ server_close(rps_sess_t *sess) {
 static void
 server_on_ctx_shutdown(uv_shutdown_t* req, int err) {
     
+    if (err == UV_ECANCELED) {
+        return;  /* Handle has been closed. */
+    }
+
     if (err) {
         UV_SHOW_ERROR(err, "on shutdown done");
         return;
@@ -434,6 +438,11 @@ server_on_connect_done(uv_connect_t *req, int err) {
         ctx->connected = 1;
     }
 
+    /* request maybe killed before forward connected. */
+    if (ctx->flag == c_forward && server_ctx_closed(ctx->sess->request)) {
+        ctx->state = c_kill;
+    }
+
     server_do_next(ctx);
 }
 
@@ -661,6 +670,7 @@ server_establish(rps_sess_t *sess) {
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
     char remoteip[MAX_INET_ADDRSTRLEN];
+
 
     request = sess->request;
     forward = sess->forward;
