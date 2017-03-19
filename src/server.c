@@ -91,7 +91,6 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->nread = 0;
     ctx->nwrite = 0;
     ctx->nwrite2 = 0;
-    ctx->last_status = 0;
     ctx->reconn = 0;
     ctx->retry = 0;
     ctx->connected = 0;
@@ -345,10 +344,10 @@ server_on_write_done(uv_write_t *req, int err) {
 
     ctx = req->data;
     ctx->wstat = c_done;
-    ctx->last_status = err;
 
     if (err) {
         UV_SHOW_ERROR(err, "on write done");
+        ctx->state = c_kill;
         server_do_next(ctx);
         return;
     }
@@ -431,7 +430,6 @@ server_on_connect_done(uv_connect_t *req, int err) {
         ctx->connected = 1;
     }
 
-    ctx->last_status = err;
     server_do_next(ctx);
 }
 
@@ -594,7 +592,7 @@ server_forward_connect(rps_sess_t *sess) {
     /* Be called after connect finished */
     if (forward->reconn > 0) {
         /* Last connect failed */
-        if (forward->last_status < 0) {
+        if (!forward->connected) {
             log_warn("Connect upstream %s:%d failed. reconn: %d", forward->peername, 
                     rps_unresolve_port(&forward->peer), forward->reconn);
         } else {
@@ -778,10 +776,6 @@ server_forward_retry(rps_sess_t *sess) {
 
 void
 server_do_next(rps_ctx_t *ctx) {
-    /* ignore connect error, we need reconn */
-    if (ctx->last_status < 0 && ctx->state != c_conn) {
-        ctx->state = c_kill;
-    }
 
     switch (ctx->state) {
         case c_exchange:
@@ -789,7 +783,7 @@ server_do_next(rps_ctx_t *ctx) {
                 /* exchange from request context to forward context */
                 server_forward_kickoff(ctx->sess);
             } else {
-                /* finish dural context handshake, session established */
+                /* finish dural context handshake, tunnel established */
                 server_establish(ctx->sess);
             }
             break;
