@@ -179,6 +179,7 @@ rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
 
 void 
 rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
+    ASSERT(len < MAX_HOSTNAME_LEN);
     memset(&addr->addr.name, 0, sizeof(addr->addr.name));
     addr->addr.name.family = AF_DOMAIN;
     memcpy(&addr->addr.name.port, port, 2);
