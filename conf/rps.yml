@@ -31,6 +31,12 @@ upstreams:
     # after enable hybrid
     hybrid: false
 
+    # If connect upstream failed in upstream phase, attempt connect new upstream.
+    # re-connect is low cost operation relative to retry.
+    maxreconn: 3 
+
+    # If handshake with upstream failed, try handshake with new upstream.
+    # Need re-connect, re-handshake, re-auth etc..
     maxretry: 3
 
     pools:
