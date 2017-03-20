@@ -48,13 +48,13 @@ s5_do_handshake_resp(struct context *ctx) {
     size = (size_t)ctx->nread;
 
     if (size != 2) {
-        log_warn("s5 upstream handshake error: junk");
+        log_debug("s5 upstream '%s' handshake error: junk", ctx->peername);
         goto retry;
     }
 
     resp = (struct s5_method_response *)data;
     if (resp->ver != SOCKS5_VERSION) {
-        log_warn("s5 upstream handshake error: bad protocol version.");
+        log_debug("s5 upstream '%s' handshake error: bad protocol version.", ctx->peername);
         goto retry;
     }
 
@@ -69,12 +69,12 @@ s5_do_handshake_resp(struct context *ctx) {
         case s5_auth_unacceptable:
         default:
             new_state = c_retry;
-            log_warn("s5 upstream handshake error: unacceptable authentication.");
+            log_debug("s5 upstream '%s' handshake error: unacceptable authentication.", ctx->peername);
             goto retry;
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 upstream handshake finish.");
+    log_verb("s5 upstream '%s' handshake finish.", ctx->peername);
 #endif
 
     ctx->state = new_state;
@@ -129,24 +129,24 @@ s5_do_auth_resp(struct context *ctx) {
     size = (size_t)ctx->nread;
 
     if (size != 2) {
-        log_warn("s5 upstream auth error: junk");
+        log_debug("s5 upstream '%s' auth error: junk", ctx->peername);
         goto retry;
     }
 
     resp = (struct s5_auth_response *)data;
 
     if (resp->ver != SOCKS5_AUTH_PASSWD_VERSION){
-        log_warn("s5 upstream auth error: invalid auth version : %d", resp->ver);
+        log_debug("s5 upstream '%s' auth error: invalid auth version : %d", ctx->peername, resp->ver);
         goto retry;
     }
 
     if (resp->status != s5_auth_allow) {
-        log_warn("s5 upstream auth error: auth denied");
+        log_debug("s5 upstream '%s' auth error: auth denied", ctx->peername);
         goto retry;
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 upstream auth allow.");
+    log_verb("s5 upstream '%s' auth allow.", ctx->peername);
 #endif
 
     ctx->state = c_requests;
@@ -216,22 +216,26 @@ s5_do_reply(struct context *ctx) {
     uint8_t    *data;
     size_t     size;
     struct s5_in4_response *resp;
+    char remoteip[MAX_INET_ADDRSTRLEN];
 
     data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
     resp = (struct s5_in4_response *)data; 
     if (resp->ver != SOCKS5_VERSION) {
-        log_warn("s5 upstream reply error: bad protocol version.");
+        log_debug("s5 upstream '%s' reply error: bad protocol version.", ctx->peername);
         goto retry;
     }
 
+    rps_unresolve_addr(&ctx->sess->remote, remoteip);
+
     if (resp->rep != s5_rep_success) {
-        log_warn("s5 upstream reply error: connect remote failed : %s", s5_strrep(resp->rep));
+        log_debug("s5 upstream %s reply error, connect remote %s failed : %s", 
+                ctx->peername, remoteip, s5_strrep(resp->rep));
         goto retry;
     } else {
     #ifdef RPS_DEBUG_OPEN
-        log_verb("s5 upstream connect remote success.");
+        log_verb("s5 upstream %s connect remote %s success.", ctx->peername, remoteip);
     #endif
         ctx->established = 1;
         ctx->state = c_exchange;

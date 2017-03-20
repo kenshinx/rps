@@ -41,7 +41,7 @@ void _rps_free(void *ptr, const char *name, int line);
 typedef enum { false, true } bool;
 
 #define UV_SHOW_ERROR(err, why) do {                                \
-    log_error("libuv %s:%s", why, uv_strerror(err));                 \
+    log_debug("libuv %s:%s", why, uv_strerror(err));                 \
 } while(0)
 
 void _rps_assert(const char *cond, const char *file, int line);
