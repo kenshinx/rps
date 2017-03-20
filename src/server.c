@@ -82,7 +82,7 @@ server_sess_free(rps_sess_t *sess) {
     rps_free(sess);
 }
 
-static void
+static rps_status_t
 server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t proto) {
     ctx->sess = sess;
     ctx->flag = flag;
@@ -102,6 +102,16 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->timer.data = ctx;
     ctx->connect_req.data = ctx;
     ctx->shutdown_req.data = ctx;
+
+    ctx->wbuf = (char *)rps_alloc(WRITE_BUF_SIZE);
+    if (ctx->wbuf == NULL) {
+        return RPS_ENOMEM;
+    }
+    
+    ctx->wbuf2 = (char *)rps_alloc(WRITE_BUF_SIZE);
+    if (ctx->wbuf2 == NULL) {
+        return RPS_ENOMEM;
+    }
 
     if (ctx->proto == SOCKS5) {
         switch (ctx->flag) {
@@ -130,7 +140,8 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     } else {
         NOT_REACHED();
     }
-    
+
+    return RPS_OK;
 }
 
 static bool
@@ -159,6 +170,9 @@ server_on_ctx_close(uv_handle_t* handle) {
     ctx->state = c_closed;
     ctx->connected = 0;
     ctx->established = 0;
+
+    rps_free(ctx->wbuf);
+    rps_free(ctx->wbuf2);
 
     switch (ctx->flag) {
         case c_request:
@@ -374,9 +388,9 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
     ASSERT(len > 0);
 
     if (ctx->wstat == c_busy) {
-        slot = sizeof(ctx->wbuf2) - ctx->nwrite2;
+        slot = WRITE_BUF_SIZE - ctx->nwrite2;
         if (slot == 0) {
-            log_debug("write buffer to %s full, drop %d bytes.", ctx->peername, len);
+            log_debug("write buffer to %s has been full, drop %d bytes.", ctx->peername, len);
             return RPS_OK; 
         }
 
@@ -501,7 +515,10 @@ server_on_request_connect(uv_stream_t *us, int err) {
         return;
     }
     sess->request = request;
-    server_ctx_init(request, sess, c_request, s->proto);
+    status = server_ctx_init(request, sess, c_request, s->proto);
+    if (status != RPS_OK) {
+        return;
+    }
     
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
@@ -579,7 +596,11 @@ server_forward_kickoff(rps_sess_t *sess) {
         return;
     }
 
-    server_ctx_init(forward, sess, c_forward, request->proto);
+    if (server_ctx_init(forward, sess, c_forward, request->proto) != RPS_OK) {
+        request->state = c_kill;
+        server_do_next(request);
+        return;
+    }
     sess->forward = forward;
     
     uv_timer_init(&s->loop, &forward->timer);

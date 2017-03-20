@@ -12,7 +12,7 @@
 #define RPS_EUPSTREAM   -3
 
 #define	READ_BUF_SIZE 2048 //2k
-#define	WRITE_BUF_SIZE 20480 //20k
+#define	WRITE_BUF_SIZE 65536 //64k
 #define WRITE_UV_BUF_SIZE   20
 
 typedef int rps_status_t;
@@ -114,13 +114,13 @@ struct context {
 	char 				rbuf[READ_BUF_SIZE];
 	ssize_t				nread;
 
-    char                wbuf[WRITE_BUF_SIZE];
+    char                *wbuf;
     ssize_t             nwrite;
 
     /* The memory pointed to by the buffers must remain valid until the write callback gets called.
      * So we use a buffer for write buffer ensure the wbuf is safe and won't be overwritten before write callback called.
      */
-    char                wbuf2[WRITE_BUF_SIZE];
+    char                *wbuf2;
     ssize_t             nwrite2;
 
     rps_addr_t          peer;
