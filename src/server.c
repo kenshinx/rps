@@ -138,7 +138,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
         }
 #endif
     } else {
-        NOT_REACHED();
+        return RPS_ERROR;
     }
 
     return RPS_OK;
