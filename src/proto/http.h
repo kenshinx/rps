@@ -1,6 +1,8 @@
 #ifndef _RPS_HTTP_H
 #define _RPS_HTTP_H
 
+#include "core.h"
+
 #include <uv.h>
 
 /*
@@ -9,20 +11,7 @@
  */
 
 
-typedef struct {
-    void    *data;
-    uint8_t t;
-    
-} http_handle_t;
-
-#include "core.h"
-
-static inline void
-http_handle_init(http_handle_t *handle) {
-    memset(handle, 0, sizeof(*handle));
-}
-
-ctx_state_t http_server_do_next(struct context *ctx);
-ctx_state_t http_client_do_next(struct context *ctx);
+void http_server_do_next(struct context *ctx);
+void http_client_do_next(struct context *ctx);
 
 #endif
