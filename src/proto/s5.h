@@ -19,7 +19,7 @@
  * A SOCKS-based IPv6/IPv4 Gateway Mechanism
  * https://tools.ietf.org/html/rfc3089
  *
- * RPS work based on socks5 proxy 
+ * RPS socks5 proxy tunnel establishment procedure
  *
  *                   Client                RPS               Upstream           Remote
  * 
