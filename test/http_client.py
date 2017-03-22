@@ -29,8 +29,8 @@ class HTTPTunnelPorxy(object):
 
         self.s.sendall(payload)
 
-        data = self.s.recv(512)
-        print "recv: \n"
+        data = self.s.recv(1024)
+        print "recv: %d character\n" %len(data)
         print data
 
         data = data.strip()
@@ -56,7 +56,7 @@ class HTTPTunnelPorxy(object):
         self.s.sendall(payload)
 
         data = self.s.recv(1024)
-        print "recv: \n"
+        print "recv: %d character\n" %len(data)
         print data
 
    
@@ -75,7 +75,7 @@ class HTTPTunnelPorxy(object):
         self.s.sendall(payload)
 
         data = self.s.recv(1024)
-        print "recv: \n"
+        print "recv: %d character\n" %len(data)
         print data
 
    
