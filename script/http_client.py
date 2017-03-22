@@ -3,8 +3,9 @@
 import socket
 import optparse
 
-HTTP_PROXY_HOST = "proxy"
-HTTP_PROXY_PORT = 8080
+HTTP_PROXY_HOST = "dev1"
+HTTP_PROXY_PORT = 8889
+HTTP_PROXY_HOST = "localhost"
 
 class HTTPTunnelPorxy(object):
 
@@ -18,7 +19,8 @@ class HTTPTunnelPorxy(object):
         
     def handshake(self, host, port):
         payload = "CONNECT %s:%d HTTP/1.1\r\n" %(host, port)
-        payload = payload + "User-agent: Mozilla/4.0\r\n"
+        payload = payload + "HOST: %s\r\n" %host
+        payload = payload + "User-agent: RPS/HTTP PROXY\r\n"
         payload = payload + "\r\n\r\n"
 
         print "---------------------------------------------"
@@ -101,9 +103,9 @@ def main():
     proxy = HTTPTunnelPorxy(HTTP_PROXY_HOST, HTTP_PROXY_PORT)
 
 
-    #proxy.doHTTPRequest("www.google.com", 80)
+    proxy.doHTTPRequest("www.google.com", 80)
     #proxy.doHTTPSRequest("www.google.com", 80)
-    proxy.doWhoisRequest("whois.godaddy.com", 43, "kenshinx.me")
+    #proxy.doWhoisRequest("whois.godaddy.com", 43, "kenshinx.me")
 
     
 
