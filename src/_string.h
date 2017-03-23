@@ -42,6 +42,5 @@ int string_copy(rps_str_t *dst, const rps_str_t *src);
 
 #define rps_strcmp(_s1, _s2)        \
     strcmp((char *)(_s1)->data, (char *)(_s2))
-
 #endif
 
