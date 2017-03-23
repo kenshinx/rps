@@ -9,7 +9,12 @@
 #include <sys/un.h>
 #include <sys/socket.h>
 
-#define CRLF    "\x0d\x0a"
+#define CRLF        "\x0d\x0a"
+#define CR          (uint8_t)13
+#define LF          (uint8_t)10
+#define LF_LEN      (sizeof("\x0a") - 1)
+#define CRLF_LEN    (sizeof("\x0d\x0a") - 1)
+
 
 #define MAX(_a, _b)     ((_a) > (_b) ? (_a):(_b))
 #define MIN(_a, _b)     ((_a) < (_b) ? (_a):(_b))
