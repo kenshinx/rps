@@ -65,15 +65,47 @@
  * +----------+ | <--------------------+ |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
- *				|   TCP Payload          |    Traffic Forward    |  TCP Payload |
- *				|  +------------------>  |  +--------------->    | +----------> |
- *				|   HTTP(S),WHOIS,ETC    |                       |              |
- *				|                        |                       |              |
- *				|       Response         |     Response          |   Response   |
- *				|     <-------------+    |     <-----------+     |  <--------+  |
- *				|						 |						 |				|
- *				+                        +                       +              +
+ *              |   TCP Payload          |    Traffic Forward    |  TCP Payload |
+ *              |  +------------------>  |  +--------------->    | +----------> |
+ *              |   HTTP(S),WHOIS,ETC    |                       |              |
+ *              |                        |                       |              |
+ *              |       Response         |     Response          |   Response   |
+ *              |     <-------------+    |     <-----------+     |  <--------+  |
+ *              |                        |                       |              |
+ *              +                        +                       +              +
  */
+
+enum http_method {
+    http_get,
+    http_connect,
+};
+
+enum http_staut_code {
+    http_success = 200,
+    http_forbidden = 403,
+    http_proxy_auth_required = 407,
+    http_bad_gateway = 502
+};
+
+
+struct http_header {
+    
+};
+
+struct http_request {
+    uint8_t             method;
+    rps_str_t           protocol;
+    rps_str_t           host;
+    uint16_t            port;
+    struct http_header  headers;        
+    
+};
+
+struct http_response {
+    rps_str_t   version;
+    uint16_t    status;
+};
+
 
 
 void http_server_do_next(struct context *ctx);
