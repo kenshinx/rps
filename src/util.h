@@ -21,6 +21,14 @@
 
 #define UNUSED(_x) (void)(_x)
 
+#define rps_str4_cmp(p, c0, c1, c2, c3)                             \
+    ((p[0] == c0) && (p[1] == c1) && (p[2] == c2) && (p[3] == c3))  \
+
+#define rps_str7_cmp(p, c0, c1, c2, c3, c4, c5, c6)                 \
+    ((p[0] == c0) && (p[1] == c1) && (p[2] == c2) && (p[3] == c3) && \
+    (p[4] == c4) && (p[5] == c5) && (p[6] == c6))                   \
+
+
 #define rps_alloc(_s)                                               \
     _rps_alloc((size_t)(_s), __FILE__, __LINE__)                    \
 

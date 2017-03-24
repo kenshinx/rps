@@ -23,7 +23,7 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *str) {
             }
 
             if (n > 0) {
-                string_duplicate(str, &data[start], n);
+                string_duplicate(str, (const char *)&data[start], n);
             }
             break;
         }
@@ -35,32 +35,133 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *str) {
 }
 
 static rps_status_t
-http_parse_request(rps_str_t *str, struct http_request *req) {
-    int ret;
-    char method[16];
-    char url[128];
-    char protocol[16];
+http_parse_request_line(rps_str_t *str, struct http_request *req) {
+    uint8_t *p, *end;
+    uint8_t ch;
+    size_t i;
 
-    ret = sscanf(str->data, "%[^ ] %[^ ] %[^ ]", method, url, protocol);
+    enum {
+        sw_start = 0,
+        sw_method,
+        sw_space_before_host,
+        sw_host,
+        sw_port,
+    } state;
+
+    state = sw_start;
+
+    for (i = 0; i < str->len; i++) {
+
+        ch = str->data[i];
+
+        switch (state) {
+            case sw_start:
+                p = &str->data[i];
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_method;
+                break;
+
+            case sw_method:
+                if (ch == ' ') {
+                    /* method end */
+                    end = &str->data[i];
+                    
+                    switch (end - p) {
+                        case 3:
+                            if (rps_str4_cmp(p, 'G', 'E', 'T', ' ')) {
+                                req->method = http_get;
+                                break;
+                            }
+                            break;
+                        case 4:
+                            if (rps_str4_cmp(p, 'P', 'O', 'S', 'T')) {
+                                req->method = http_post;
+                                break;
+                            }
+                            break;
+                        case 7:
+                            if (rps_str7_cmp(p, 'C', 'O', 'N', 'N', 'E', 'C', 'T')) {
+                                req->method = http_connect;
+                                break;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+
+                    p = &str->data[i];
+                    state = sw_space_before_host;
+                    break;
+                }
+
+                if ((ch < 'A' || ch > 'Z') && ch != '_') {
+                    log_error("http parse request line error, invalid method");
+                    return RPS_ERROR;
+                }
+                break;
+
+            case sw_space_before_host:
+                p = &str->data[i];
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_host;
+                break;
+
+            case sw_host:
+                if (ch == ':') {
+                    end = &str->data[i];
+                    if (end - p <= 0) {
+                        log_error("http parse request line error, invalid host");
+                        return RPS_ERROR;
+                    }
+                    string_duplicate(&req->host, (const char *)p, end - p);
+                    p = &str->data[i];
+                    state = sw_port;
+                    break;
+                }
+
+                if (ch == ' ') {
+                    log_error("http parse request line error, need port");
+                    return RPS_ERROR;
+                }
+
+                 
+                /* rule is not strict, adapt to punycode encode doamin */
+                if (ch < '-' || ch > 'z') {
+                    log_error("http parse request line error, invalid host");
+                    return RPS_ERROR;
+                }
+                break;
+
+            
+            default:
+                return RPS_OK;
+        }
+        
+    }
+
     
-    printf("method:%s\n", method);
-    printf("url:%s\n", url);
-    printf("protocol:%s\n", protocol);
+    
+
 
     
     return RPS_OK;
 }
 
 
-
-
 static void
 http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
-    int i, len;
+    size_t i, len;
     int line;
-    int cr;
     rps_str_t *str;
     struct http_request req;
+
+    http_request_init(&req);
     
     i = 0;
     line = 0;
@@ -76,12 +177,14 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
             break;
         }
 
+
         i += len;
         line++;
 
         if (line == 1) {
-            http_parse_request(str, &req);
-            
+            http_parse_request_line(str, &req);
+            printf("request method: %d\n", req.method);
+            printf("request host: %s\n", req.host.data);
         }
 
         printf("line <%d>: %s\n", line, str->data);

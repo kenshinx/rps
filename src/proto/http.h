@@ -76,7 +76,9 @@
  */
 
 enum http_method {
-    http_get,
+    http_emethod = 0,
+    http_get = 1,
+    http_post,
     http_connect,
 };
 
@@ -92,6 +94,7 @@ struct http_header {
     
 };
 
+
 struct http_request {
     uint8_t             method;
     rps_str_t           protocol;
@@ -105,6 +108,15 @@ struct http_response {
     rps_str_t   version;
     uint16_t    status;
 };
+
+
+static inline void
+http_request_init(struct http_request *req) {
+    req->method = http_emethod;
+    string_init(&req->protocol);
+    string_init(&req->host);
+    req->port = 0;
+}
 
 
 
