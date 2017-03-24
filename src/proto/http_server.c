@@ -36,9 +36,9 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *str) {
 
 static rps_status_t
 http_parse_request_line(rps_str_t *str, struct http_request *req) {
-    uint8_t *p, *end;
+    uint8_t *start, *end;
     uint8_t ch;
-    size_t i;
+    size_t i, j, len;
 
     enum {
         sw_start = 0,
@@ -46,6 +46,8 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
         sw_space_before_host,
         sw_host,
         sw_port,
+        sw_space_before_protocol,
+        sw_protocol,
     } state;
 
     state = sw_start;
@@ -56,7 +58,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
 
         switch (state) {
             case sw_start:
-                p = &str->data[i];
+                start = &str->data[i];
                 if (ch == ' ') {
                     break;
                 }
@@ -69,21 +71,21 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                     /* method end */
                     end = &str->data[i];
                     
-                    switch (end - p) {
+                    switch (end - start) {
                         case 3:
-                            if (rps_str4_cmp(p, 'G', 'E', 'T', ' ')) {
+                            if (rps_str4_cmp(start, 'G', 'E', 'T', ' ')) {
                                 req->method = http_get;
                                 break;
                             }
                             break;
                         case 4:
-                            if (rps_str4_cmp(p, 'P', 'O', 'S', 'T')) {
+                            if (rps_str4_cmp(start, 'P', 'O', 'S', 'T')) {
                                 req->method = http_post;
                                 break;
                             }
                             break;
                         case 7:
-                            if (rps_str7_cmp(p, 'C', 'O', 'N', 'N', 'E', 'C', 'T')) {
+                            if (rps_str7_cmp(start, 'C', 'O', 'N', 'N', 'E', 'C', 'T')) {
                                 req->method = http_connect;
                                 break;
                             }
@@ -92,7 +94,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                             break;
                     }
 
-                    p = &str->data[i];
+                    start = end;
                     state = sw_space_before_host;
                     break;
                 }
@@ -104,7 +106,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 break;
 
             case sw_space_before_host:
-                p = &str->data[i];
+                start = &str->data[i];
                 if (ch == ' ') {
                     break;
                 }
@@ -115,12 +117,12 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
             case sw_host:
                 if (ch == ':') {
                     end = &str->data[i];
-                    if (end - p <= 0) {
+                    if (end - start <= 0) {
                         log_error("http parse request line error, invalid host");
                         return RPS_ERROR;
                     }
-                    string_duplicate(&req->host, (const char *)p, end - p);
-                    p = &str->data[i];
+                    string_duplicate(&req->host, (const char *)start, end - start);
+                    start = &str->data[i+1]; /* cross ':' */
                     state = sw_port;
                     break;
                 }
@@ -138,6 +140,31 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 }
                 break;
 
+            case sw_port:
+                if (ch >= '0' && ch <= '9') {
+                    break;
+                }
+
+                if (ch == ' ') {
+                    end = &str->data[i];
+                    len = end - start;
+
+                    if (len <=0 || len >= 6) {
+                        log_error("http parse request line error, invalid port");
+                        return RPS_ERROR;
+                    }
+
+                    for (; start < end; start++) {
+                        req->port = req->port * 10 + (*start - '0'); 
+                    }
+
+                    start = end;
+                    state = sw_space_before_protocol;
+                    break;
+                }
+                
+                log_error("http parse request line error, invalid port");
+                return RPS_ERROR;
             
             default:
                 return RPS_OK;
@@ -185,6 +212,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
             http_parse_request_line(str, &req);
             printf("request method: %d\n", req.method);
             printf("request host: %s\n", req.host.data);
+            printf("request port: %d\n", req.port);
         }
 
         printf("line <%d>: %s\n", line, str->data);

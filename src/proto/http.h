@@ -99,7 +99,7 @@ struct http_request {
     uint8_t             method;
     rps_str_t           protocol;
     rps_str_t           host;
-    uint16_t            port;
+    uint32_t            port;
     struct http_header  headers;        
     
 };
