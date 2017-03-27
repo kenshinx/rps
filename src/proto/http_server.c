@@ -5,11 +5,11 @@
 #include <uv.h>
 
 static size_t
-http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *str) {
+http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     size_t i, n, len;
     uint8_t c, last;
 
-    ASSERT(string_empty(str));
+    ASSERT(string_empty(line));
 
     n = 0;
     len = 1;
@@ -24,7 +24,7 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *str) {
             }
 
             if (n > 0) {
-                string_duplicate(str, (const char *)&data[start], n);
+                string_duplicate(line, (const char *)&data[start], n);
             }
             break;
         }
@@ -36,7 +36,7 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *str) {
 }
 
 static rps_status_t
-http_parse_request_line(rps_str_t *str, struct http_request *req) {
+http_parse_request_line(rps_str_t *line, struct http_request *req) {
     uint8_t *start, *end;
     uint8_t ch;
     size_t i, len;
@@ -54,13 +54,13 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
 
     state = sw_start;
 
-    for (i = 0; i < str->len; i++) {
+    for (i = 0; i < line->len; i++) {
 
-        ch = str->data[i];
+        ch = line->data[i];
 
         switch (state) {
             case sw_start:
-                start = &str->data[i];
+                start = &line->data[i];
                 if (ch == ' ') {
                     break;
                 }
@@ -71,7 +71,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
             case sw_method:
                 if (ch == ' ') {
                     /* method end */
-                    end = &str->data[i];
+                    end = &line->data[i];
                     
                     switch (end - start) {
                         case 3:
@@ -108,7 +108,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 break;
 
             case sw_space_before_host:
-                start = &str->data[i];
+                start = &line->data[i];
                 if (ch == ' ') {
                     break;
                 }
@@ -118,13 +118,13 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
 
             case sw_host:
                 if (ch == ':') {
-                    end = &str->data[i];
+                    end = &line->data[i];
                     if (end - start <= 0) {
                         log_error("http parse request line error, invalid host");
                         return RPS_ERROR;
                     }
                     string_duplicate(&req->host, (const char *)start, end - start);
-                    start = &str->data[i+1]; /* cross ':' */
+                    start = &line->data[i+1]; /* cross ':' */
                     state = sw_port;
                     break;
                 }
@@ -148,7 +148,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 }
 
                 if (ch == ' ') {
-                    end = &str->data[i];
+                    end = &line->data[i];
                     len = end - start;
 
                     if (len <=0 || len >= 6) {
@@ -169,7 +169,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 return RPS_ERROR;
 
             case sw_space_before_protocol:
-                start = &str->data[i];
+                start = &line->data[i];
                 if (ch == ' ') {
                     break;
                 }
@@ -183,7 +183,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                     break;
                 }
 
-                end = &str->data[i];
+                end = &line->data[i];
                 break;
 
             case sw_end:
@@ -213,7 +213,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
 }
 
 static rps_status_t
-http_check_request(struct http_request *req) {
+http_request_check(struct http_request *req) {
     if (req->method != http_connect) {
         log_error("http request check error, only connect support");
         return RPS_ERROR;
@@ -257,19 +257,19 @@ http_request_dump(struct http_request *req) {
 static void
 http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     size_t i, len;
-    int line;
-    rps_str_t str;
+    int n;
+    rps_str_t line;
     struct http_request req;
 
     http_request_init(&req);
     
     i = 0;
-    line = 0;
+    n = 0;
 
     for (;;) {
-        string_init(&str);
+        string_init(&line);
 
-        len = http_read_line(data, i, size, &str);
+        len = http_read_line(data, i, size, &line);
         if (len <= CRLF_LEN) {
             /* read empty line, only contain /r/n */
             break;
@@ -277,27 +277,29 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
 
 
         i += len;
-        line++;
+        n++;
 
-        if (line == 1) {
-            if (http_parse_request_line(&str, &req) != RPS_OK) {
-                log_error("parse http request line: %s error.", str.data);
-                goto kill;
-            }
-            
-            if (http_check_request(&req) != RPS_OK) {
-                log_error("invalid http request: %s", str.data);
+        printf("line <%d>: %s\n", n, line.data);
+
+        if (n == 1) {
+            if (http_parse_request_line(&line, &req) != RPS_OK) {
+                log_error("parse http request line: %s error.", line.data);
                 goto kill;
             }
         }
 
-        printf("line <%d>: %s\n", line, str.data);
-        string_deinit(&str);
+
+        string_deinit(&line);
     }
 
     if ((size != i + 2 * CRLF_LEN) && (size != i + CRLF_LEN)) {
         log_error("http tunnel handshake contain junk: %s", data);
         /* 2*CRLF_LEN == last line \r\n\r\n */
+        goto kill;
+    }
+            
+    if (http_request_check(&req) != RPS_OK) {
+        log_error("invalid http request: %s", line.data);
         goto kill;
     }
 
