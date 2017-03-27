@@ -1,5 +1,6 @@
 #include "http.h"
 #include "core.h"
+#include "util.h"
 
 #include <uv.h>
 
@@ -38,7 +39,7 @@ static rps_status_t
 http_parse_request_line(rps_str_t *str, struct http_request *req) {
     uint8_t *start, *end;
     uint8_t ch;
-    size_t i, j, len;
+    size_t i, len;
 
     enum {
         sw_start = 0,
@@ -133,7 +134,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 }
 
                  
-                /* rule is not strict, adapt to punycode encode doamin */
+                /* rule is not too strict, adapt to punycode encode doamin */
                 if (ch < '-' || ch > 'z') {
                     log_error("http parse request line error, invalid host");
                     return RPS_ERROR;
@@ -165,17 +166,31 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 
                 log_error("http parse request line error, invalid port");
                 return RPS_ERROR;
+
+            case sw_space_before_protocol:
+                start = &str->data[i];
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_protocol;
+                break;
+
+            case sw_protocol:
+                end = &str->data[i];
+                break;
             
             default:
-                return RPS_OK;
+                NOT_REACHED();
         }
-        
     }
 
-    
-    
+    if (end - start <= 0) {
+        log_error("http parse request line error, invalid protocol");
+        return RPS_ERROR;
+    }
 
-
+    string_duplicate(&req->protocol, (const char *)start, end - start +1);
     
     return RPS_OK;
 }
@@ -213,6 +228,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
             printf("request method: %d\n", req.method);
             printf("request host: %s\n", req.host.data);
             printf("request port: %d\n", req.port);
+            printf("request protocol: %s\n", req.protocol.data);
         }
 
         printf("line <%d>: %s\n", line, str->data);
