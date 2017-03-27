@@ -2,6 +2,10 @@
 #include "murmur3.h"
 #include "core.h"
 
+#include "stdlib.h"
+
+
+#define MAX_SEED  2147483647
 
 int
 hashtable_init(rps_hashtable_t *ht, uint32_t nbuckets) {
@@ -10,7 +14,7 @@ hashtable_init(rps_hashtable_t *ht, uint32_t nbuckets) {
 
     ASSERT(ht != NULL);
 
-    ht->seed = (uint32_t)rand();
+    ht->seed = (uint32_t)rps_random(MAX_SEED);
     ht->size = nbuckets;
 
     buckets = rps_alloc(ht->size * sizeof(*buckets));

@@ -6,7 +6,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 typedef void (*rps_hashfunc_t)(const void *key, int len, uint32_t seed, void *out);
 
