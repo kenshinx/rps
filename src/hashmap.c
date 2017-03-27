@@ -77,6 +77,7 @@ hashmap_init(rps_hashmap_t *map, uint32_t nbuckets) {
 
     map->seed = (uint32_t)rps_random(MAX_SEED);
     map->size = nbuckets;
+    map->count = 0;
 
     buckets = rps_alloc(map->size * sizeof(*buckets));
     if (buckets == NULL) {
@@ -137,12 +138,40 @@ hashmap_destroy(rps_hashmap_t *map) {
 
     map->size = 0;
     map->seed = 0;
+    map->count = 0;
     map->hashfunc = NULL;
 }
 
+static uint32_t
+hashmap_index(rps_hashmap_t *map, void *key, size_t key_size) {
+    uint32_t index;
+
+    map->hashfunc(key, key_size, map->seed, &index);
+
+    index %= map->size;
+
+    return index;
+}
+
 void
-hashmap_put(rps_hashmap_t *map, void *key, size_t key_size, void *value, size_t value_size) {
+hashmap_set(rps_hashmap_t *map, void *key, size_t key_size, void *value, size_t value_size) {
+    uint32_t index;
     struct hash_entry *entry;
+    struct hash_entry *tmp;
 
     entry = hashmap_entry_create(key, key_size, value, value_size);
+    index = hashmap_index(map, key, key_size);
+
+    tmp = map->buckets[index];
+    
+    printf("key:%s, index:%d\n", key, index);
+
+    if (tmp == NULL) {
+        map->buckets[index] = entry;
+        map->count++;
+        return;
+    }
+
+
+    
 }
