@@ -2,6 +2,7 @@
 #include "murmur3.h"
 #include "core.h"
 
+#include "stdio.h"
 #include "stdlib.h"
 
 //max int32 
@@ -43,6 +44,9 @@ hashmap_entry_create(void *key, size_t key_size, void *value, size_t value_size)
 
 static void
 hashmap_entry_deinit(struct hash_entry *entry) {
+
+    ASSERT(entry != NULL);
+
     if (entry->key != NULL) {
         rps_free(entry->key);
         entry->key = NULL;
@@ -92,25 +96,6 @@ hashmap_init(rps_hashmap_t *map, uint32_t nbuckets) {
     return RPS_OK;
 }
 
-/*
-
-void
-hashmap_deinit(rps_hashmap_t *map) {
-    uint32_t i;
-    struct hash_entry *entry;
-
-    ASSERT(map != NULL);
-    
-    for (i = 0; i < map->size; i++) {
-        entry = map->buckets[i];
-        if (entry != NULL) {
-            rps_free(entry);
-        }
-        
-    }
-}
-*/
-
 rps_hashmap_t *
 hashmap_create(uint32_t nbuckets) {
     rps_hashmap_t *map;
@@ -129,6 +114,31 @@ hashmap_create(uint32_t nbuckets) {
     return map;
 }
 
+void
+hashmap_destroy(rps_hashmap_t *map) {
+    uint32_t i;
+    struct hash_entry *entry;
+    struct hash_entry *tmp;
+
+    ASSERT(map != NULL);
+    
+    for (i = 0; i < map->size; i++) {
+        entry = map->buckets[i];
+        while (entry != NULL) {
+            tmp = entry->next;
+            hashmap_entry_destroy(entry);
+            entry = tmp;
+        }
+        
+        map->buckets[i] = NULL;
+    }
+
+    rps_free(map->buckets);
+
+    map->size = 0;
+    map->seed = 0;
+    map->hashfunc = NULL;
+}
 
 void
 hashmap_put(rps_hashmap_t *map, void *key, size_t key_size, void *value, size_t value_size) {

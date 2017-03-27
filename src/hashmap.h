@@ -31,8 +31,9 @@ struct rps_hashmap_s {
 
 typedef struct rps_hashmap_s rps_hashmap_t;
 
-int hashmap_init(rps_hashmap_t *table, uint32_t nbuckets);
+int hashmap_init(rps_hashmap_t *map, uint32_t nbuckets);
 rps_hashmap_t *hashmap_create(uint32_t nbuckets);
+void hashmap_destroy(rps_hashmap_t *map);
 
 
 
