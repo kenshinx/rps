@@ -89,7 +89,7 @@ typedef struct sockinfo {
 } rps_addr_t;
 
 static inline bool 
-rps_valid_port(uint16_t port) {
+rps_valid_port(int port) {
     return (port > 1 && port < UINT16_MAX);  
 }
 
