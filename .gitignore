@@ -19,6 +19,6 @@ src/proto/*.a
 src/script/*.swp
 src/script/*.o
 script/.*.swp
-/script/s5_client
 .*.swo
 .*.swp
+/test/s5_client
