@@ -1,20 +1,17 @@
 #ifndef _RPS_HASHTABLE_H
 #define _RPS_HASHTABLE_H
 
-#include "_string.h"
-#include "util.h"
-
 #include <stddef.h>
 #include <stdint.h>
 
 typedef void (*rps_hashfunc_t)(const void *key, int len, uint32_t seed, void *out);
 
 struct hash_entry {
-    rps_str_t           *key;
+    void                *key;
+    size_t              key_size;
 
     void                *value;
-    /* size of value */
-    size_t              size;
+    size_t              value_size;
     
     struct hash_entry   *next;
     
