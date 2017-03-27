@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef (*rps_hashfunc_t)(const void *key, int len, uint32_t seed, void *out);
+typedef void (*rps_hashfunc_t)(const void *key, int len, uint32_t seed, void *out);
 
 struct hash_entry {
     rps_str_t           *key;
@@ -30,12 +30,14 @@ struct rps_hashtable_s {
 
     uint32_t            seed;
 
-    rps_hashfunc_t      *hashfunc;
+    rps_hashfunc_t      hashfunc;
 };
 
 typedef struct rps_hashtable_s rps_hashtable_t;
 
+int hashtable_init(rps_hashtable_t *ht, uint32_t nbuckets);
 rps_hashtable_t *hashtable_create(uint32_t nbuckets);
+
 
 
 
