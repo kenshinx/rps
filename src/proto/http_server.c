@@ -254,8 +254,8 @@ http_request_dump(struct http_request *req) {
 #endif
 
 
-static void
-http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
+static rps_status_t
+http_request_parse(uint8_t *data, size_t size) {
     size_t i, len;
     int n;
     rps_str_t line;
@@ -284,7 +284,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         if (n == 1) {
             if (http_parse_request_line(&line, &req) != RPS_OK) {
                 log_error("parse http request line: %s error.", line.data);
-                goto kill;
+                return RPS_ERROR;
             }
         }
 
@@ -295,22 +295,29 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     if ((size != i + 2 * CRLF_LEN) && (size != i + CRLF_LEN)) {
         log_error("http tunnel handshake contain junk: %s", data);
         /* 2*CRLF_LEN == last line \r\n\r\n */
-        goto kill;
+        return RPS_ERROR;
     }
             
     if (http_request_check(&req) != RPS_OK) {
         log_error("invalid http request: %s", line.data);
-        goto kill;
+        return RPS_ERROR;
     }
 
 #ifdef RPS_DEBUG_OPEN
     http_request_dump(&req);
 #endif
-    
-kill:
-    ctx->state = c_kill;
-    server_do_next(ctx);
 
+}
+
+static void
+http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
+    rps_status_t status;
+
+    status = http_request_parse(data, size);
+    if (status != RPS_OK) {
+        ctx->state = c_kill;
+        server_do_next(ctx);
+    }
 }
 
 static void
