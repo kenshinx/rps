@@ -49,6 +49,7 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
         sw_port,
         sw_space_before_protocol,
         sw_protocol,
+        sw_end,
     } state;
 
     state = sw_start;
@@ -177,8 +178,19 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
                 break;
 
             case sw_protocol:
+                if (ch == ' ') {
+                    state = sw_end;
+                    break;
+                }
+
                 end = &str->data[i];
                 break;
+
+            case sw_end:
+                if (ch != ' ') {
+                    log_error("http parse request line error, junk in request line");
+                    return RPS_ERROR;
+                }
             
             default:
                 NOT_REACHED();
@@ -191,16 +203,62 @@ http_parse_request_line(rps_str_t *str, struct http_request *req) {
     }
 
     string_duplicate(&req->protocol, (const char *)start, end - start +1);
+
+    if (state != sw_protocol && state != sw_end) {
+        log_error("http parse request line error, parse failed");
+        return RPS_ERROR;
+    }
     
     return RPS_OK;
 }
+
+static rps_status_t
+http_check_request(struct http_request *req) {
+    if (req->method != http_connect) {
+        log_error("http request check error, only connect support");
+        return RPS_ERROR;
+    }
+
+    if (!rps_valid_port(req->port)) {
+        log_error("http request check error, invalid port");
+        return RPS_ERROR;
+    }
+
+    return RPS_OK;
+} 
+
+#ifdef RPS_DEBUG_OPEN
+static void
+http_request_dump(struct http_request *req) {
+
+    char *method;
+
+    switch (req->method) {
+        case http_get:
+            method = "GET";
+            break;
+        case http_post:
+            method = "POST";
+            break;
+        case http_connect:
+            method = "CONNECT";
+            break;
+        default:
+            method = "UNKNOWN";
+    }
+
+    log_verb("[http request]");
+    log_verb("%s %s:%d %s", method, req->host.data, 
+            req->port, req->protocol.data);
+}
+#endif
 
 
 static void
 http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     size_t i, len;
     int line;
-    rps_str_t *str;
+    rps_str_t str;
     struct http_request req;
 
     http_request_init(&req);
@@ -209,13 +267,11 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     line = 0;
 
     for (;;) {
-        str =  string_new();
-        if (str == NULL) {
-            goto kill;
-        }
-        len = http_read_line(data, i, size, str);
+        string_init(&str);
+
+        len = http_read_line(data, i, size, &str);
         if (len <= CRLF_LEN) {
-            /* read empty line, just contain /r/n */
+            /* read empty line, only contain /r/n */
             break;
         }
 
@@ -224,15 +280,19 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         line++;
 
         if (line == 1) {
-            http_parse_request_line(str, &req);
-            printf("request method: %d\n", req.method);
-            printf("request host: %s\n", req.host.data);
-            printf("request port: %d\n", req.port);
-            printf("request protocol: %s\n", req.protocol.data);
+            if (http_parse_request_line(&str, &req) != RPS_OK) {
+                log_error("parse http request line: %s error.", str.data);
+                goto kill;
+            }
+            
+            if (http_check_request(&req) != RPS_OK) {
+                log_error("invalid http request: %s", str.data);
+                goto kill;
+            }
         }
 
-        printf("line <%d>: %s\n", line, str->data);
-        string_free(str);
+        printf("line <%d>: %s\n", line, str.data);
+        string_deinit(&str);
     }
 
     if ((size != i + 2 * CRLF_LEN) && (size != i + CRLF_LEN)) {
@@ -240,6 +300,10 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         /* 2*CRLF_LEN == last line \r\n\r\n */
         goto kill;
     }
+
+#ifdef RPS_DEBUG_OPEN
+    http_request_dump(&req);
+#endif
     
 kill:
     ctx->state = c_kill;
