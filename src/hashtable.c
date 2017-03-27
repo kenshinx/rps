@@ -4,8 +4,65 @@
 
 #include "stdlib.h"
 
+//max int32 
+#define MAX_SEED  2147483647 
 
-#define MAX_SEED  2147483647
+static struct hash_entry *
+hashtable_entry_create(void *key, size_t key_size, void *value, size_t value_size) {
+    struct hash_entry *he;
+
+    ASSERT(key_size > 0);
+    ASSERT(value_size > 0);
+
+    he = rps_alloc(sizeof(struct hash_entry));
+    if (he == NULL) {
+        return NULL;
+    }
+    
+    he->key = rps_alloc(key_size);
+    if (he->key == NULL) {
+        rps_free(he);
+        return NULL;
+    }
+    he->key_size = key_size;
+    memcpy(he->key, key, key_size);
+
+    he->value = rps_alloc(value_size);
+    if (he->value == NULL) {
+        rps_free(he->key);
+        rps_free(he);
+        return NULL;
+    }
+    he->value_size = value_size;
+    memcpy(he->value, value, value_size);
+
+    he->next = NULL;
+
+    return he;
+}
+
+static void
+hashtable_entry_deinit(struct hash_entry *he) {
+    if (he->key != NULL) {
+        rps_free(he->key);
+        he->key = NULL;
+    }
+
+    if (he->value != NULL) {
+        rps_free(he->value);
+        he->value = NULL;
+    }
+
+    he->key_size = 0;
+    he->value_size = 0;
+    he->next = NULL;
+}
+
+static void
+hashtable_entry_destroy(struct hash_entry *he) {
+    hashtable_entry_deinit(he);
+    rps_free(he);
+}
 
 int
 hashtable_init(rps_hashtable_t *ht, uint32_t nbuckets) {
@@ -72,45 +129,10 @@ hashtable_create(uint32_t nbuckets) {
     return ht;
 }
 
-static struct hash_entry *
-hashtable_entry_create(void *key, size_t key_size, void *value, size_t value_size) {
-    struct hash_entry *he;
-
-    ASSERT(key_size > 0);
-    ASSERT(value_size > 0);
-
-    he = rps_alloc(sizeof(struct hash_entry));
-    if (he == NULL) {
-        return NULL;
-    }
-    
-    he->key = rps_alloc(key_size);
-    if (he->key == NULL) {
-        rps_free(he);
-        return NULL;
-    }
-    he->key_size = key_size;
-    memcpy(he->key, key, key_size);
-
-    he->value = rps_alloc(value_size);
-    if (he->value == NULL) {
-        rps_free(he->key);
-        rps_free(he);
-        return NULL;
-    }
-    he->value_size = value_size;
-    memcpy(he->value, value, value_size);
-
-    he->next = NULL;
-
-    return he;
-}
-
-
 
 void
-hashtable_set(rps_hashtable_t *ht, rps_str_t *key, void *value, size_t size) {
+hashtable_set(rps_hashtable_t *ht, void *key, size_t key_size, void *value, size_t value_size) {
     struct hash_entry *he;
 
-    he = hashtable_entry_create(key, vlaue, size);
+    he = hashtable_entry_create(key, key_size, value, value_size);
 }
