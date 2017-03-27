@@ -62,6 +62,31 @@ hashmap_entry_deinit(struct hash_entry *entry) {
     entry->next = NULL;
 }
 
+static bool
+hashmap_entry_compare(struct hash_entry *e1, struct hash_entry *e2) {
+    if (e1->key_size != e2->key_size) {
+        return false;
+    }
+
+    return (memcmp(e1->key, e2->key, e1->key_size) == 0);
+}
+
+static void
+hashmap_entry_set(struct hash_entry *entry, void *value, size_t value_size) {
+    if (entry->value != NULL) {
+        rps_free(entry->value);
+    }
+
+    entry->value = rps_alloc(value_size);
+    if (entry->value == NULL) {
+        log_error("update hashmap entry alloc memory failed");
+        return;
+    }
+
+    memcpy(entry->value, value, value_size);
+    entry->value_size = value_size;
+}
+
 static void
 hashmap_entry_destroy(struct hash_entry *entry) {
     hashmap_entry_deinit(entry);
@@ -163,15 +188,28 @@ hashmap_set(rps_hashmap_t *map, void *key, size_t key_size, void *value, size_t 
     index = hashmap_index(map, key, key_size);
 
     tmp = map->buckets[index];
-    
-    printf("key:%s, index:%d\n", key, index);
 
-    if (tmp == NULL) {
+    if (tmp == NULL) {  /* no collision */
         map->buckets[index] = entry;
         map->count++;
         return;
     }
 
+    while (tmp->next != NULL) {
+        if (hashmap_entry_compare(tmp, entry)) {
+            break;
+        }
+        tmp = tmp->next;
+    }
 
+    /* the keys are identical, throw away the old entry 
+     * and update new value.
+     */
+    if(hashmap_entry_compare(tmp, entry)) {
+        hashmap_entry_set(tmp, value, value_size);
+        hashmap_entry_destroy(entry);
+    }
+
+    /* append new entry onto the end of the link */
     
 }
