@@ -1,5 +1,5 @@
-#ifndef _RPS_HASHTABLE_H
-#define _RPS_HASHTABLE_H
+#ifndef _RPS_HASHMAP_H
+#define _RPS_HASHMAP_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -17,7 +17,7 @@ struct hash_entry {
     
 };
 
-struct rps_hashtable_s {
+struct rps_hashmap_s {
 
     
     struct hash_entry   **buckets;
@@ -29,10 +29,10 @@ struct rps_hashtable_s {
     rps_hashfunc_t      hashfunc;
 };
 
-typedef struct rps_hashtable_s rps_hashtable_t;
+typedef struct rps_hashmap_s rps_hashmap_t;
 
-int hashtable_init(rps_hashtable_t *ht, uint32_t nbuckets);
-rps_hashtable_t *hashtable_create(uint32_t nbuckets);
+int hashmap_init(rps_hashmap_t *table, uint32_t nbuckets);
+rps_hashmap_t *hashmap_create(uint32_t nbuckets);
 
 
 
