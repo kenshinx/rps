@@ -57,6 +57,7 @@ typedef struct session rps_sess_t;
 #include "_string.h"
 #include "log.h"
 #include "array.h"
+#include "hashmap.h"
 #include "server.h"
 #include "upstream.h"
 

@@ -90,17 +90,12 @@ enum http_staut_code {
 };
 
 
-struct http_header {
-    
-};
-
-
 struct http_request {
     uint8_t             method;
     rps_str_t           host;
     int                 port;
     rps_str_t           protocol;
-    struct http_header  headers;        
+    rps_hashmap_t       headers;        
     
 };
 

@@ -213,6 +213,12 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
 }
 
 static rps_status_t
+http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
+    
+
+}
+
+static rps_status_t
 http_request_check(struct http_request *req) {
     if (req->method != http_connect) {
         log_error("http request check error, only connect support");
@@ -226,6 +232,7 @@ http_request_check(struct http_request *req) {
 
     return RPS_OK;
 } 
+
 
 #ifdef RPS_DEBUG_OPEN
 static void
@@ -288,6 +295,7 @@ http_request_parse(uint8_t *data, size_t size) {
             }
         }
 
+        http_parse_header_line(&line, &req.headers);
 
         string_deinit(&line);
     }
