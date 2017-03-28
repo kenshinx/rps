@@ -114,7 +114,8 @@ http_request_init(struct http_request *req) {
     string_init(&req->protocol);
     string_init(&req->host);
     req->port = 0;
-    hashmap_init(&req->headers, HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
+    hashmap_init(&req->headers, 
+            HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
 }
 
 
