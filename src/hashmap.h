@@ -6,21 +6,21 @@
 
 typedef void (*rps_hashfunc_t)(const void *key, int len, uint32_t seed, void *out);
 
-struct hash_entry {
+struct hashmap_entry {
     void                *key;
     size_t              key_size;
 
     void                *value;
     size_t              value_size;
     
-    struct hash_entry   *next;
+    struct hashmap_entry   *next;
     
 };
 
 struct rps_hashmap_s {
 
     
-    struct hash_entry   **buckets;
+    struct hashmap_entry   **buckets;
 
     /* allocate keys */
     uint32_t            count;
@@ -30,16 +30,21 @@ struct rps_hashmap_s {
 
     uint32_t            seed;
 
+    uint32_t            collisions;
+    /* autoresize will be triggered if max load factor reached */ 
+    double              max_load_factor;
+
     rps_hashfunc_t      hashfunc;
 };
 
 typedef struct rps_hashmap_s rps_hashmap_t;
 
-int hashmap_init(rps_hashmap_t *map, uint32_t nbuckets);
-rps_hashmap_t *hashmap_create(uint32_t nbuckets);
-void hashmap_destroy(rps_hashmap_t *map);
+int hashmap_init(rps_hashmap_t *map, uint32_t nbuckets, double max_load_factor);
+rps_hashmap_t *hashmap_create(uint32_t nbuckets, double max_load_factor);
+void hashmap_deinit(rps_hashmap_t *map);
 void hashmap_set(rps_hashmap_t *map, void *key, size_t key_size, 
         void *value, size_t value_size);
+void hashmap_set_entry(rps_hashmap_t *map, struct hashmap_entry *entry);
 
 
 

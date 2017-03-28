@@ -8,14 +8,14 @@
 //max int32 
 #define MAX_SEED  2147483647 
 
-static struct hash_entry *
+static struct hashmap_entry *
 hashmap_entry_create(void *key, size_t key_size, void *value, size_t value_size) {
-    struct hash_entry *entry;
+    struct hashmap_entry *entry;
 
     ASSERT(key_size > 0);
     ASSERT(value_size > 0);
 
-    entry = rps_alloc(sizeof(struct hash_entry));
+    entry = rps_alloc(sizeof(struct hashmap_entry));
     if (entry == NULL) {
         return NULL;
     }
@@ -43,7 +43,7 @@ hashmap_entry_create(void *key, size_t key_size, void *value, size_t value_size)
 }
 
 static void
-hashmap_entry_deinit(struct hash_entry *entry) {
+hashmap_entry_deinit(struct hashmap_entry *entry) {
 
     ASSERT(entry != NULL);
 
@@ -63,7 +63,7 @@ hashmap_entry_deinit(struct hash_entry *entry) {
 }
 
 static bool
-hashmap_entry_compare(struct hash_entry *e1, struct hash_entry *e2) {
+hashmap_entry_compare(struct hashmap_entry *e1, struct hashmap_entry *e2) {
     if (e1->key_size != e2->key_size) {
         return false;
     }
@@ -72,7 +72,7 @@ hashmap_entry_compare(struct hash_entry *e1, struct hash_entry *e2) {
 }
 
 static void
-hashmap_entry_set(struct hash_entry *entry, void *value, size_t value_size) {
+hashmap_entry_set(struct hashmap_entry *entry, void *value, size_t value_size) {
     if (entry->value != NULL) {
         rps_free(entry->value);
     }
@@ -88,21 +88,23 @@ hashmap_entry_set(struct hash_entry *entry, void *value, size_t value_size) {
 }
 
 static void
-hashmap_entry_destroy(struct hash_entry *entry) {
+hashmap_entry_destroy(struct hashmap_entry *entry) {
     hashmap_entry_deinit(entry);
     rps_free(entry);
 }
 
 int
-hashmap_init(rps_hashmap_t *map, uint32_t nbuckets) {
+hashmap_init(rps_hashmap_t *map, uint32_t nbuckets, double max_load_factor) {
     uint32_t i;
-    struct hash_entry **buckets;
+    struct hashmap_entry **buckets;
 
     ASSERT(map != NULL);
 
     map->seed = (uint32_t)rps_random(MAX_SEED);
     map->size = nbuckets;
     map->count = 0;
+    map->collisions = 0;
+    map->max_load_factor= max_load_factor;
 
     buckets = rps_alloc(map->size * sizeof(*buckets));
     if (buckets == NULL) {
@@ -123,7 +125,7 @@ hashmap_init(rps_hashmap_t *map, uint32_t nbuckets) {
 }
 
 rps_hashmap_t *
-hashmap_create(uint32_t nbuckets) {
+hashmap_create(uint32_t nbuckets, double max_load_factor) {
     rps_hashmap_t *map;
 
     ASSERT(nbuckets >0);
@@ -133,7 +135,7 @@ hashmap_create(uint32_t nbuckets) {
         return NULL;
     }
 
-    if (hashmap_init(map, nbuckets) != RPS_OK) {
+    if (hashmap_init(map, nbuckets, max_load_factor) != RPS_OK) {
         return NULL;
     }
 
@@ -141,10 +143,10 @@ hashmap_create(uint32_t nbuckets) {
 }
 
 void
-hashmap_destroy(rps_hashmap_t *map) {
+hashmap_deinit(rps_hashmap_t *map) {
     uint32_t i;
-    struct hash_entry *entry;
-    struct hash_entry *tmp;
+    struct hashmap_entry *entry;
+    struct hashmap_entry *tmp;
 
     ASSERT(map != NULL);
     
@@ -161,10 +163,48 @@ hashmap_destroy(rps_hashmap_t *map) {
 
     rps_free(map->buckets);
 
+    map->buckets = NULL;
     map->size = 0;
     map->seed = 0;
     map->count = 0;
+    map->max_load_factor = 0;
     map->hashfunc = NULL;
+}
+
+static void
+hashmap_rehash(rps_hashmap_t *map, uint32_t new_size) {
+    rps_hashmap_t new_map;
+    struct hashmap_entry *entry;
+    struct hashmap_entry *next;
+    uint32_t i;
+
+    ASSERT(new_size > map->size);
+
+    hashmap_init(&new_map, new_size, map->max_load_factor);
+
+    for (i = 0; i < map->size; i++) {
+        entry = map->buckets[i];
+        if (entry == NULL) {
+            continue;
+        }
+
+        while (entry != NULL) {
+            next = entry->next;
+            hashmap_set_entry(&new_map, entry);
+            entry = next;
+        }
+        map->buckets[i] = NULL;
+    }
+
+    hashmap_deinit(map);
+
+    map->buckets = new_map.buckets;
+    map->count = new_map.count;
+    map->size = new_map.size;
+    map->seed = new_map.seed;
+    map->collisions = new_map.collisions;
+    map->max_load_factor = new_map.max_load_factor;
+    map->hashfunc = new_map.hashfunc;
 }
 
 static uint32_t
@@ -179,13 +219,12 @@ hashmap_index(rps_hashmap_t *map, void *key, size_t key_size) {
 }
 
 void
-hashmap_set(rps_hashmap_t *map, void *key, size_t key_size, void *value, size_t value_size) {
+hashmap_set_entry(rps_hashmap_t *map, struct hashmap_entry *entry) {
     uint32_t index;
-    struct hash_entry *entry;
-    struct hash_entry *tmp;
-
-    entry = hashmap_entry_create(key, key_size, value, value_size);
-    index = hashmap_index(map, key, key_size);
+    struct hashmap_entry *tmp;
+    double current_load_factor;
+    
+    index = hashmap_index(map, entry->key, entry->key_size);
 
     tmp = map->buckets[index];
 
@@ -206,10 +245,33 @@ hashmap_set(rps_hashmap_t *map, void *key, size_t key_size, void *value, size_t 
      * and update new value.
      */
     if(hashmap_entry_compare(tmp, entry)) {
-        hashmap_entry_set(tmp, value, value_size);
+        hashmap_entry_set(tmp, entry->value, entry->value_size);
         hashmap_entry_destroy(entry);
-    }
+        return;
+    } 
 
     /* append new entry onto the end of the link */
-    
+    tmp->next = entry;
+    map->collisions++;
+    map->count++;
+
+    current_load_factor = (double)(map->collisions/map->size);
+    if (current_load_factor > map->max_load_factor) {
+        hashmap_rehash(map, map->size * 2);
+    }
+
+}
+
+void
+hashmap_set(rps_hashmap_t *map, void *key, size_t key_size, void *value, size_t value_size) {
+    struct hashmap_entry *entry;
+
+    entry = hashmap_entry_create(key, key_size, value, value_size);
+    if (entry == NULL) {
+        log_error("create hashmap entry failed");
+        return;
+    }
+
+    hashmap_set_entry(map, entry);
+
 }
