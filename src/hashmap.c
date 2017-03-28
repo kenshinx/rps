@@ -357,3 +357,20 @@ hashmap_remove(rps_hashmap_t *map, void *key, size_t key_size) {
 
     return 0;
 }
+
+
+void
+hashmap_iter(rps_hashmap_t *map, hashmap_iter_t func) {
+    uint32_t i;
+    struct hashmap_entry *entry;
+
+    for (i = 0; i < map->size; i++) {
+        
+        entry = map->buckets[i];
+
+        while (entry != NULL) {
+            func(entry->key, entry->key_size, entry->value, entry->value_size);
+            entry = entry->next;
+        }
+    }
+}

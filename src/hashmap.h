@@ -5,7 +5,8 @@
 #include <stdint.h>
 
 
-typedef void (*rps_hashfunc_t)(const void *key, int len, uint32_t seed, void *out);
+typedef void (*hashmap_hash_t)(const void *key, int len, uint32_t seed, void *out);
+typedef void (*hashmap_iter_t) (void *key, size_t key_size, void *value, size_t value_size);
 
 struct hashmap_entry {
     void                *key;
@@ -35,7 +36,7 @@ struct rps_hashmap_s {
     /* autoresize will be triggered if max load factor reached */ 
     double              max_load_factor;
 
-    rps_hashfunc_t      hashfunc;
+    hashmap_hash_t      hashfunc;
 };
 
 typedef struct rps_hashmap_s rps_hashmap_t;
@@ -55,6 +56,7 @@ int hashmap_has(rps_hashmap_t *map, void *key, size_t key_size);
 int hashmap_remove(rps_hashmap_t *map, void *key, size_t key_size);
 uint32_t hashmap_n(rps_hashmap_t *map);
 
+void hashmap_iter(rps_hashmap_t *map, hashmap_iter_t func);
 
 
 #endif
