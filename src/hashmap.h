@@ -53,6 +53,7 @@ void hashmap_set(rps_hashmap_t *map, void *key, size_t key_size,
 
 int hashmap_has(rps_hashmap_t *map, void *key, size_t key_size);
 int hashmap_remove(rps_hashmap_t *map, void *key, size_t key_size);
+uint32_t hashmap_n(rps_hashmap_t *map);
 
 
 

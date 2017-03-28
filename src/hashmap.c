@@ -224,7 +224,11 @@ hashmap_set_entry(rps_hashmap_t *map, struct hashmap_entry *entry) {
     if (current_load_factor > map->max_load_factor) {
         hashmap_rehash(map, map->size * 2);
     }
+}
 
+uint32_t
+hashmap_n(rps_hashmap_t *map) {
+    return map->count;
 }
 
 void
