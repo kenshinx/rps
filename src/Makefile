@@ -59,7 +59,7 @@ RPS_INSTALL=$(INSTALL)
 
 
 RPS_BIN=rps
-RPS_OBJ=rps.o log.o config.o util.o array.o _string.o upstream.o server.o 
+RPS_OBJ=rps.o log.o config.o util.o array.o hashmap.o murmur3.o _string.o upstream.o server.o 
 
 %.o: %.c
 	$(RPS_CC) -c $< -o $@ 
