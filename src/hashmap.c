@@ -2,8 +2,8 @@
 #include "murmur3.h"
 #include "core.h"
 
-#include "stdio.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 //max int32 
 #define MAX_SEED  2147483647 
@@ -301,4 +301,14 @@ hashmap_get(rps_hashmap_t *map, void *key, size_t key_size, size_t *value_size) 
 
     *value_size = 0;
     return NULL;
+}
+
+int 
+hashmap_has(rps_hashmap_t *map, void *key, size_t key_size) {
+    void *value;
+    size_t value_size;
+
+    value = hashmap_get(map, key, key_size, &value_size);
+
+    return (value != NULL && value_size != 0);
 }
