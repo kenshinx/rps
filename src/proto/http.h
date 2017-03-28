@@ -75,6 +75,9 @@
  *              +                        +                       +              +
  */
 
+#define HTTP_HEADER_DEFAULT_COUNT   64
+#define HTTP_HEADER_REHASH_THRESHOLD   0.05
+
 enum http_method {
     http_emethod = 0,
     http_get = 1,
@@ -111,6 +114,7 @@ http_request_init(struct http_request *req) {
     string_init(&req->protocol);
     string_init(&req->host);
     req->port = 0;
+    hashmap_init(&req->headers, HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
 }
 
 

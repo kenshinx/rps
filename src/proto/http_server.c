@@ -265,13 +265,13 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
                     break;
                 }
 
-                log_error("http parse request header line error, invalid symbol in key");
+                log_error("http parse request header error, invalid symbol in key");
                 return RPS_ERROR;
 
             case sw_key:
 
                 if (ki >= HTTP_HEADER_MAX_KEY_LENGTH) {
-                    log_error("http parse request header line error, too large key");
+                    log_error("http parse request header error, too large key");
                     return RPS_ERROR;
                 }
 
@@ -287,7 +287,7 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
                     break;
                 }
 
-                log_error("http parse request header line error, junk in key");
+                log_error("http parse request header error, junk in key");
                 return RPS_ERROR;
 
             case sw_space_before_value:
@@ -298,25 +298,28 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
 
                 state = sw_value;
                 
-                c = lowcase[ch];
-                if (c) {
-                    value[0] = c;
-                    vi = 1;
-                    break;
+                value[0] = ch;
+                vi = 1;
+                break;
+
+            case sw_value:
+                if (vi >= HTTP_HEADER_MAX_VALUE_LENGTH) {
+                    log_error("http parse request header error, too large value");
+                    return RPS_ERROR;
                 }
 
-                log_error("http parse request header line error, invalid symbol in value");
-                return RPS_ERROR;
+                value[vi++] = ch;
+                break;
 
-            
 
             default:
                 break;
         }
     }
 
-    key[ki] = '\0';
-    printf("header key: %s\n", key);
+    hashmap_set(headers, key, ki, value, vi);
+
+    return RPS_OK;
 
 }
 
@@ -393,11 +396,16 @@ http_request_parse(uint8_t *data, size_t size) {
         if (n == 1) {
             if (http_parse_request_line(&line, &req) != RPS_OK) {
                 log_error("parse http request line: %s error.", line.data);
+                string_deinit(&line);
                 return RPS_ERROR;
             }
+        } else {
+            if (http_parse_header_line(&line, &req.headers) != RPS_OK) {
+                log_error("parse http request header line :%s error.", line.data);
+                string_deinit(&line);
+                return RPS_ERROR;   
+            }
         }
-
-        http_parse_header_line(&line, &req.headers);
 
         string_deinit(&line);
     }
