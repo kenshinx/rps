@@ -4,6 +4,9 @@
 
 #include <uv.h>
 
+#define HTTP_HEADER_MAX_KEY_LENGTH     256
+#define HTTP_HEADER_MAX_VALUE_LENGTH   512
+
 static size_t
 http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     size_t i, n, len;
@@ -214,7 +217,106 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
 
 static rps_status_t
 http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
+    uint8_t c, ch;
+    size_t i;
+    size_t ki, vi;
+    uint8_t key[HTTP_HEADER_MAX_KEY_LENGTH];
+    uint8_t value[HTTP_HEADER_MAX_VALUE_LENGTH];
     
+    enum {
+        sw_start = 0,
+        sw_key,
+        sw_space_before_value,
+        sw_value,
+    } state;
+
+
+    /* Ascii chart, copy from nginx */
+   static uint8_t lowcase[] =
+        "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        "\0\0\0\0\0\0\0\0\0\0\0\0\0-\0\0" "0123456789\0\0\0\0\0\0"
+        "\0abcdefghijklmnopqrstuvwxyz\0\0\0\0\0"
+        "\0abcdefghijklmnopqrstuvwxyz\0\0\0\0\0"
+        "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+        "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+
+    ki = 0;
+    vi = 0;
+	state = sw_start;
+
+    for (i = 0; i < line->len; i++) {
+        ch = line->data[i];
+
+        switch (state) {
+            case sw_start:
+
+                if (ch == ' ') {
+                    break;
+                }
+                state = sw_key;
+                
+                c = lowcase[ch];
+
+                if (c) {
+                    key[0] = c;
+                    ki = 1;
+                    break;
+                }
+
+                log_error("http parse request header line error, invalid symbol in key");
+                return RPS_ERROR;
+
+            case sw_key:
+
+                if (ki >= HTTP_HEADER_MAX_KEY_LENGTH) {
+                    log_error("http parse request header line error, too large key");
+                    return RPS_ERROR;
+                }
+
+                c = lowcase[ch];
+                
+                if (c) {
+                    key[ki++] = c; 
+                    break;
+                }
+
+                if (ch == ':') {
+                    state = sw_space_before_value;
+                    break;
+                }
+
+                log_error("http parse request header line error, junk in key");
+                return RPS_ERROR;
+
+            case sw_space_before_value:
+                
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_value;
+                
+                c = lowcase[ch];
+                if (c) {
+                    value[0] = c;
+                    vi = 1;
+                    break;
+                }
+
+                log_error("http parse request header line error, invalid symbol in value");
+                return RPS_ERROR;
+
+            
+
+            default:
+                break;
+        }
+    }
+
+    key[ki] = '\0';
+    printf("header key: %s\n", key);
 
 }
 
