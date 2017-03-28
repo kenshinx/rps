@@ -231,7 +231,7 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
     } state;
 
 
-    /* Ascii chart, copy from nginx */
+    /* Valid ascii chart, copy from nginx */
    static uint8_t lowcase[] =
         "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
         "\0\0\0\0\0\0\0\0\0\0\0\0\0-\0\0" "0123456789\0\0\0\0\0\0"
@@ -335,8 +335,32 @@ http_request_check(struct http_request *req) {
         return RPS_ERROR;
     }
 
+#ifdef HTTP_REQUEST_HEADER_MUST_CONTAIN_HOST
+    if (!hashmap_has(&req->headers, "host", 4)) {
+        log_error("http request check error, must have host header");
+        return RPS_ERROR;
+    }
+#endif
+
     return RPS_OK;
 } 
+
+#ifdef RPS_DEBUG_OPEN
+/* implement hashmap_iter_t */
+static void
+http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
+    char skey[key_size + 1];
+    char svalue[value_size + 1];
+
+    memcpy(skey, key, key_size);
+    memcpy(svalue, value, value_size);
+    
+    skey[key_size] = '\0';
+    svalue[value_size] = '\0';
+
+    log_verb("%s: %s", skey, svalue);
+}
+#endif
 
 
 #ifdef RPS_DEBUG_OPEN
@@ -362,6 +386,8 @@ http_request_dump(struct http_request *req) {
     log_verb("[http request]");
     log_verb("%s %s:%d %s", method, req->host.data, 
             req->port, req->protocol.data);
+
+    hashmap_iter(&req->headers, http_header_dump);
 }
 #endif
 
@@ -391,8 +417,6 @@ http_request_parse(uint8_t *data, size_t size) {
         i += len;
         n++;
 
-        printf("line <%d>: %s\n", n, line.data);
-
         if (n == 1) {
             if (http_parse_request_line(&line, &req) != RPS_OK) {
                 log_error("parse http request line: %s error.", line.data);
@@ -417,7 +441,7 @@ http_request_parse(uint8_t *data, size_t size) {
     }
             
     if (http_request_check(&req) != RPS_OK) {
-        log_error("invalid http request: %s", line.data);
+        log_error("invalid http request: %s", data);
         return RPS_ERROR;
     }
 
