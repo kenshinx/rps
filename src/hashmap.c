@@ -312,3 +312,44 @@ hashmap_has(rps_hashmap_t *map, void *key, size_t key_size) {
 
     return (value != NULL && value_size != 0);
 }
+
+int 
+hashmap_remove(rps_hashmap_t *map, void *key, size_t key_size) {
+    uint32_t index;
+    struct hashmap_entry *entry;
+    struct hashmap_entry *prev;
+    struct hashmap_entry tmp;
+
+    tmp.key = key;
+    tmp.key_size = key_size;
+
+    index = hashmap_index(map, key, key_size);
+
+    prev = NULL;
+    entry = map->buckets[index];
+
+    while (entry != NULL) {
+        if (hashmap_entry_compare(entry, &tmp)) {
+            if (prev == NULL) {
+                /* head of the link */
+                map->buckets[index] = entry->next;
+            } else {
+                prev->next = entry->next;
+            }
+
+            map->count--;
+            
+            if (prev != NULL) {
+                map->collisions--;
+            }
+
+            hashmap_entry_destroy(entry);
+            return 1;
+        } 
+        
+        prev = entry;
+        entry = entry->next;
+    }
+
+    return 0;
+}
