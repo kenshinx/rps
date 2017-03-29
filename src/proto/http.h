@@ -118,23 +118,6 @@ struct http_response {
 };
 
 
-static inline void
-http_request_init(struct http_request *req) {
-    req->method = http_emethod;
-    string_init(&req->protocol);
-    string_init(&req->host);
-    req->port = 0;
-    hashmap_init(&req->headers, 
-            HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
-}
-
-static inline void
-http_request_auth_init(struct http_request_auth *auth) {
-    auth->schema = http_auth_unknown;
-    string_init(&auth->param);
-}
-
-
 void http_server_do_next(struct context *ctx);
 void http_client_do_next(struct context *ctx);
 

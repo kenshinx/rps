@@ -8,6 +8,34 @@
 #define HTTP_HEADER_MAX_KEY_LENGTH     256
 #define HTTP_HEADER_MAX_VALUE_LENGTH   512
 
+static void
+http_request_init(struct http_request *req) {
+    req->method = http_emethod;
+    string_init(&req->protocol);
+    string_init(&req->host);
+    req->port = 0;
+    hashmap_init(&req->headers, 
+            HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
+}
+
+static void
+http_request_deinit(struct http_request *req) {
+    string_deinit(&req->protocol);
+    string_deinit(&req->host);
+    hashmap_deinit(&req->headers);
+}
+
+static void
+http_request_auth_init(struct http_request_auth *auth) {
+    auth->schema = http_auth_unknown;
+    string_init(&auth->param);
+}
+
+static void
+http_request_auth_deinit(struct http_request_auth *auth) {
+    string_deinit(&auth->param);
+}
+
 static size_t
 http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     size_t i, n, len;
@@ -500,8 +528,6 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     int n;
     rps_str_t line;
 
-    http_request_init(req);
-    
     i = 0;
     n = 0;
 
@@ -606,7 +632,9 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     struct http_request_auth auth;
     struct server *s;
     rps_status_t status;
-
+    
+    http_request_init(&req);
+    
     status = http_request_parse(&req, data, size);
     if (status != RPS_OK) {
         ctx->state = c_kill;
@@ -640,6 +668,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     http_request_auth_init(&auth);
     status = http_parse_request_auth(&auth, credentials, credentials_size);
     if (status != RPS_OK) {
+        http_request_auth_deinit(&auth);
         ctx->state = c_kill;
         goto next;
     }
@@ -647,6 +676,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     if (auth.schema != http_auth_basic) {
         /* response 407 */
         log_warn("Only http basic authenticate supported.");
+        http_request_auth_deinit(&auth);
         ctx->state = c_auth_req;
         goto next;
     }
@@ -659,7 +689,10 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         log_verb("http client authentication failed.");
     };
 
+    http_request_auth_deinit(&auth);
+
 next:
+    http_request_deinit(&req);
     server_do_next(ctx);
     return;
 }
