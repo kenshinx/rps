@@ -393,13 +393,12 @@ http_request_dump(struct http_request *req) {
 
 
 static rps_status_t
-http_request_parse(uint8_t *data, size_t size) {
+http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     size_t i, len;
     int n;
     rps_str_t line;
-    struct http_request req;
 
-    http_request_init(&req);
+    http_request_init(req);
     
     i = 0;
     n = 0;
@@ -418,13 +417,13 @@ http_request_parse(uint8_t *data, size_t size) {
         n++;
 
         if (n == 1) {
-            if (http_parse_request_line(&line, &req) != RPS_OK) {
+            if (http_parse_request_line(&line, req) != RPS_OK) {
                 log_error("parse http request line: %s error.", line.data);
                 string_deinit(&line);
                 return RPS_ERROR;
             }
         } else {
-            if (http_parse_header_line(&line, &req.headers) != RPS_OK) {
+            if (http_parse_header_line(&line, &req->headers) != RPS_OK) {
                 log_error("parse http request header line :%s error.", line.data);
                 string_deinit(&line);
                 return RPS_ERROR;   
@@ -440,26 +439,52 @@ http_request_parse(uint8_t *data, size_t size) {
         return RPS_ERROR;
     }
             
-    if (http_request_check(&req) != RPS_OK) {
+    if (http_request_check(req) != RPS_OK) {
         log_error("invalid http request: %s", data);
         return RPS_ERROR;
     }
 
 #ifdef RPS_DEBUG_OPEN
-    http_request_dump(&req);
+    http_request_dump(req);
 #endif
+
+    return RPS_OK;
 
 }
 
 static void
 http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
+    struct http_request req;
+    struct server *s;
     rps_status_t status;
 
-    status = http_request_parse(data, size);
+    status = http_request_parse(&req, data, size);
     if (status != RPS_OK) {
         ctx->state = c_kill;
         server_do_next(ctx);
+        return;
     }
+
+    s = ctx->sess->server;
+    
+    if (string_empty(&s->cfg->username) || string_empty(&s->cfg->password)) {
+        /* rps server didn't assign username or password 
+         * jump to upstream handshake phase directly. */
+        ctx->state = c_exchange;
+        server_do_next(ctx);
+        return;
+    }
+
+    const char *auth_header = "proxy-authorization";
+
+    if (!hashmap_has(&req.headers, auth_header, strlen(auth_header))) {
+        /* request header dosen't contain authorization  field 
+         * jump to seend authorization need phase. */
+        ctx->state = c_auth_req;
+    }
+
+    
+
 }
 
 static void
