@@ -53,7 +53,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
 
     s = ctx->sess->server;
     
-    if (string_empty(&s->cfg->username) && string_empty(&s->cfg->password)) {
+    if (string_empty(&s->cfg->username) || string_empty(&s->cfg->password)) {
         /* If rps didn't assign username and password, 
          * select auth method dependent on client request 
          * */
