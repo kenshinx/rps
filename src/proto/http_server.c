@@ -325,7 +325,7 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
 
 static rps_status_t
 http_parse_request_auth(struct http_request_auth *auth, 
-        const char *credentials, size_t credentials_size) {
+        uint8_t *credentials, size_t credentials_size) {
     size_t i;
     uint8_t *start, *end;
     uint8_t ch;
@@ -380,7 +380,7 @@ http_parse_request_auth(struct http_request_auth *auth,
                     
                     start = end;
                     state = sw_space_before_param;
-                    break
+                    break;
                 }
 
                 break;
@@ -419,6 +419,8 @@ http_parse_request_auth(struct http_request_auth *auth,
         log_error("http parse request auth error, invalid param");
         return RPS_ERROR;
     }
+
+    string_duplicate(&auth->param, (const char *)start, end - start +1);
 
     return RPS_OK;
 }
@@ -552,24 +554,47 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
 }
 
 static bool
-http_basic_authorize(struct context *ctx, const char *challenge, size_t challenge_size) {
+http_basic_auth(struct context *ctx, rps_str_t *param) {
+    char *uname, *passwd;
     char plain[256];
     int length;
-    char *c;
+    struct server *s;
     base64_decodestate bstate;
 
-    c = plain;
     length = 0;
 
     base64_init_decodestate(&bstate);
 
-    length = base64_decode_block(challenge, challenge_size, c, &bstate);
+    length = base64_decode_block((const char *)param->data, param->len, plain, &bstate);
 
-    c += length;
-    *c = '\0';
+    if (length <= 0) {
+        return false;
+    }
 
+    plain[length] = '\0';
 
-    printf("challenge: %s\n", plain);
+    char *delimiter = ":";
+
+    uname = strtok(plain, delimiter);
+    passwd = strtok(NULL, delimiter);
+
+    if (uname == NULL || passwd == NULL) {
+        return false;
+    }
+
+    s = ctx->sess->server;
+    
+    if (rps_strcmp(&s->cfg->username, uname) == 0 && 
+        rps_strcmp(&s->cfg->password, passwd) == 0) {
+        return true;
+    }
+    
+    
+#ifdef RPS_DEBUG_OPEN
+    log_verb("http client authentication failed.");
+#endif
+
+    return false;
     
 }
 
@@ -598,10 +623,10 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     }
 
     const char *auth_header = "proxy-authorization";
-    char *credentials;
+    uint8_t *credentials;
     size_t credentials_size;
 
-    credentials = (char *)hashmap_get(&req.headers, (void *)auth_header, 
+    credentials = (uint8_t *)hashmap_get(&req.headers, (void *)auth_header, 
             strlen(auth_header), &credentials_size);
 
     if (credentials == NULL) {
@@ -610,11 +635,29 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         ctx->state = c_auth_req;
         goto next;
     }
+
    
-    http_parse_request_auth(&auth, credentials, credentials_size);
+    http_request_auth_init(&auth);
+    status = http_parse_request_auth(&auth, credentials, credentials_size);
+    if (status != RPS_OK) {
+        ctx->state = c_kill;
+        goto next;
+    }
 
-    ctx->state = c_kill;
+    if (auth.schema != http_auth_basic) {
+        /* response 407 */
+        log_warn("Only http basic authenticate supported.");
+        ctx->state = c_auth_req;
+        goto next;
+    }
 
+    if (http_basic_auth(ctx, &auth.param)) {
+        ctx->state = c_exchange;
+        log_verb("http client authentication success.");
+    } else {
+        ctx->state = c_auth_req;
+        log_verb("http client authentication failed.");
+    };
 
 next:
     server_do_next(ctx);
