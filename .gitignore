@@ -22,3 +22,4 @@ script/.*.swp
 .*.swo
 .*.swp
 /test/s5_client
+src/b64/*.o
