@@ -70,9 +70,9 @@ typedef enum context_flag {
 typedef enum context_state {
     c_init = (1 << 0),
     c_conn = (1 << 1),
-	c_handshake = (1 << 2),
+	c_handshake_req = (1 << 2),
     c_handshake_resp = (1 << 3),
-	c_auth = (1 << 4),
+	c_auth_req = (1 << 4),
     c_auth_resp = (1 << 5),
     c_requests = (1 << 6),
     c_exchange = (1 << 7),

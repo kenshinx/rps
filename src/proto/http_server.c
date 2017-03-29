@@ -477,7 +477,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
 
     const char *auth_header = "proxy-authorization";
 
-    if (!hashmap_has(&req.headers, auth_header, strlen(auth_header))) {
+    if (!hashmap_has(&req.headers, (void *)auth_header, strlen(auth_header))) {
         /* request header dosen't contain authorization  field 
          * jump to seend authorization need phase. */
         ctx->state = c_auth_req;
@@ -504,10 +504,10 @@ http_server_do_next(struct context *ctx) {
 
 
     switch (ctx->state) {
-        case c_handshake:
+        case c_handshake_req:
             http_do_handshake(ctx, data, size);
             break;
-        case c_auth:
+        case c_auth_req:
             http_do_auth(ctx, data, size);
             break;
         default:

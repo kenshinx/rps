@@ -559,7 +559,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
 
     log_debug("Accept request from %s:%d", request->peername, rps_unresolve_port(&request->peer));
 
-    request->state = c_handshake;
+    request->state = c_handshake_req;
 
     /*
      * Beigin receive data
@@ -638,7 +638,7 @@ server_forward_connect(rps_sess_t *sess) {
             }
 
             forward->reconn = 0;
-            forward->state = c_handshake;
+            forward->state = c_handshake_req;
             server_do_next(forward);
             return;
         }

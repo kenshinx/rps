@@ -72,7 +72,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
             new_state = c_requests;
             break;
         case s5_auth_passwd:
-            new_state = c_auth;
+            new_state = c_auth_req;
             break;
         case s5_auth_gssapi:
         case s5_auth_unacceptable:
@@ -282,10 +282,10 @@ s5_server_do_next(struct context *ctx) {
     size = (size_t)ctx->nread;
 
     switch (ctx->state) {
-        case c_handshake:
+        case c_handshake_req:
             s5_do_handshake(ctx, data, size);
             break;
-        case c_auth:
+        case c_auth_req:
             s5_do_auth(ctx, data, size);
             break;
         case c_requests:

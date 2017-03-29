@@ -63,7 +63,7 @@ s5_do_handshake_resp(struct context *ctx) {
             new_state = c_requests;
             break;
         case s5_auth_passwd:
-            new_state = c_auth;
+            new_state = c_auth_req;
             break;
         case s5_auth_gssapi:
         case s5_auth_unacceptable:
@@ -260,13 +260,13 @@ void
 s5_client_do_next(struct context *ctx) {
 
     switch(ctx->state) {
-        case c_handshake:
+        case c_handshake_req:
             s5_do_handshake(ctx);
             break;
         case c_handshake_resp:
             s5_do_handshake_resp(ctx);
             break;
-        case c_auth:
+        case c_auth_req:
             s5_do_auth(ctx);
             break;
         case c_auth_resp:
