@@ -1,6 +1,7 @@
 #include "http.h"
 #include "core.h"
 #include "util.h"
+#include "b64/cdecode.h"
 
 #include <uv.h>
 
@@ -320,7 +321,106 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
     hashmap_set(headers, key, ki, value, vi);
 
     return RPS_OK;
+}
 
+static rps_status_t
+http_parse_request_auth(struct http_request_auth *auth, 
+        const char *credentials, size_t credentials_size) {
+    size_t i;
+    uint8_t *start, *end;
+    uint8_t ch;
+
+    enum {
+        sw_start = 0,
+        sw_schema,
+        sw_space_before_param,
+        sw_param,
+        sw_end,
+    } state;
+
+    state = sw_start;
+
+    for (i = 0;  i < credentials_size; i++) {
+        ch = credentials[i];
+
+        switch (state) {
+            case sw_start:
+                start = &credentials[i];
+
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_schema;
+                break;
+
+            case sw_schema:
+                if (ch == ' ') {
+                    /* end of schema token */
+                    end = &credentials[i];
+
+                    switch (end - start) {
+                        case 5:
+                            if (rps_str6_cmp(start, 'B', 'a', 's', 'i', 'c', ' ')) {
+                                auth->schema = http_auth_basic;
+                                break;
+                            }
+                            break;
+                            
+                        case 6:
+                            if (rps_str6_cmp(start, 'D', 'i', 'g', 'e', 's', 't')) {
+                                auth->schema = http_auth_digest;
+                                break;
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+                    
+                    start = end;
+                    state = sw_space_before_param;
+                    break
+                }
+
+                break;
+
+            case sw_space_before_param:
+                start = &credentials[i];
+
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_param;
+                break;
+
+            case sw_param:
+                if (ch == ' ') {
+                    state = sw_end;
+                    break;
+                }
+                
+                end = &credentials[i];
+                break;
+
+            case sw_end:
+                if (ch != ' ') {
+                    log_error("http prase request auth error, junk in credentials");
+                    return RPS_ERROR;
+                }
+            
+            default:
+                NOT_REACHED();
+        }
+    }
+
+    if (end - start <= 0) {
+        log_error("http parse request auth error, invalid param");
+        return RPS_ERROR;
+    }
+
+    return RPS_OK;
 }
 
 static rps_status_t
@@ -449,20 +549,43 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
 #endif
 
     return RPS_OK;
-
 }
+
+static bool
+http_basic_authorize(struct context *ctx, const char *challenge, size_t challenge_size) {
+    char plain[256];
+    int length;
+    char *c;
+    base64_decodestate bstate;
+
+    c = plain;
+    length = 0;
+
+    base64_init_decodestate(&bstate);
+
+    length = base64_decode_block(challenge, challenge_size, c, &bstate);
+
+    c += length;
+    *c = '\0';
+
+
+    printf("challenge: %s\n", plain);
+    
+}
+
+
 
 static void
 http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     struct http_request req;
+    struct http_request_auth auth;
     struct server *s;
     rps_status_t status;
 
     status = http_request_parse(&req, data, size);
     if (status != RPS_OK) {
         ctx->state = c_kill;
-        server_do_next(ctx);
-        return;
+        goto next;
     }
 
     s = ctx->sess->server;
@@ -471,20 +594,31 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         /* rps server didn't assign username or password 
          * jump to upstream handshake phase directly. */
         ctx->state = c_exchange;
-        server_do_next(ctx);
-        return;
+        goto next;
     }
 
     const char *auth_header = "proxy-authorization";
+    char *credentials;
+    size_t credentials_size;
 
-    if (!hashmap_has(&req.headers, (void *)auth_header, strlen(auth_header))) {
+    credentials = (char *)hashmap_get(&req.headers, (void *)auth_header, 
+            strlen(auth_header), &credentials_size);
+
+    if (credentials == NULL) {
         /* request header dosen't contain authorization  field 
-         * jump to seend authorization need phase. */
+         * jump to seend authorization request phase. */
         ctx->state = c_auth_req;
+        goto next;
     }
+   
+    http_parse_request_auth(&auth, credentials, credentials_size);
 
-    
+    ctx->state = c_kill;
 
+
+next:
+    server_do_next(ctx);
+    return;
 }
 
 static void

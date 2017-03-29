@@ -92,6 +92,16 @@ enum http_staut_code {
     http_bad_gateway = 502
 };
 
+enum http_auth_schema {
+    http_auth_unknown = 0,
+    http_auth_basic = 1,
+    http_auth_digest,
+};
+
+struct http_request_auth {
+    uint8_t             schema;
+    rps_str_t           param;
+};
 
 struct http_request {
     uint8_t             method;
@@ -118,6 +128,11 @@ http_request_init(struct http_request *req) {
             HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
 }
 
+static inline void
+http_request_auth_init(struct http_request_auth *auth) {
+    auth->schema = http_auth_unknown;
+    string_init(&auth->param);
+}
 
 
 void http_server_do_next(struct context *ctx);
