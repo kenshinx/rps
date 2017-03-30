@@ -615,13 +615,8 @@ http_basic_auth(struct context *ctx, rps_str_t *param) {
         return true;
     }
     
-    
-#ifdef RPS_DEBUG_OPEN
-    log_verb("http client authentication failed.");
-#endif
 
     return false;
-    
 }
 
 
