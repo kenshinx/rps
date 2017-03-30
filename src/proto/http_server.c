@@ -107,21 +107,29 @@ http_do_auth(struct context *ctx) {
 
     hashmap_set(&resp.headers, (void *)key1, sizeof(key1), (void *)val1, v1len);
 
+    /* set proxy-agent header*/
+    const char key2[] = "Proxy-Agent";
+    hashmap_set(&resp.headers, (void *)key2, sizeof(key2), 
+            (void *)HTTP_DEFAULT_PROXY_AGENT, sizeof(HTTP_DEFAULT_PROXY_AGENT));
+
     /* set proxy-authenticate header */
 
-    const char key2[] = "Proxy-Authenticate";
-    char val2[64];
-    int v2len;
+    const char key3[] = "Proxy-Authenticate";
+    char val3[64];
+    int v3len;
     
-    v2len = snprintf(val2, 64, "%s realm=\"%s\"", HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
+    v3len = snprintf(val3, 64, "%s realm=\"%s\"", HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
     
-    hashmap_set(&resp.headers, (void *)key2, sizeof(key2), (void *)val2, v2len);
+    hashmap_set(&resp.headers, (void *)key3, sizeof(key3), (void *)val3, v3len);
 
     len = http_response_output(out, &resp);
     
     ASSERT(len > 0);
 
-    server_write(ctx, out, len);
+    if (server_write(ctx, out, len) != RPS_OK) {
+        ctx->state = c_kill;
+    }
+    
 }
 
 
