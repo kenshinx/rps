@@ -78,18 +78,40 @@
 #define HTTP_HEADER_DEFAULT_COUNT   64
 #define HTTP_HEADER_REHASH_THRESHOLD   0.05
 
+static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
+
+
+#define HTTP_RESP_MAP(V)                                        \
+    V(0,   http_undefine, "Undefine")                           \
+    V(200, http_ok, "OK")                                       \
+    V(403, http_forbidden, "Forbidden")                         \
+    V(407, http_proxy_auth, "Proxy Authentication Required")    \
+    V(500, http_server_error, "Internal Server Error")          \
+    V(502, http_bad_gateway, "Bad Gateway")                     \
+
+enum {
+#define HTTP_RESP_GEN(code, name, _) name = code,
+    HTTP_RESP_MAP(HTTP_RESP_GEN)
+#undef HTTP_RESP_GEN
+};
+
+
+static inline const char * 
+http_resp_code_str(uint16_t code) {
+#define HTTP_RESP_GEN(_, name, str) case name: return str;
+    switch (code) {
+        HTTP_RESP_MAP(HTTP_RESP_GEN)
+        default: ;
+    }
+#undef HTTP_RESP_GEN
+    return "Invalid response status code.";
+}
+
 enum http_method {
     http_emethod = 0,
     http_get = 1,
     http_post,
     http_connect,
-};
-
-enum http_staut_code {
-    http_success = 200,
-    http_forbidden = 403,
-    http_proxy_auth_required = 407,
-    http_bad_gateway = 502
 };
 
 enum http_auth_schema {
@@ -113,10 +135,8 @@ struct http_request {
 };
 
 struct http_response {
-    rps_str_t           version;
     uint16_t            code;
     rps_hashmap_t       headers;        
-
     rps_str_t           body;
 };
 
@@ -130,7 +150,12 @@ void http_request_init(struct http_request *req);
 void http_request_deinit(struct http_request *req);
 void http_request_auth_init(struct http_request_auth *auth);
 void http_request_auth_deinit(struct http_request_auth *auth);
+void http_response_init(struct http_response *resp);
+void http_response_deinit(struct http_response *resp);
+
+
 size_t http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line);
+
 rps_status_t http_parse_request_line(rps_str_t *line, struct http_request *req);
 rps_status_t http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers);
 rps_status_t http_parse_request_auth(struct http_request_auth *auth, 

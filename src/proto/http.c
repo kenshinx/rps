@@ -38,6 +38,20 @@ http_request_auth_deinit(struct http_request_auth *auth) {
     string_deinit(&auth->param);
 }
 
+void
+http_response_init(struct http_response *resp) {
+    resp->code = http_undefine;
+    string_init(&resp->body);
+    hashmap_init(&resp->headers, 
+            HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
+}
+
+void 
+http_response_deinit(struct http_response *resp) {
+    hashmap_deinit(&resp->headers);
+    string_deinit(&resp->body);
+}
+
 size_t
 http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     size_t i, n, len;
