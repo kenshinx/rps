@@ -622,11 +622,17 @@ http_basic_auth(struct context *ctx, rps_str_t *param) {
 
 
 static void
-http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
+http_do_handshake(struct context *ctx) {
+    uint8_t *data;
+    ssize_t size;
     struct http_request req;
     struct http_request_auth auth;
     struct server *s;
     rps_status_t status;
+
+    data = (uint8_t *)ctx->rbuf;
+    size = (size_t)ctx->nread;
+
     
     http_request_init(&req);
     
@@ -655,7 +661,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     if (credentials == NULL) {
         /* request header dosen't contain authorization  field 
          * jump to seend authorization request phase. */
-        ctx->state = c_auth_req;
+        ctx->state = c_auth_resp;
         goto next;
     }
 
@@ -672,7 +678,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         /* response 407 */
         log_warn("Only http basic authenticate supported.");
         http_request_auth_deinit(&auth);
-        ctx->state = c_auth_req;
+        ctx->state = c_auth_resp;
         goto next;
     }
 
@@ -680,7 +686,7 @@ http_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
         ctx->state = c_exchange;
         log_verb("http client authentication success.");
     } else {
-        ctx->state = c_auth_req;
+        ctx->state = c_auth_resp;
         log_verb("http client authentication failed.");
     };
 
@@ -693,27 +699,21 @@ next:
 }
 
 static void
-http_do_auth(struct context *ctx, uint8_t *data, size_t size) {
-    printf("begin do http auth, read %zd bytes: %s\n", size, data);
+http_do_auth(struct context *ctx) {
+    /* send http 407, auth required */
 
 }
 
 
 void
 http_server_do_next(struct context *ctx) {
-    uint8_t *data;
-    ssize_t size;
-
-    data = (uint8_t *)ctx->rbuf;
-    size = (size_t)ctx->nread;
-
 
     switch (ctx->state) {
         case c_handshake_req:
-            http_do_handshake(ctx, data, size);
+            http_do_handshake(ctx);
             break;
-        case c_auth_req:
-            http_do_auth(ctx, data, size);
+        case c_auth_resp:
+            http_do_auth(ctx);
             break;
         default:
             NOT_REACHED();

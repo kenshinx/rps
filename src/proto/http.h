@@ -113,8 +113,11 @@ struct http_request {
 };
 
 struct http_response {
-    rps_str_t   version;
-    uint16_t    status;
+    rps_str_t           version;
+    uint16_t            code;
+    rps_hashmap_t       headers;        
+
+    rps_str_t           body;
 };
 
 
