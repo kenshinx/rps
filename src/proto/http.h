@@ -124,4 +124,27 @@ struct http_response {
 void http_server_do_next(struct context *ctx);
 void http_client_do_next(struct context *ctx);
 
+/* Only be used in http moudle internal */
+
+void http_request_init(struct http_request *req);
+void http_request_deinit(struct http_request *req);
+void http_request_auth_init(struct http_request_auth *auth);
+void http_request_auth_deinit(struct http_request_auth *auth);
+size_t http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line);
+rps_status_t http_parse_request_line(rps_str_t *line, struct http_request *req);
+rps_status_t http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers);
+rps_status_t http_parse_request_auth(struct http_request_auth *auth, 
+    uint8_t *credentials, size_t credentials_size);
+
+rps_status_t http_request_parse(struct http_request *req, uint8_t *data, size_t size);
+
+int http_basic_auth(struct context *ctx, rps_str_t *param);
+
+rps_status_t http_request_check(struct http_request *req);
+#ifdef RPS_DEBUG_OPEN
+void http_header_dump(void *key, size_t key_size, void *value, size_t value_size);
+void http_request_dump(struct http_request *req);
+#endif
+
+
 #endif
