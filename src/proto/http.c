@@ -40,7 +40,7 @@ http_request_auth_deinit(struct http_request_auth *auth) {
 
 void
 http_response_init(struct http_response *resp) {
-    resp->code = http_undefine;
+    resp->code = http_ok;
     string_init(&resp->body);
     hashmap_init(&resp->headers, 
             HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
@@ -52,7 +52,7 @@ http_response_deinit(struct http_response *resp) {
     string_deinit(&resp->body);
 }
 
-size_t
+static size_t
 http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     size_t i, n, len;
     uint8_t c, last;
@@ -83,7 +83,7 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     return len;
 }
 
-rps_status_t
+static rps_status_t
 http_parse_request_line(rps_str_t *line, struct http_request *req) {
     uint8_t *start, *end;
     uint8_t ch;
@@ -260,7 +260,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
     return RPS_OK;
 }
 
-rps_status_t
+static rps_status_t
 http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
     uint8_t c, ch;
     size_t i;
@@ -368,7 +368,7 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
 }
 
 rps_status_t
-http_parse_request_auth(struct http_request_auth *auth, 
+http_request_auth_parse(struct http_request_auth *auth, 
         uint8_t *credentials, size_t credentials_size) {
     size_t i;
     uint8_t *start, *end;
@@ -469,7 +469,7 @@ http_parse_request_auth(struct http_request_auth *auth,
     return RPS_OK;
 }
 
-rps_status_t
+static rps_status_t
 http_request_check(struct http_request *req) {
     if (req->method != http_connect) {
         log_error("http request check error, only connect support");
@@ -493,7 +493,7 @@ http_request_check(struct http_request *req) {
 
 #ifdef RPS_DEBUG_OPEN
 /* implement hashmap_iter_t */
-void
+static void
 http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
     char skey[key_size + 1];
     char svalue[value_size + 1];
@@ -635,3 +635,57 @@ http_basic_auth(struct context *ctx, rps_str_t *param) {
     return false;
 }
 
+static int
+http_header_output(char *out, int size, struct hashmap_entry *header) {
+    size_t key_size, val_size;
+    int len;
+
+    key_size = header->key_size;
+    val_size = header->value_size;
+
+    char skey[key_size + 1];
+    char sval[val_size + 1];
+
+    memcpy(skey, header->key, key_size);
+    memcpy(sval, header->value, val_size);
+    
+    skey[key_size] = '\0';
+    sval[val_size] = '\0';
+
+    len = snprintf(out, size, "%s: %s\r\n", skey, sval);
+    return len;
+}
+
+int
+http_response_output(char *out, struct http_response *resp) {
+    int len;
+    int size;
+    uint32_t i;
+    struct hashmap_entry *header;
+
+    len = 0;
+    size = HTTP_RESPONSE_MAX_LENGTH;
+
+    len += snprintf(out, size, "%s %d %s\r\n", 
+            HTTP_DEFAULT_VERSION, resp->code, http_resp_code_str(resp->code));
+    
+    for (i = 0; i < resp->headers.size; i++) {
+        header = resp->headers.buckets[i];
+        
+        while (header != NULL) {
+            len += http_header_output(out + len, size - len, header);
+            header = header->next;
+        }
+    }
+
+    len += snprintf(out + len, size - len, "\r\n");
+
+    len += snprintf(out + len, size - len, "%s", resp->body.data);
+
+#ifdef RPS_DEBUG_OPEN
+    log_verb("[http response]");
+    log_verb("%s", out);
+#endif
+    
+    return len;
+}

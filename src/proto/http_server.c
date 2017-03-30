@@ -47,7 +47,7 @@ http_do_handshake(struct context *ctx) {
 
    
     http_request_auth_init(&auth);
-    status = http_parse_request_auth(&auth, credentials, credentials_size);
+    status = http_request_auth_parse(&auth, credentials, credentials_size);
     if (status != RPS_OK) {
         http_request_auth_deinit(&auth);
         ctx->state = c_kill;
@@ -84,7 +84,7 @@ http_do_auth(struct context *ctx) {
     struct http_response resp;
     size_t len;
     char body[HTTP_BODY_MAX_LENGTH];
-    char message[HTTP_RESPONSE_MAX_LENGTH];
+    char out[HTTP_RESPONSE_MAX_LENGTH];
 
     http_response_init(&resp);
     
@@ -117,8 +117,11 @@ http_do_auth(struct context *ctx) {
     
     hashmap_set(&resp.headers, (void *)key2, sizeof(key2), (void *)val2, v2len);
 
-    http_response_gen(message, &resp);
+    len = http_response_output(out, &resp);
+    
+    ASSERT(len > 0);
 
+    server_write(ctx, out, len);
 }
 
 

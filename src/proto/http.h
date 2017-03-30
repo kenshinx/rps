@@ -161,22 +161,16 @@ void http_response_init(struct http_response *resp);
 void http_response_deinit(struct http_response *resp);
 
 
-size_t http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line);
-
-rps_status_t http_parse_request_line(rps_str_t *line, struct http_request *req);
-rps_status_t http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers);
-rps_status_t http_parse_request_auth(struct http_request_auth *auth, 
-    uint8_t *credentials, size_t credentials_size);
-
 rps_status_t http_request_parse(struct http_request *req, uint8_t *data, size_t size);
+rps_status_t http_request_auth_parse(struct http_request_auth *auth, 
+    uint8_t *credentials, size_t credentials_size);
 
 int http_basic_auth(struct context *ctx, rps_str_t *param);
 
-rps_status_t http_request_check(struct http_request *req);
 #ifdef RPS_DEBUG_OPEN
-void http_header_dump(void *key, size_t key_size, void *value, size_t value_size);
 void http_request_dump(struct http_request *req);
 #endif
 
+int http_response_output(char *out, struct http_response *resp);
 
 #endif
