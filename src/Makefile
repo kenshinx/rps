@@ -88,7 +88,7 @@ protoclean:
 	-(cd proto && $(MAKE) clean)
 
 clean: protoclean
-	$(RM) $(RPS_BIN) *.o *.gch \.*.swp *.i b64/*.o
+	$(RM) $(RPS_BIN) *.o *.gch \.*.swp *.i b64/*.o murmur3/*.o
 .PHONY: clean
 
 distclean: clean
