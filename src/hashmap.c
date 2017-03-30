@@ -1,6 +1,6 @@
 #include "hashmap.h"
-#include "murmur3.h"
 #include "core.h"
+#include "murmur3/murmur3.h"
 
 #include <stdio.h>
 #include <stdlib.h>
