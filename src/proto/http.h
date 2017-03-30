@@ -78,16 +78,23 @@
 #define HTTP_HEADER_DEFAULT_COUNT   64
 #define HTTP_HEADER_REHASH_THRESHOLD   0.05
 
+//http body size always be small in our approach.
+#define HTTP_BODY_MAX_LENGTH    256
+// 1k is big enough in our approach
+#define HTTP_RESPONSE_MAX_LENGTH    1024
+
 static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
+static const char HTTP_DEFAULT_AUTH[] = "Basic";
+static const char HTTP_DEFAULT_REALM[] = "rps";
 
 
-#define HTTP_RESP_MAP(V)                                        \
-    V(0,   http_undefine, "Undefine")                           \
-    V(200, http_ok, "OK")                                       \
-    V(403, http_forbidden, "Forbidden")                         \
-    V(407, http_proxy_auth, "Proxy Authentication Required")    \
-    V(500, http_server_error, "Internal Server Error")          \
-    V(502, http_bad_gateway, "Bad Gateway")                     \
+#define HTTP_RESP_MAP(V)                                                \
+    V(0,   http_undefine, "Undefine")                                   \
+    V(200, http_ok, "OK")                                               \
+    V(403, http_forbidden, "Forbidden")                                 \
+    V(407, http_proxy_auth_required, "Proxy Authentication Required")   \
+    V(500, http_server_error, "Internal Server Error")                  \
+    V(502, http_bad_gateway, "Bad Gateway")                             \
 
 enum {
 #define HTTP_RESP_GEN(code, name, _) name = code,

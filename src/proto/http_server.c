@@ -81,6 +81,43 @@ next:
 static void
 http_do_auth(struct context *ctx) {
     /* send http 407, auth required */
+    struct http_response resp;
+    size_t len;
+    char body[HTTP_BODY_MAX_LENGTH];
+    char message[HTTP_RESPONSE_MAX_LENGTH];
+
+    http_response_init(&resp);
+    
+    resp.code = http_proxy_auth_required;
+    
+    /* write http body */ 
+    len = snprintf(body, HTTP_BODY_MAX_LENGTH, "%d %s", 
+            resp.code, http_resp_code_str(resp.code));
+
+    ASSERT(len > 0);
+
+    string_duplicate(&resp.body, body, len);
+
+    /* set content-length header */
+    const char key1[] = "Content-Length";
+    char val1[32];
+    int v1len;
+
+    v1len = sprintf(val1, "%zd", len);
+
+    hashmap_set(&resp.headers, (void *)key1, sizeof(key1), (void *)val1, v1len);
+
+    /* set proxy-authenticate header */
+
+    const char key2[] = "Proxy-Authenticate";
+    char val2[64];
+    int v2len;
+    
+    v2len = snprintf(val2, 64, "%s realm=\"%s\"", HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
+    
+    hashmap_set(&resp.headers, (void *)key2, sizeof(key2), (void *)val2, v2len);
+
+    http_response_gen(message, &resp);
 
 }
 
