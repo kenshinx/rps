@@ -59,7 +59,7 @@ RPS_INSTALL=$(INSTALL)
 
 
 RPS_BIN=rps
-RPS_OBJ=rps.o log.o config.o util.o array.o _string.o upstream.o server.o 
+RPS_OBJ=rps.o log.o config.o util.o array.o hashmap.o _string.o upstream.o server.o b64/cencode.o b64/cdecode.o murmur3/murmur3.o
 
 %.o: %.c
 	$(RPS_CC) -c $< -o $@ 
@@ -88,7 +88,7 @@ protoclean:
 	-(cd proto && $(MAKE) clean)
 
 clean: protoclean
-	$(RM) $(RPS_BIN) *.o *.gch \.*.swp *.i
+	$(RM) $(RPS_BIN) *.o *.gch \.*.swp *.i b64/*.o murmur3/*.o
 .PHONY: clean
 
 distclean: clean

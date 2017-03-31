@@ -326,7 +326,7 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
 
 #ifdef RPS_DEBUG_OPEN
-    if (ctx->state < c_established) {
+    if (ctx->proto == SOCKS5 && ctx->state < c_established) {
         log_verb("read %zd bytes", ctx->nread);
         log_hex(LOG_VERBOSE, ctx->rbuf, ctx->nread);
     }
@@ -420,7 +420,7 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
     
 
 #if RPS_DEBUG_OPEN
-    if (ctx->state < c_established) {
+    if (ctx->proto == SOCKS5 && ctx->state < c_established) {
         log_verb("write %zd bytes", len);
         log_hex(LOG_VERBOSE, (char *)data, len);
     }
@@ -559,7 +559,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
 
     log_debug("Accept request from %s:%d", request->peername, rps_unresolve_port(&request->peer));
 
-    request->state = c_handshake;
+    request->state = c_handshake_req;
 
     /*
      * Beigin receive data
@@ -638,7 +638,7 @@ server_forward_connect(rps_sess_t *sess) {
             }
 
             forward->reconn = 0;
-            forward->state = c_handshake;
+            forward->state = c_handshake_req;
             server_do_next(forward);
             return;
         }

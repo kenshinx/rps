@@ -9,12 +9,30 @@
 #include <sys/un.h>
 #include <sys/socket.h>
 
-#define CRLF    "\x0d\x0a"
+#define CRLF        "\x0d\x0a"
+#define CR          (uint8_t)13
+#define LF          (uint8_t)10
+#define LF_LEN      (sizeof("\x0a") - 1)
+#define CRLF_LEN    (sizeof("\x0d\x0a") - 1)
+
 
 #define MAX(_a, _b)     ((_a) > (_b) ? (_a):(_b))
 #define MIN(_a, _b)     ((_a) < (_b) ? (_a):(_b))
 
 #define UNUSED(_x) (void)(_x)
+
+#define rps_str4_cmp(p, c0, c1, c2, c3)                             \
+    ((p[0] == c0) && (p[1] == c1) && (p[2] == c2) && (p[3] == c3))  \
+
+#define rps_str6_cmp(p, c0, c1, c2, c3, c4, c5)                     \
+    ((p[0] == c0) && (p[1] == c1) && (p[2] == c2) && (p[3] == c3)   \
+     && (p[4] == c4) && (p[5] == c5))                               \
+    
+
+#define rps_str7_cmp(p, c0, c1, c2, c3, c4, c5, c6)                 \
+    ((p[0] == c0) && (p[1] == c1) && (p[2] == c2) && (p[3] == c3)   \
+     && (p[4] == c4) && (p[5] == c5) && (p[6] == c6))               \
+
 
 #define rps_alloc(_s)                                               \
     _rps_alloc((size_t)(_s), __FILE__, __LINE__)                    \
@@ -76,7 +94,7 @@ typedef struct sockinfo {
 } rps_addr_t;
 
 static inline bool 
-rps_valid_port(uint16_t port) {
+rps_valid_port(int port) {
     return (port > 1 && port < UINT16_MAX);  
 }
 
