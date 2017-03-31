@@ -577,7 +577,7 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
         string_deinit(&line);
     }
 
-    if ((size != i + 2 * CRLF_LEN) && (size != i + CRLF_LEN)) {
+    if (i < size - 3 *CRLF_LEN) {
         log_error("http tunnel handshake contain junk: %s", data);
         /* 2*CRLF_LEN == last line \r\n\r\n */
         return RPS_ERROR;
