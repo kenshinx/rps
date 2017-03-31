@@ -684,7 +684,9 @@ http_response_message(char *message, struct http_response *resp) {
 
 #ifdef RPS_DEBUG_OPEN
     log_verb("[http response]");
-    log_verb("%s", message);
+    log_verb("%s %d %s", HTTP_DEFAULT_VERSION, resp->code, 
+        http_resp_code_str(resp->code));
+    hashmap_iter(&resp->headers, http_header_dump);
 #endif
     
     return len;
