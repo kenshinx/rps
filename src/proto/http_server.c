@@ -1,14 +1,15 @@
 #include "http.h"
 
 
-static void
-http_do_handshake(struct context *ctx) {
+static int
+http_request_verify(struct context *ctx) {
     uint8_t *data;
     ssize_t size;
     struct http_request req;
     struct http_request_auth auth;
     struct server *s;
     rps_status_t status;
+    int result;
 
     data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
@@ -18,7 +19,7 @@ http_do_handshake(struct context *ctx) {
     
     status = http_request_parse(&req, data, size);
     if (status != RPS_OK) {
-        ctx->state = c_kill;
+        result = http_verify_error;
         goto next;
     }
 
@@ -27,7 +28,7 @@ http_do_handshake(struct context *ctx) {
     if (string_empty(&s->cfg->username) || string_empty(&s->cfg->password)) {
         /* rps server didn't assign username or password 
          * jump to upstream handshake phase directly. */
-        ctx->state = c_exchange;
+        result = http_verify_success;
         goto next;
     }
 
@@ -41,7 +42,7 @@ http_do_handshake(struct context *ctx) {
     if (credentials == NULL) {
         /* request header dosen't contain authorization  field 
          * jump to seend authorization request phase. */
-        ctx->state = c_auth_resp;
+        result =  http_verify_fail;
         goto next;
     }
 
@@ -50,23 +51,22 @@ http_do_handshake(struct context *ctx) {
     status = http_request_auth_parse(&auth, credentials, credentials_size);
     if (status != RPS_OK) {
         http_request_auth_deinit(&auth);
-        ctx->state = c_kill;
+        result = http_verify_error;
         goto next;
     }
 
     if (auth.schema != http_auth_basic) {
-        /* response 407 */
         log_warn("Only http basic authenticate supported.");
         http_request_auth_deinit(&auth);
-        ctx->state = c_auth_resp;
+        result = http_verify_error;
         goto next;
     }
 
     if (http_basic_auth(ctx, &auth.param)) {
-        ctx->state = c_exchange;
+        result = http_verify_success;
         log_verb("http client authentication success.");
     } else {
-        ctx->state = c_auth_resp;
+        result = http_verify_fail;
         log_verb("http client authentication failed.");
     };
 
@@ -74,12 +74,11 @@ http_do_handshake(struct context *ctx) {
 
 next:
     http_request_deinit(&req);
-    server_do_next(ctx);
-    return;
+    return result;
 }
 
-static void
-http_do_auth(struct context *ctx) {
+static rps_status_t
+http_send_auth_require(struct context *ctx) {
     /* send http 407, auth required */
     struct http_response resp;
     size_t len;
@@ -127,9 +126,70 @@ http_do_auth(struct context *ctx) {
     ASSERT(len > 0);
 
     if (server_write(ctx, message, len) != RPS_OK) {
-        ctx->state = c_kill;
+        return RPS_ERROR;
     }
-    
+
+    return RPS_OK;    
+}
+
+
+static void
+http_do_handshake(struct context *ctx) {
+    int http_verify_result;
+
+    http_verify_result = http_request_verify(ctx);
+
+    switch (http_verify_result) {
+        case http_verify_error:
+            ctx->state = c_kill;
+            break;
+        case http_verify_success:
+            ctx->state = c_exchange;
+            break;
+        case http_verify_fail:
+            ctx->state = c_handshake_resp;
+            break;
+    }
+
+    server_do_next(ctx);
+}
+
+static void
+http_do_handshake_resp(struct context *ctx) {
+    if (http_send_auth_require(ctx) != RPS_OK) {
+        ctx->state = c_kill;
+        server_do_next(ctx);
+    } else {
+        ctx->state = c_auth_req;
+    }
+}
+
+static void
+http_do_auth(struct context *ctx) {
+    int http_verify_result;
+
+    http_verify_result = http_request_verify(ctx);
+
+    switch (http_verify_result) {
+        case http_verify_success:
+            ctx->state = c_exchange;
+            break;
+        case http_verify_fail:
+            ctx->state = c_auth_resp;
+            break;
+        case http_verify_error:
+            ctx->state = c_kill;
+            break;
+    }
+
+    server_do_next(ctx);
+}
+
+static void
+http_do_auth_resp(struct context *ctx) {
+    http_send_auth_require(ctx);
+    ctx->state = c_kill;
+    server_do_next(ctx);
 }
 
 
@@ -140,8 +200,17 @@ http_server_do_next(struct context *ctx) {
         case c_handshake_req:
             http_do_handshake(ctx);
             break;
-        case c_auth_resp:
+        case c_handshake_resp:
+            http_do_handshake_resp(ctx);
+            break;
+        case c_auth_req:
             http_do_auth(ctx);
+            break;
+        case c_auth_resp:
+            http_do_auth_resp(ctx);
+            break;
+        case c_reply:
+            /* send http 200 */
             break;
         default:
             NOT_REACHED();

@@ -115,6 +115,12 @@ http_resp_code_str(uint16_t code) {
     return "Invalid response status code.";
 }
 
+enum http_request_verify_result {
+    http_verify_error = -1,
+    http_verify_success = 0,
+    http_verify_fail,
+};
+
 enum http_method {
     http_emethod = 0,
     http_get = 1,
