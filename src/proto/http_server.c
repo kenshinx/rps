@@ -84,7 +84,7 @@ http_do_auth(struct context *ctx) {
     struct http_response resp;
     size_t len;
     char body[HTTP_BODY_MAX_LENGTH];
-    char out[HTTP_RESPONSE_MAX_LENGTH];
+    char message[HTTP_MESSAGE_MAX_LENGTH];
 
     http_response_init(&resp);
     
@@ -122,11 +122,11 @@ http_do_auth(struct context *ctx) {
     
     hashmap_set(&resp.headers, (void *)key3, sizeof(key3), (void *)val3, v3len);
 
-    len = http_response_output(out, &resp);
+    len = http_response_message(message, &resp);
     
     ASSERT(len > 0);
 
-    if (server_write(ctx, out, len) != RPS_OK) {
+    if (server_write(ctx, message, len) != RPS_OK) {
         ctx->state = c_kill;
     }
     

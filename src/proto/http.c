@@ -636,7 +636,7 @@ http_basic_auth(struct context *ctx, rps_str_t *param) {
 }
 
 static int
-http_header_output(char *out, int size, struct hashmap_entry *header) {
+http_header_message(char *message, int size, struct hashmap_entry *header) {
     size_t key_size, val_size;
     int len;
 
@@ -652,39 +652,39 @@ http_header_output(char *out, int size, struct hashmap_entry *header) {
     skey[key_size] = '\0';
     sval[val_size] = '\0';
 
-    len = snprintf(out, size, "%s: %s\r\n", skey, sval);
+    len = snprintf(message, size, "%s: %s\r\n", skey, sval);
     return len;
 }
 
 int
-http_response_output(char *out, struct http_response *resp) {
+http_response_message(char *message, struct http_response *resp) {
     int len;
     int size;
     uint32_t i;
     struct hashmap_entry *header;
 
     len = 0;
-    size = HTTP_RESPONSE_MAX_LENGTH;
+    size = HTTP_MESSAGE_MAX_LENGTH;
 
-    len += snprintf(out, size, "%s %d %s\r\n", 
+    len += snprintf(message, size, "%s %d %s\r\n", 
             HTTP_DEFAULT_VERSION, resp->code, http_resp_code_str(resp->code));
     
     for (i = 0; i < resp->headers.size; i++) {
         header = resp->headers.buckets[i];
         
         while (header != NULL) {
-            len += http_header_output(out + len, size - len, header);
+            len += http_header_message(message + len, size - len, header);
             header = header->next;
         }
     }
 
-    len += snprintf(out + len, size - len, "\r\n");
+    len += snprintf(message + len, size - len, "\r\n");
 
-    len += snprintf(out + len, size - len, "%s", resp->body.data);
+    len += snprintf(message + len, size - len, "%s", resp->body.data);
 
 #ifdef RPS_DEBUG_OPEN
     log_verb("[http response]");
-    log_verb("%s", out);
+    log_verb("%s", message);
 #endif
     
     return len;

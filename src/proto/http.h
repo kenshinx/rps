@@ -81,7 +81,7 @@
 //http body size always be small in our approach.
 #define HTTP_BODY_MAX_LENGTH    256
 // 1k is big enough in our approach
-#define HTTP_RESPONSE_MAX_LENGTH    1024
+#define HTTP_MESSAGE_MAX_LENGTH    1024
 
 static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";
@@ -172,6 +172,6 @@ int http_basic_auth(struct context *ctx, rps_str_t *param);
 void http_request_dump(struct http_request *req);
 #endif
 
-int http_response_output(char *out, struct http_response *resp);
+int http_response_message(char *message, struct http_response *resp);
 
 #endif
