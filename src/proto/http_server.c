@@ -32,7 +32,7 @@ http_request_verify(struct context *ctx) {
         goto next;
     }
 
-    const char *auth_header = "proxy-authorization";
+    const char auth_header[] = "proxy-authorization";
     uint8_t *credentials;
     size_t credentials_size;
 

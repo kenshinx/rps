@@ -28,11 +28,11 @@
  *              |                        |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
- * Authenticate |  HTTP 407 Auth Require |                       |              |
+ *Handshake_resp|  HTTP 407 Auth Require |                       |              |
  * +-----------+| <--------------------  |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
- *  Handshake2  |  HTTP Connect          |                       |              |
+ * Authenticate |  HTTP Connect          |                       |              |
  * +-----------+| ---------------------> |                       |              |
  *              |  Host:                 |                       |              |
  *              |  Proxy_Authorization:  |                       |              |
@@ -114,6 +114,12 @@ http_resp_code_str(uint16_t code) {
 #undef HTTP_RESP_GEN
     return "Invalid response status code.";
 }
+
+enum http_request_verify_result {
+    http_verify_error = -1,
+    http_verify_success = 0,
+    http_verify_fail,
+};
 
 enum http_method {
     http_emethod = 0,
