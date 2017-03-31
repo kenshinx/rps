@@ -55,12 +55,12 @@ class HTTPTunnelPorxy(object):
             print "handshake success"
             return True
         elif code == "407":
-            return self.doAuth(host, port)
+            return self.authenticate(host, port)
         else:
             print "invalid http response code"
             return False
 
-    def doAuth(self, host, port):
+    def authenticate(self, host, port):
 
         credential = "%s:%s" %(self.uname, self.passwd)
         credential = credential.encode("base64")
