@@ -71,18 +71,19 @@ typedef enum context_state {
     c_init = (1 << 0),
     c_conn = (1 << 1),
 	c_handshake_req = (1 << 2),
-    c_handshake_resp = (1 << 3),
-	c_auth_req = (1 << 4),
-    c_auth_resp = (1 << 5),
-    c_requests = (1 << 6),
-    c_exchange = (1 << 7),
-    c_reply = (1 << 8),
-    c_retry = (1 << 9),
-	c_established = (1 << 10),
-    c_kill = (1 << 11),
-    c_dead = (1 << 12),
-    c_closing = (1 << 13),
-    c_closed = (1 << 14)
+	c_handshake_req2 = (1 << 3), /* http tunnel allows reperform handshake */
+    c_handshake_resp = (1 << 4),
+	c_auth_req = (1 << 5),
+    c_auth_resp = (1 << 6),
+    c_auth_resp2 = (1 << 7),
+    c_requests = (1 << 8),
+    c_exchange = (1 << 9),
+    c_reply = (1 << 10),
+    c_retry = (1 << 11),
+	c_established = (1 << 12),
+    c_kill = (1 << 13),
+    c_closing = (1 << 14),
+    c_closed = (1 << 15)
 } ctx_state_t;
 
 

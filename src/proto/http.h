@@ -20,19 +20,19 @@
  *             Client                   RPS                 Upstream        Remote
  *
  *              +                        
- *              |  HTTP Connect          +                       +              +
- *              | ------------------->   |                       |              |
+ *  HandShake   |  HTTP Connect          +                       +              +
+ *  +--------+  | ------------------->   |                       |              |
  *              |  Host:                 |                       |              |
- *   HandShake  |  Proxy_Authorization:  |                       |              |
- *   +--------+ |  (Maybe)               |                       |              |
+ *              |  Proxy_Authorization:  |                       |              |
+ *              |  (Maybe)               |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
- *              |  HTTP 407 Auth Require |                       |              |
- *              | <--------------------  |                       |              |
+ * Authenticate |  HTTP 407 Auth Require |                       |              |
+ * +-----------+| <--------------------  |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
- * Authenticate |  HTTP Connect          |                       |              |
+ *  Handshake2  |  HTTP Connect          |                       |              |
  * +-----------+| ---------------------> |                       |              |
  *              |  Host:                 |                       |              |
  *              |  Proxy_Authorization:  |                       |              |
