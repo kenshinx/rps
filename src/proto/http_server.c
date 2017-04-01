@@ -8,6 +8,7 @@ http_request_verify(struct context *ctx) {
     struct http_request req;
     struct http_request_auth auth;
     struct server *s;
+    rps_addr_t  *remote;
     rps_status_t status;
     int result;
 
@@ -73,6 +74,13 @@ http_request_verify(struct context *ctx) {
     http_request_auth_deinit(&auth);
 
 next:
+    
+    if (result == http_verify_success) {
+        remote = &ctx->sess->remote;
+        rps_addr_name(remote, req.host.data, req.host.len, req.port);
+        log_debug("remote: %s:%d", req.host.data, req.port);
+    }
+
     http_request_deinit(&req);
     return result;
 }
