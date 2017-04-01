@@ -64,7 +64,7 @@ server_sess_init(rps_sess_t *sess, struct server *s) {
 
 static void
 server_sess_free(rps_sess_t *sess) {
-    if ((sess->request != NULL) && (sess->request->state & c_closed)) {
+    if (((sess->request != NULL)) && (sess->request->state & c_closed)) {
         rps_free(sess->request);
         sess->request = NULL;
     }
@@ -142,6 +142,27 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     return RPS_OK;
 }
 
+
+static void
+server_ctx_deinit(rps_ctx_t *ctx) {
+
+    ASSERT(ctx != NULL);
+
+    ctx->state = c_closed;
+    ctx->connected = 0;
+    ctx->established = 0;
+
+    ctx->handle.handle.data  = NULL;
+    ctx->write_req.data = NULL;
+    ctx->timer.data = NULL;
+    ctx->connect_req.data = NULL;
+    ctx->shutdown_req.data = NULL;
+
+    rps_free(ctx->wbuf);
+    rps_free(ctx->wbuf2);
+}
+
+
 static bool
 server_ctx_closed(rps_ctx_t *ctx) {
 
@@ -157,20 +178,15 @@ server_ctx_closed(rps_ctx_t *ctx) {
     
 }
 
+
 static void 
 server_on_ctx_close(uv_handle_t* handle) {
     //Set flag be closed and 
     rps_ctx_t *ctx;
-    rps_sess_t *sess;
 
     ctx = handle->data;
-    sess = ctx->sess;
-    ctx->state = c_closed;
-    ctx->connected = 0;
-    ctx->established = 0;
-
-    rps_free(ctx->wbuf);
-    rps_free(ctx->wbuf2);
+    
+    server_ctx_deinit(ctx);
 
     switch (ctx->flag) {
         case c_request:
@@ -195,13 +211,19 @@ server_ctx_close(rps_ctx_t *ctx) {
         return;
     }
 
+/*
     if (!ctx->connected) {
+        // we still need free context and session 
+        // even if connect didn't establised 
+        server_ctx_deinit(ctx);
+        server_do_next(ctx);
         return;
     }
+*/
 
     ctx->state = c_closing;
-    uv_read_stop(&ctx->handle.stream);
     uv_timer_stop(&ctx->timer);
+    uv_read_stop(&ctx->handle.stream);
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
 }
 
@@ -262,6 +284,10 @@ server_on_timer_expire(uv_timer_t *handle) {
     rps_ctx_t *ctx;
 
     ctx = handle->data;
+
+    if (ctx == NULL) {
+        return;
+    }
     
 
     if (ctx->flag == c_request) {
@@ -294,6 +320,11 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     rps_ctx_t *ctx;   
     
     ctx = stream->data;
+
+    if (ctx == NULL) {
+        return;
+    }
+
     ASSERT(&ctx->handle.stream == stream);
     ASSERT(ctx->rbuf == buf->base);
 
@@ -361,6 +392,11 @@ server_on_write_done(uv_write_t *req, int err) {
     }
 
     ctx = req->data;
+
+    if (ctx == NULL) {
+        return;
+    }
+
     ctx->wstat = c_done;
 
     if (err) {
@@ -442,6 +478,10 @@ server_on_connect_done(uv_connect_t *req, int err) {
     }
 
     ctx = req->data;
+
+    if (ctx == NULL) {
+        return;
+    }
 
     if (err) {
         UV_SHOW_ERROR(err, "on connect done");
@@ -777,6 +817,8 @@ server_on_forward_close(uv_handle_t* handle) {
 
     forward->connected = 0;
     forward->established = 0;
+
+    log_debug("Forward to %s be closed.", forward->peername);
 
     forward->state = c_conn;
     server_do_next(forward);
