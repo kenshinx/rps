@@ -111,7 +111,7 @@ int rps_unresolve_addr(rps_addr_t *addr, char *name);
 uint16_t rps_unresolve_port(rps_addr_t *addr);
 void rps_addr_in4(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
 void rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
-void rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
+void rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint16_t port);
 
 int rps_random(int max);
 

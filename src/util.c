@@ -149,7 +149,7 @@ rps_unresolve_port(rps_addr_t *addr) {
     } else if (addr->family == AF_INET6) {
         return ntohs(addr->addr.in6.sin6_port);
     } else if (addr->family == AF_DOMAIN) {
-        return ntohs(addr->addr.name.port);
+        return addr->addr.name.port;
     } else {
         NOT_REACHED();
         return -1;
@@ -178,13 +178,13 @@ rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
 }
 
 void 
-rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
+rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint16_t port) {
     ASSERT(len < MAX_HOSTNAME_LEN);
     memset(&addr->addr.name, 0, sizeof(addr->addr.name));
     addr->addr.name.family = AF_DOMAIN;
-    memcpy(&addr->addr.name.port, port, 2);
     memcpy(&addr->addr.name.host, _addr, len); 
     addr->addr.name.host[len] = '\0';
+    addr->addr.name.port = port;
     addr->family = AF_DOMAIN;
     addr->addrlen = sizeof(addr->addr.name);
 }
