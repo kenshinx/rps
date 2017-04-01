@@ -164,7 +164,7 @@ server_ctx_deinit(rps_ctx_t *ctx) {
 
 
 static bool
-server_ctx_closed(rps_ctx_t *ctx) {
+server_ctx_dead(rps_ctx_t *ctx) {
 
     if (ctx == NULL) {
         return true;
@@ -207,7 +207,7 @@ server_on_ctx_close(uv_handle_t* handle) {
 static void
 server_ctx_close(rps_ctx_t *ctx) {
 
-    if (server_ctx_closed(ctx)) {
+    if (server_ctx_dead(ctx)) {
         return;
     }
 
@@ -254,7 +254,7 @@ server_ctx_shutdown(rps_ctx_t *ctx) {
     /* uv_shutdown can ensure all the write-queue data has been sent out before close handle */
     int err;
 
-    if (server_ctx_closed(ctx)) {
+    if (server_ctx_dead(ctx)) {
         return;
     }
     
@@ -334,6 +334,7 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     if (nread <0 ) {
         
         if (ctx->state == c_established) {
+            // May be read error or EOF
             server_do_next(ctx);
             return;
         }
@@ -491,7 +492,7 @@ server_on_connect_done(uv_connect_t *req, int err) {
     }
 
     /* request maybe killed before forward connected. */
-    if (ctx->flag == c_forward && server_ctx_closed(ctx->sess->request)) {
+    if (ctx->flag == c_forward && server_ctx_dead(ctx->sess->request)) {
         ctx->state = c_kill;
     }
 
@@ -793,7 +794,7 @@ server_cycle(rps_ctx_t *ctx) {
 
         
 
-    if (server_ctx_closed(endpoint)) {
+    if (server_ctx_dead(endpoint)) {
         return;
     }
     
