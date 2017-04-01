@@ -84,6 +84,7 @@ http_send_auth_require(struct context *ctx) {
     size_t len;
     char body[HTTP_BODY_MAX_LENGTH];
     char message[HTTP_MESSAGE_MAX_LENGTH];
+    rps_status_t status;
 
     http_response_init(&resp);
     
@@ -126,10 +127,14 @@ http_send_auth_require(struct context *ctx) {
     ASSERT(len > 0);
 
     if (server_write(ctx, message, len) != RPS_OK) {
-        return RPS_ERROR;
+        status = RPS_ERROR;
+    } else {
+        status = RPS_OK;
     }
 
-    return RPS_OK;    
+    http_response_deinit(&resp);
+
+    return status;
 }
 
 
