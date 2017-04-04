@@ -93,6 +93,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->nwrite2 = 0;
     ctx->reconn = 0;
     ctx->retry = 0;
+    ctx->connecting = 0;
     ctx->connected = 0;
     ctx->established = 0;
     ctx->rstat = c_stop;
@@ -149,6 +150,7 @@ server_ctx_deinit(rps_ctx_t *ctx) {
     ASSERT(ctx != NULL);
 
     ctx->state = c_closed;
+    ctx->connecting = 0;
     ctx->connected = 0;
     ctx->established = 0;
 
@@ -211,15 +213,13 @@ server_ctx_close(rps_ctx_t *ctx) {
         return;
     }
 
-/*
-    if (!ctx->connected) {
+    if (!ctx->connecting && !ctx->connected) {
         // we still need free context and session 
         // even if connect didn't establised 
         server_ctx_deinit(ctx);
         server_do_next(ctx);
         return;
     }
-*/
 
     ctx->state = c_closing;
     uv_timer_stop(&ctx->timer);
@@ -491,6 +491,8 @@ server_on_connect_done(uv_connect_t *req, int err) {
         ctx->connected = 1;
     }
 
+    ctx->connecting = 0;
+
     /* request maybe killed before forward connected. */
     if (ctx->flag == c_forward && server_ctx_dead(ctx->sess->request)) {
         ctx->state = c_kill;
@@ -513,6 +515,8 @@ server_connect(rps_ctx_t *ctx) {
         UV_SHOW_ERROR(err, "tcp connect");
         return RPS_ERROR;
     }
+
+    ctx->connecting = 1;
 
     server_timer_reset(ctx);
 
@@ -618,7 +622,7 @@ error:
 }
 
 static void
-server_forward_kickoff(rps_sess_t *sess) {
+server_forward_kickin(rps_sess_t *sess) {
     struct server *s;
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
@@ -816,6 +820,7 @@ server_on_forward_close(uv_handle_t* handle) {
 
     forward = handle->data;
 
+    forward->connecting = 0;
     forward->connected = 0;
     forward->established = 0;
 
@@ -865,7 +870,7 @@ server_do_next(rps_ctx_t *ctx) {
         case c_exchange:
             if (ctx->flag == c_request) {
                 /* exchange from request context to forward context */
-                server_forward_kickoff(ctx->sess);
+                server_forward_kickin(ctx->sess);
             } else {
                 /* finish dural context handshake, tunnel established */
                 server_establish(ctx->sess);
