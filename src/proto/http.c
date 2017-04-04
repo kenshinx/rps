@@ -667,7 +667,7 @@ http_response_message(char *message, struct http_response *resp) {
     size = HTTP_MESSAGE_MAX_LENGTH;
 
     len += snprintf(message, size, "%s %d %s\r\n", 
-            HTTP_DEFAULT_VERSION, resp->code, http_resp_code_str(resp->code));
+            HTTP_DEFAULT_PROTOCOL, resp->code, http_resp_code_str(resp->code));
     
     for (i = 0; i < resp->headers.size; i++) {
         header = resp->headers.buckets[i];
@@ -684,7 +684,7 @@ http_response_message(char *message, struct http_response *resp) {
 
 #ifdef RPS_DEBUG_OPEN
     log_verb("[http response]");
-    log_verb("%s %d %s", HTTP_DEFAULT_VERSION, resp->code, 
+    log_verb("%s %d %s", HTTP_DEFAULT_PROTOCOL, resp->code, 
         http_resp_code_str(resp->code));
     hashmap_iter(&resp->headers, http_header_dump);
 #endif

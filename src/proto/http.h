@@ -83,7 +83,7 @@
 // 1k is big enough in our approach
 #define HTTP_MESSAGE_MAX_LENGTH    1024
 
-static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
+static const char HTTP_DEFAULT_PROTOCOL[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";
 static const char HTTP_DEFAULT_REALM[] = "rps";
 static const char HTTP_DEFAULT_PROXY_AGENT[] = "RPS/1.0";
