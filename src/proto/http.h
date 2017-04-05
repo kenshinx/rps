@@ -78,6 +78,9 @@
 #define HTTP_HEADER_DEFAULT_COUNT   64
 #define HTTP_HEADER_REHASH_THRESHOLD   0.05
 
+#define HTTP_HEADER_MAX_KEY_LENGTH     256
+#define HTTP_HEADER_MAX_VALUE_LENGTH   512
+
 //http body size always be small in our approach.
 #define HTTP_BODY_MAX_LENGTH    256
 // 1k is big enough in our approach
@@ -173,6 +176,7 @@ rps_status_t http_request_auth_parse(struct http_request_auth *auth,
     uint8_t *credentials, size_t credentials_size);
 
 int http_basic_auth(struct context *ctx, rps_str_t *param);
+int http_basic_auth_gen(const char *uname, const char *passwd, char *output);
 
 #ifdef RPS_DEBUG_OPEN
 void http_request_dump(struct http_request *req);

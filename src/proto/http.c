@@ -2,13 +2,11 @@
 #include "core.h"
 #include "util.h"
 #include "b64/cdecode.h"
+#include "b64/cencode.h"
 
 
 #include <uv.h>
 
-
-#define HTTP_HEADER_MAX_KEY_LENGTH     256
-#define HTTP_HEADER_MAX_VALUE_LENGTH   512
 
 void
 http_request_init(struct http_request *req) {
@@ -633,6 +631,25 @@ http_basic_auth(struct context *ctx, rps_str_t *param) {
     
 
     return false;
+}
+
+int 
+http_basic_auth_gen(const char *uname, const char *passwd, char *output) {
+    base64_encodestate bstate;   
+    int length;
+    char input[HTTP_HEADER_MAX_VALUE_LENGTH];
+
+    snprintf(input, HTTP_HEADER_MAX_VALUE_LENGTH, "%s:%s", uname, passwd);
+    
+
+    length = 0;
+    base64_init_encodestate(&bstate);
+
+    length = base64_encode_block(input, strlen(input), output, &bstate);
+    length += base64_encode_blockend(&output[length], &bstate);
+    output[length] = '\0';
+
+    return length;
 }
 
 static int
