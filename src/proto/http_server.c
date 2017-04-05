@@ -111,7 +111,7 @@ http_send_auth_require(struct context *ctx) {
     char val1[32];
     int v1len;
 
-    v1len = sprintf(val1, "%zd", len);
+    v1len = snprintf(val1, 32, "%zd", len);
 
     hashmap_set(&resp.headers, (void *)key1, sizeof(key1), (void *)val1, v1len);
 
