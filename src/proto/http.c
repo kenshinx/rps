@@ -504,10 +504,7 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
 
     log_verb("%s: %s", skey, svalue);
 }
-#endif
 
-
-#ifdef RPS_DEBUG_OPEN
 void
 http_request_dump(struct http_request *req) {
 
@@ -532,6 +529,14 @@ http_request_dump(struct http_request *req) {
             req->port, req->protocol.data);
 
     hashmap_iter(&req->headers, http_header_dump);
+}
+
+void 
+http_response_dump(struct http_response *resp) {
+    log_verb("[http response]");
+    log_verb("%s %d %s", HTTP_DEFAULT_PROTOCOL, resp->code, 
+        http_resp_code_str(resp->code));
+    hashmap_iter(&resp->headers, http_header_dump);
 }
 #endif
 
@@ -700,10 +705,7 @@ http_response_message(char *message, struct http_response *resp) {
     len += snprintf(message + len, size - len, "%s", resp->body.data);
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("[http response]");
-    log_verb("%s %d %s", HTTP_DEFAULT_PROTOCOL, resp->code, 
-        http_resp_code_str(resp->code));
-    hashmap_iter(&resp->headers, http_header_dump);
+    http_response_dump(resp);
 #endif
     
     return len;

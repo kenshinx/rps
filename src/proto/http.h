@@ -180,6 +180,7 @@ int http_basic_auth_gen(const char *uname, const char *passwd, char *output);
 
 #ifdef RPS_DEBUG_OPEN
 void http_request_dump(struct http_request *req);
+void http_response_dump(struct http_response *resp);
 #endif
 
 int http_response_message(char *message, struct http_response *resp);
