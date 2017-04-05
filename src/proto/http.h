@@ -118,18 +118,35 @@ http_resp_code_str(uint16_t code) {
     return "Invalid response status code.";
 }
 
+#define HTTP_METHOD_MAP(V)                  \
+    V(0, http_emethod, "EMETHOD")           \
+    V(1, http_get, "GET")                   \
+    V(2, http_post, "POST")                 \
+    V(3, http_connect, "CONNECT")           \
+
+enum {
+#define HTTP_METHOD_GEN(code, name, _) name = code,
+    HTTP_METHOD_MAP(HTTP_METHOD_GEN)
+#undef HTTP_METHOD_GEN
+};
+
+static inline const char * 
+http_method_str(uint16_t code) {
+#define HTTP_METHOD_GEN(_, name, str) case name: return str;
+    switch (code) {
+        HTTP_METHOD_MAP(HTTP_METHOD_GEN)
+        default: ;
+    }
+#undef HTTP_METHOD_GEN
+    return "EMETHOD";
+}
+
 enum http_request_verify_result {
     http_verify_error = -1,
     http_verify_success = 0,
     http_verify_fail,
 };
 
-enum http_method {
-    http_emethod = 0,
-    http_get = 1,
-    http_post,
-    http_connect,
-};
 
 enum http_auth_schema {
     http_auth_unknown = 0,
