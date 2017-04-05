@@ -19,9 +19,12 @@ _rps_alloc(size_t size, const char *name, int line) {
     
     if (p == NULL) {
         log_error("malloc(%zu) failed @ %s:%d", size, name, line);
-    } else {
-        log_verb("malloc(%zu) at %p @ %s:%d", size, p, name, line);
     }
+        
+#ifdef  RPS_MORE_VERBOSE
+    log_verb("malloc(%zu) at %p @ %s:%d", size, p, name, line);
+#endif
+    
 
     return p;
 }
@@ -60,10 +63,16 @@ _rps_realloc(void *ptr, size_t size, const char *name, int line) {
     return p;
 }
 
+
 void 
+#ifdef RPS_MORE_VERBOSE
 _rps_free(void *ptr, const char *name, int line) {
-    ASSERT(ptr != NULL);
     log_verb("free(%p) @ %s:%d", ptr, name, line);
+#else
+_rps_free(void *ptr) {
+#endif
+
+    ASSERT(ptr != NULL);
     free(ptr);
 }
 
