@@ -67,6 +67,27 @@ http_do_handshake(struct context *ctx) {
     }
 }
 
+static void
+http_do_handshake_resp(struct context *ctx) {
+    uint8_t *data;
+    ssize_t size;
+    rps_status_t status;
+    struct http_response resp;
+
+    data = (uint8_t *)ctx->rbuf;
+    size = (size_t)ctx->nread;
+
+    http_response_init(&resp);
+
+    status = http_response_parse(&resp, data, size);
+    if (status != RPS_OK) {
+        ctx->state = c_retry;
+        server_do_next(ctx);
+        return;
+    }
+
+}
+
 
 void
 http_client_do_next(struct context *ctx) {
@@ -75,6 +96,10 @@ http_client_do_next(struct context *ctx) {
         case c_handshake_req:
             http_do_handshake(ctx);
             break;
+        case c_handshake_resp:
+            http_do_handshake_resp(ctx);
+            break;
+
 
         default:
             NOT_REACHED();
