@@ -175,9 +175,10 @@ struct http_request {
 
 struct http_response {
     uint16_t            code;
-    rps_hashmap_t       headers;        
+    rps_str_t           status;
     rps_str_t           protocol;
     rps_str_t           body;
+    rps_hashmap_t       headers;        
 };
 
 

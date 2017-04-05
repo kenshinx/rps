@@ -95,8 +95,10 @@ http_send_auth_require(struct context *ctx) {
 
     http_response_init(&resp);
     
-    string_duplicate(&resp.protocol, HTTP_DEFAULT_PROTOCOL, strlen(HTTP_DEFAULT_PROTOCOL));
+    
     resp.code = http_proxy_auth_required;
+    string_duplicate(&resp.status, http_resp_code_str(resp.code), strlen(http_resp_code_str(resp.code)));
+    string_duplicate(&resp.protocol, HTTP_DEFAULT_PROTOCOL, strlen(HTTP_DEFAULT_PROTOCOL));
     
     /* write http body */ 
     len = snprintf(body, HTTP_BODY_MAX_LENGTH, "%d %s", 
