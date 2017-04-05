@@ -176,6 +176,7 @@ struct http_request {
 struct http_response {
     uint16_t            code;
     rps_hashmap_t       headers;        
+    rps_str_t           protocol;
     rps_str_t           body;
 };
 
@@ -196,6 +197,7 @@ void http_response_deinit(struct http_response *resp);
 rps_status_t http_request_parse(struct http_request *req, uint8_t *data, size_t size);
 rps_status_t http_request_auth_parse(struct http_request_auth *auth, 
     uint8_t *credentials, size_t credentials_size);
+rps_status_t http_response_parse(struct http_response *resp, uint8_t *data, size_t size);
 
 int http_basic_auth(struct context *ctx, rps_str_t *param);
 int http_basic_auth_gen(const char *uname, const char *passwd, char *output);
