@@ -113,12 +113,12 @@ http_send_auth_require(struct context *ctx) {
 
     v1len = snprintf(val1, 32, "%zd", len);
 
-    hashmap_set(&resp.headers, (void *)key1, sizeof(key1), (void *)val1, v1len);
+    hashmap_set(&resp.headers, (void *)key1, strlen(key1), (void *)val1, v1len);
 
     /* set proxy-agent header*/
     const char key2[] = "Proxy-Agent";
-    hashmap_set(&resp.headers, (void *)key2, sizeof(key2), 
-            (void *)HTTP_DEFAULT_PROXY_AGENT, sizeof(HTTP_DEFAULT_PROXY_AGENT));
+    hashmap_set(&resp.headers, (void *)key2, strlen(key2), 
+            (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
 
     /* set proxy-authenticate header */
 
@@ -128,7 +128,7 @@ http_send_auth_require(struct context *ctx) {
     
     v3len = snprintf(val3, 64, "%s realm=\"%s\"", HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
     
-    hashmap_set(&resp.headers, (void *)key3, sizeof(key3), (void *)val3, v3len);
+    hashmap_set(&resp.headers, (void *)key3, strlen(key3), (void *)val3, v3len);
 
     len = http_response_message(message, &resp);
     
