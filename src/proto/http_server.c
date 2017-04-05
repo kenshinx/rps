@@ -115,10 +115,12 @@ http_send_auth_require(struct context *ctx) {
 
     hashmap_set(&resp.headers, (void *)key1, strlen(key1), (void *)val1, v1len);
 
+#ifdef HTTP_PROXY_AGENT
     /* set proxy-agent header*/
     const char key2[] = "Proxy-Agent";
     hashmap_set(&resp.headers, (void *)key2, strlen(key2), 
             (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
+#endif
 
     /* set proxy-authenticate header */
 
