@@ -154,6 +154,11 @@ enum http_auth_schema {
     http_auth_digest,
 };
 
+enum http_recv_send {
+    http_recv,
+    http_send,
+};
+
 struct http_request_auth {
     uint8_t             schema;
     rps_str_t           param;
@@ -196,10 +201,11 @@ int http_basic_auth(struct context *ctx, rps_str_t *param);
 int http_basic_auth_gen(const char *uname, const char *passwd, char *output);
 
 #ifdef RPS_DEBUG_OPEN
-void http_request_dump(struct http_request *req);
-void http_response_dump(struct http_response *resp);
+void http_request_dump(struct http_request *req, uint8_t rs);
+void http_response_dump(struct http_response *resp, uint8_t rs);
 #endif
 
+int http_request_message(char *message, struct http_request *req);
 int http_response_message(char *message, struct http_response *resp);
 
 #endif

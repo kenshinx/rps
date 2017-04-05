@@ -506,34 +506,27 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
 }
 
 void
-http_request_dump(struct http_request *req) {
-
-    char *method;
-
-    switch (req->method) {
-        case http_get:
-            method = "GET";
-            break;
-        case http_post:
-            method = "POST";
-            break;
-        case http_connect:
-            method = "CONNECT";
-            break;
-        default:
-            method = "UNKNOWN";
+http_request_dump(struct http_request *req, uint8_t rs) {
+    if (rs == http_recv) {
+        log_verb("[http recv request]");
+    } else {
+        log_verb("[http send request]");
     }
 
-    log_verb("[http request]");
-    log_verb("%s %s:%d %s", method, req->host.data, 
+    log_verb("%s %s:%d %s", http_method_str(req->method), req->host.data, 
             req->port, req->protocol.data);
 
     hashmap_iter(&req->headers, http_header_dump);
 }
 
 void 
-http_response_dump(struct http_response *resp) {
-    log_verb("[http response]");
+http_response_dump(struct http_response *resp, uint8_t rs) {
+    if (rs == http_recv) {
+        log_verb("[http recv response]");
+    } else {
+        log_verb("[http send response]");
+    }
+
     log_verb("%s %d %s", HTTP_DEFAULT_PROTOCOL, resp->code, 
         http_resp_code_str(resp->code));
     hashmap_iter(&resp->headers, http_header_dump);
@@ -592,7 +585,7 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     }
 
 #ifdef RPS_DEBUG_OPEN
-    http_request_dump(req);
+    http_request_dump(req, http_recv);
 #endif
 
     return RPS_OK;
@@ -700,13 +693,46 @@ http_response_message(char *message, struct http_response *resp) {
         }
     }
 
-    len += snprintf(message + len, size - len, "\r\n");
+    len += snprintf(message + len, size - len, "\r\n\r\n");
 
     len += snprintf(message + len, size - len, "%s", resp->body.data);
 
 #ifdef RPS_DEBUG_OPEN
-    http_response_dump(resp);
+    http_response_dump(resp, http_send);
 #endif
     
     return len;
+}
+
+int 
+http_request_message(char *message, struct http_request *req) {
+    int len;
+    int size;
+    uint32_t i;
+    struct hashmap_entry *header;
+
+    len = 0;
+    size = HTTP_MESSAGE_MAX_LENGTH;
+
+    len += snprintf(message, size, "%s %s:%d %s\r\n", 
+            http_method_str(req->method), req->host.data, 
+            req->port, req->protocol.data);
+
+    for (i = 0; i < req->headers.size; i++) {
+        header = req->headers.buckets[i];
+        
+        while (header != NULL) {
+            len += http_header_message(message + len, size - len, header);
+            header = header->next;
+        }
+    }
+
+    len += snprintf(message + len, size - len, "\r\n\r\n");
+
+#ifdef RPS_DEBUG_OPEN
+    http_request_dump(req, http_send);
+#endif
+
+    return len;
+
 }
