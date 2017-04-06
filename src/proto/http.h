@@ -78,12 +78,18 @@
 #define HTTP_HEADER_DEFAULT_COUNT   64
 #define HTTP_HEADER_REHASH_THRESHOLD   0.05
 
+#define HTTP_HEADER_MAX_KEY_LENGTH     256
+#define HTTP_HEADER_MAX_VALUE_LENGTH   512
+
 //http body size always be small in our approach.
 #define HTTP_BODY_MAX_LENGTH    256
 // 1k is big enough in our approach
 #define HTTP_MESSAGE_MAX_LENGTH    1024
 
-static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
+#define HTTP_MIN_STATUS_CODE    100
+#define HTTP_MAX_STATUS_CODE    599
+
+static const char HTTP_DEFAULT_PROTOCOL[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";
 static const char HTTP_DEFAULT_REALM[] = "rps";
 static const char HTTP_DEFAULT_PROXY_AGENT[] = "RPS/1.0";
@@ -115,23 +121,45 @@ http_resp_code_str(uint16_t code) {
     return "Invalid response status code.";
 }
 
+#define HTTP_METHOD_MAP(V)                  \
+    V(0, http_emethod, "EMETHOD")           \
+    V(1, http_get, "GET")                   \
+    V(2, http_post, "POST")                 \
+    V(3, http_connect, "CONNECT")           \
+
+enum {
+#define HTTP_METHOD_GEN(code, name, _) name = code,
+    HTTP_METHOD_MAP(HTTP_METHOD_GEN)
+#undef HTTP_METHOD_GEN
+};
+
+static inline const char * 
+http_method_str(uint16_t code) {
+#define HTTP_METHOD_GEN(_, name, str) case name: return str;
+    switch (code) {
+        HTTP_METHOD_MAP(HTTP_METHOD_GEN)
+        default: ;
+    }
+#undef HTTP_METHOD_GEN
+    return "EMETHOD";
+}
+
 enum http_request_verify_result {
     http_verify_error = -1,
     http_verify_success = 0,
     http_verify_fail,
 };
 
-enum http_method {
-    http_emethod = 0,
-    http_get = 1,
-    http_post,
-    http_connect,
-};
 
 enum http_auth_schema {
     http_auth_unknown = 0,
     http_auth_basic = 1,
     http_auth_digest,
+};
+
+enum http_recv_send {
+    http_recv,
+    http_send,
 };
 
 struct http_request_auth {
@@ -150,8 +178,10 @@ struct http_request {
 
 struct http_response {
     uint16_t            code;
-    rps_hashmap_t       headers;        
+    rps_str_t           status;
+    rps_str_t           protocol;
     rps_str_t           body;
+    rps_hashmap_t       headers;        
 };
 
 
@@ -171,13 +201,17 @@ void http_response_deinit(struct http_response *resp);
 rps_status_t http_request_parse(struct http_request *req, uint8_t *data, size_t size);
 rps_status_t http_request_auth_parse(struct http_request_auth *auth, 
     uint8_t *credentials, size_t credentials_size);
+rps_status_t http_response_parse(struct http_response *resp, uint8_t *data, size_t size);
 
 int http_basic_auth(struct context *ctx, rps_str_t *param);
+int http_basic_auth_gen(const char *uname, const char *passwd, char *output);
 
 #ifdef RPS_DEBUG_OPEN
-void http_request_dump(struct http_request *req);
+void http_request_dump(struct http_request *req, uint8_t rs);
+void http_response_dump(struct http_response *resp, uint8_t rs);
 #endif
 
+int http_request_message(char *message, struct http_request *req);
 int http_response_message(char *message, struct http_response *resp);
 
 #endif

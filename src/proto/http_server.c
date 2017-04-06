@@ -8,6 +8,7 @@ http_request_verify(struct context *ctx) {
     struct http_request req;
     struct http_request_auth auth;
     struct server *s;
+    rps_addr_t  *remote;
     rps_status_t status;
     int result;
 
@@ -73,6 +74,13 @@ http_request_verify(struct context *ctx) {
     http_request_auth_deinit(&auth);
 
 next:
+    
+    if (result == http_verify_success) {
+        remote = &ctx->sess->remote;
+        rps_addr_name(remote, req.host.data, req.host.len, req.port);
+        log_debug("remote: %s:%d", req.host.data, req.port);
+    }
+
     http_request_deinit(&req);
     return result;
 }
@@ -87,7 +95,10 @@ http_send_auth_require(struct context *ctx) {
 
     http_response_init(&resp);
     
+    
     resp.code = http_proxy_auth_required;
+    string_duplicate(&resp.status, http_resp_code_str(resp.code), strlen(http_resp_code_str(resp.code)));
+    string_duplicate(&resp.protocol, HTTP_DEFAULT_PROTOCOL, strlen(HTTP_DEFAULT_PROTOCOL));
     
     /* write http body */ 
     len = snprintf(body, HTTP_BODY_MAX_LENGTH, "%d %s", 
@@ -102,14 +113,16 @@ http_send_auth_require(struct context *ctx) {
     char val1[32];
     int v1len;
 
-    v1len = sprintf(val1, "%zd", len);
+    v1len = snprintf(val1, 32, "%zd", len);
 
-    hashmap_set(&resp.headers, (void *)key1, sizeof(key1), (void *)val1, v1len);
+    hashmap_set(&resp.headers, (void *)key1, strlen(key1), (void *)val1, v1len);
 
+#ifdef HTTP_PROXY_AGENT
     /* set proxy-agent header*/
     const char key2[] = "Proxy-Agent";
-    hashmap_set(&resp.headers, (void *)key2, sizeof(key2), 
-            (void *)HTTP_DEFAULT_PROXY_AGENT, sizeof(HTTP_DEFAULT_PROXY_AGENT));
+    hashmap_set(&resp.headers, (void *)key2, strlen(key2), 
+            (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
+#endif
 
     /* set proxy-authenticate header */
 
@@ -119,17 +132,15 @@ http_send_auth_require(struct context *ctx) {
     
     v3len = snprintf(val3, 64, "%s realm=\"%s\"", HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
     
-    hashmap_set(&resp.headers, (void *)key3, sizeof(key3), (void *)val3, v3len);
+    hashmap_set(&resp.headers, (void *)key3, strlen(key3), (void *)val3, v3len);
 
     len = http_response_message(message, &resp);
     
     ASSERT(len > 0);
 
-    if (server_write(ctx, message, len) != RPS_OK) {
-        return RPS_ERROR;
-    }
+    http_response_deinit(&resp);
 
-    return RPS_OK;    
+    return server_write(ctx, message, len);
 }
 
 

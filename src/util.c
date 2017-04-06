@@ -19,9 +19,12 @@ _rps_alloc(size_t size, const char *name, int line) {
     
     if (p == NULL) {
         log_error("malloc(%zu) failed @ %s:%d", size, name, line);
-    } else {
-        log_verb("malloc(%zu) at %p @ %s:%d", size, p, name, line);
     }
+        
+#ifdef  RPS_MORE_VERBOSE
+    log_verb("malloc(%zu) at %p @ %s:%d", size, p, name, line);
+#endif
+    
 
     return p;
 }
@@ -60,10 +63,16 @@ _rps_realloc(void *ptr, size_t size, const char *name, int line) {
     return p;
 }
 
+
 void 
+#ifdef RPS_MORE_VERBOSE
 _rps_free(void *ptr, const char *name, int line) {
-    ASSERT(ptr != NULL);
     log_verb("free(%p) @ %s:%d", ptr, name, line);
+#else
+_rps_free(void *ptr) {
+#endif
+
+    ASSERT(ptr != NULL);
     free(ptr);
 }
 
@@ -149,7 +158,7 @@ rps_unresolve_port(rps_addr_t *addr) {
     } else if (addr->family == AF_INET6) {
         return ntohs(addr->addr.in6.sin6_port);
     } else if (addr->family == AF_DOMAIN) {
-        return ntohs(addr->addr.name.port);
+        return addr->addr.name.port;
     } else {
         NOT_REACHED();
         return -1;
@@ -178,13 +187,13 @@ rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
 }
 
 void 
-rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port) {
+rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint16_t port) {
     ASSERT(len < MAX_HOSTNAME_LEN);
     memset(&addr->addr.name, 0, sizeof(addr->addr.name));
     addr->addr.name.family = AF_DOMAIN;
-    memcpy(&addr->addr.name.port, port, 2);
     memcpy(&addr->addr.name.host, _addr, len); 
     addr->addr.name.host[len] = '\0';
+    addr->addr.name.port = port;
     addr->family = AF_DOMAIN;
     addr->addrlen = sizeof(addr->addr.name);
 }

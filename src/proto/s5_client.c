@@ -194,7 +194,9 @@ s5_do_request(struct context *ctx) {
             req[len++] = alen;
             memcpy(&req[len], (const char *)remote->addr.name.host, alen);
             len += alen;
-            memcpy(&req[len], &remote->addr.name.port, 2);
+            uint16_t port;
+            port = htons(remote->addr.name.port);
+            memcpy(&req[len], &port, 2);
             break;
         default:
             NOT_REACHED();
