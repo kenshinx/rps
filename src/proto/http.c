@@ -698,7 +698,7 @@ http_parse_response_line(rps_str_t *line, struct http_response *resp) {
                 }
 
                 log_error("http parse response line error: invalid code");
-                break;
+                return RPS_ERROR;
 
             case  sw_space_before_status:
                 start = &line->data[i];
