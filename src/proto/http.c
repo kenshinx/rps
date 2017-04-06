@@ -493,6 +493,26 @@ http_request_check(struct http_request *req) {
     return RPS_OK;
 } 
 
+static rps_status_t
+http_response_check(struct http_response *resp) {
+    const char http0[] = "HTTP/1.0";
+    const char http1[] = "HTTP/1.1";
+
+    if (rps_strcmp(&resp->protocol, http0) != 0 && 
+            rps_strcmp(&resp->protocol, http1) != 0) {
+        log_error("http response check error, invalid http protocol: %s", 
+                resp->protocol.data);
+        return RPS_ERROR;
+    }
+
+    if (resp->code < HTTP_MIN_STATUS_CODE || resp->code > HTTP_MAX_STATUS_CODE) {
+        log_error("http response check error, invalid http code: %d", resp->code);
+        return RPS_ERROR;
+    }
+
+    return RPS_OK;
+}
+
 #ifdef RPS_DEBUG_OPEN
 /* implement hashmap_iter_t */
 static void
@@ -579,7 +599,7 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     }
 
     if (i < size - 3 *CRLF_LEN) {
-        log_error("http tunnel handshake contain junk: %s", data);
+        log_error("http request contain junk: %s", data);
         /* 2*CRLF_LEN == last line \r\n\r\n */
         return RPS_ERROR;
     }
@@ -757,6 +777,16 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
         }
 
         string_deinit(&line);
+    }
+
+    if (i < size - 3 * CRLF_LEN) {
+        log_error("http response contain junk: %s", data);
+        return RPS_ERROR;
+    }
+
+    if (http_response_check(resp) != RPS_OK) {
+        log_error("invalid http response: %s", data);
+        return RPS_ERROR;
     }
 
 #ifdef RPS_DEBUG_OPEN

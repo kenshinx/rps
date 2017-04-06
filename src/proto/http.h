@@ -86,6 +86,9 @@
 // 1k is big enough in our approach
 #define HTTP_MESSAGE_MAX_LENGTH    1024
 
+#define HTTP_MIN_STATUS_CODE    100
+#define HTTP_MAX_STATUS_CODE    599
+
 static const char HTTP_DEFAULT_PROTOCOL[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";
 static const char HTTP_DEFAULT_REALM[] = "rps";
