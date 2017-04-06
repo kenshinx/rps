@@ -506,7 +506,7 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
     skey[key_size] = '\0';
     svalue[value_size] = '\0';
 
-    log_verb("%s: %s", skey, svalue);
+    log_verb("\t%s: %s", skey, svalue);
 }
 
 void
@@ -517,7 +517,7 @@ http_request_dump(struct http_request *req, uint8_t rs) {
         log_verb("[http send request]");
     }
 
-    log_verb("%s %s:%d %s", http_method_str(req->method), req->host.data, 
+    log_verb("\t%s %s:%d %s", http_method_str(req->method), req->host.data, 
             req->port, req->protocol.data);
 
     hashmap_iter(&req->headers, http_header_dump);
@@ -531,7 +531,7 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
         log_verb("[http send response]");
     }
 
-    log_verb("%s %d %s", resp->protocol.data, resp->code, 
+    log_verb("\t%s %d %s", resp->protocol.data, resp->code, 
         resp->status.data);
     hashmap_iter(&resp->headers, http_header_dump);
 }
@@ -743,9 +743,25 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
         n++;
 
         if (n == 1) {
-            http_parse_response_line(&line, resp);
+            if (http_parse_response_line(&line, resp) != RPS_OK) {
+                log_error("parse http response line error: %s", line.data);
+                string_deinit(&line);
+                return RPS_ERROR;
+            }
+        } else {
+            if (http_parse_header_line(&line, &resp->headers) != RPS_OK) {
+                log_error("parse http response header line error: %s", line.data);
+                string_deinit(&line);
+                return RPS_ERROR;
+            }
         }
+
+        string_deinit(&line);
     }
+
+#ifdef RPS_DEBUG_OPEN
+    http_response_dump(resp, http_recv);
+#endif
 
     return RPS_OK;
 }
