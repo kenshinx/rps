@@ -741,14 +741,21 @@ server_finish(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(!forward->established);
+    ASSERT(forward->reply_code != s5_rep_success && 
+            forward->reply_code != http_ok);
 
     request->state = c_reply;
+    request->reply_code = forward->reply_code;
+    server_do_next(request);
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
     log_info("Establish tunnel %s:%d -> rps -> upstream -> %s:%d failed.",
             request->peername, rps_unresolve_port(&request->peer),
             remoteip, rps_unresolve_port(&sess->remote));
+
+    forward->state = c_kill;
+    server_do_next(forward);
 }
 
 static void
@@ -762,10 +769,11 @@ server_establish(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->established);
+    ASSERT(forward->reply_code == s5_rep_success || 
+            forward->reply_code == http_ok);
 
     request->state = c_reply;
-    request->nread = forward->nread;
-    memcpy(request->rbuf, forward->rbuf, request->nread);
+    request->reply_code = forward->reply_code;
     server_do_next(request);
 
 
