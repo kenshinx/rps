@@ -96,6 +96,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->connecting = 0;
     ctx->connected = 0;
     ctx->established = 0;
+    ctx->reply_code = UNDEFINED_REPLY_CODE;
     ctx->rstat = c_stop;
     ctx->wstat = c_stop;
     ctx->handle.handle.data  = ctx;
@@ -730,6 +731,34 @@ kill:
 }
 
 static void
+server_finish(rps_sess_t *sess) {
+    /* After retry, still failed*/
+    rps_ctx_t   *request;
+    rps_ctx_t   *forward;
+    char remoteip[MAX_INET_ADDRSTRLEN];
+
+    request = sess->request;
+    forward = sess->forward;
+
+    ASSERT(!forward->established);
+    ASSERT(forward->reply_code != s5_rep_success && 
+            forward->reply_code != http_ok);
+
+    request->state = c_reply;
+    request->reply_code = forward->reply_code;
+    server_do_next(request);
+
+    rps_unresolve_addr(&sess->remote, remoteip);
+
+    log_info("Establish tunnel %s:%d -> rps -> upstream -> %s:%d failed.",
+            request->peername, rps_unresolve_port(&request->peer),
+            remoteip, rps_unresolve_port(&sess->remote));
+
+    forward->state = c_kill;
+    server_do_next(forward);
+}
+
+static void
 server_establish(rps_sess_t *sess) {
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
@@ -739,14 +768,14 @@ server_establish(rps_sess_t *sess) {
     request = sess->request;
     forward = sess->forward;
 
+    ASSERT(forward->established);
+    ASSERT(forward->reply_code == s5_rep_success || 
+            forward->reply_code == http_ok);
+
     request->state = c_reply;
-    request->nread = forward->nread;
-    memcpy(request->rbuf, forward->rbuf, request->nread);
+    request->reply_code = forward->reply_code;
     server_do_next(request);
 
-    if (!forward->established) {
-        return;
-    }
 
     forward->state = c_established;
 
@@ -846,13 +875,13 @@ server_forward_retry(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
+    forward->retry++;
+
     log_debug("Upstream tunnel  %s -> %s failed, retry: %d", 
             forward->peername, remoteip, forward->retry);
 
-    if (forward->retry++ >= s->upstreams->maxretry) {
-        log_error("Establish tunnel %s -> rps -> upstream -> %s failed after %d retry.", 
-                sess->request->peername, remoteip, s->upstreams->maxretry);
-        forward->state = c_kill;
+    if (forward->retry >= s->upstreams->maxretry) {
+        forward->state = c_failed;
         server_do_next(forward);
         return;
     }
@@ -881,6 +910,9 @@ server_do_next(rps_ctx_t *ctx) {
             break;
         case c_retry:
             server_forward_retry(ctx->sess);
+            break;
+        case c_failed:
+            server_finish(ctx->sess);
             break;
         case c_established:
             server_cycle(ctx);

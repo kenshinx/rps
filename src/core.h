@@ -15,6 +15,8 @@
 #define	WRITE_BUF_SIZE 65536 //64k
 #define WRITE_UV_BUF_SIZE   20
 
+#define UNDEFINED_REPLY_CODE -1
+
 typedef int rps_status_t;
 
 #define RPS_PROTO_MAP(V)                      \
@@ -78,10 +80,11 @@ typedef enum context_state {
     c_exchange = (1 << 7),
     c_reply = (1 << 8),
     c_retry = (1 << 9),
-	c_established = (1 << 10),
-    c_kill = (1 << 11),
-    c_closing = (1 << 12),
-    c_closed = (1 << 13)
+    c_failed = (1 << 10),
+	c_established = (1 << 11),
+    c_kill = (1 << 12),
+    c_closing = (1 << 13),
+    c_closed = (1 << 14)
 } ctx_state_t;
 
 
@@ -128,6 +131,12 @@ struct context {
 
     ctx_flag_t         	flag;
     ctx_state_t        	state;
+
+    /* reply code is protocol related
+     * http tunnel may be http_ok or http_forbidden etc.. 
+     * socks5 may be s5_rep_success, s5_rep_conn_deny etc..
+     */
+    int                 reply_code;
 
     int                 last_status;
     uint16_t            reconn;

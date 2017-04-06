@@ -247,31 +247,78 @@ kill:
 
 static void
 s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
-    struct s5_in4_response *resp;
-    
-    resp = (struct s5_in4_response *)data;
+    uint8_t resp[512];
+    int len, alen;
+    rps_addr_t *remote;
 
-    if (server_write(ctx, data, size) != RPS_OK) {
-        goto kill;
+    UNUSED(data);
+    UNUSED(size);
+
+    len = 0;
+    alen = 0;
+
+    if (ctx->reply_code == UNDEFINED_REPLY_CODE) {
+        /* establish failed after retry */
+        ctx->reply_code = s5_rep_socks_fail;
     }
 
-    if (resp->rep != s5_rep_success) {
-        goto kill;
+    remote = &ctx->sess->remote;
+
+    resp[len++] = SOCKS5_VERSION;
+    resp[len++] = ctx->reply_code; //rep
+    resp[len++] = 0x00; //rsv
+
+    switch (remote->family) {
+        case AF_INET:
+            resp[len++] = s5_atyp_ipv4;
+            memcpy(&resp[len], &remote->addr.in.sin_addr, 4);
+            len += 4;
+            memcpy(&resp[len], &remote->addr.in.sin_port, 2);
+            break;
+        case AF_INET6:
+            resp[len++] = s5_atyp_ipv6;
+            memcpy(&resp[len], &remote->addr.in.sin_addr, 16);
+            len += 16;
+            memcpy(&resp[len], &remote->addr.in6.sin6_port, 2);
+            break;
+        case AF_DOMAIN:
+            resp[len++] = s5_atyp_domain;
+            alen = strlen(remote->addr.name.host);
+            resp[len++] = alen;
+            memcpy(&resp[len], (const char *)remote->addr.name.host, alen);
+            len += alen;
+            uint16_t port;
+            port = htons(remote->addr.name.port);
+            memcpy(&resp[len], &port, 2);
+            break;
+        default:
+            NOT_REACHED();
     }
 
-    
+    len += 2; //port length = 2
+
+    ASSERT(len < 512);
+
+
+    if (server_write(ctx, resp, len) != RPS_OK) {
+        ctx->established = 0;
+        ctx->state = c_kill;
+        server_do_next(ctx);
+        return;
+    }
+
+    if (ctx->reply_code != s5_rep_success) {
+        /* needn't close current context immediately, close will be closed in upstream context*/
+        ctx->established = 0;
+        ctx->state = c_kill;
+    } else {
+        ctx->established = 1;
+        ctx->state = c_established;
+    }
+
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 client reply, connect remote success.");
+    log_verb("s5 client reply, connect remote %s.", s5_strrep(ctx->reply_code));
 #endif
-
-    ctx->established = 1;
-    ctx->state = c_established;
-    return;
-       
-kill:
-    ctx->established = 0;
-    ctx->state = c_kill;
-    server_do_next(ctx);
 }
 
 void 
