@@ -57,6 +57,43 @@ http_send_request(struct context *ctx) {
     return server_write(ctx, message, len);
 }
 
+static int
+http_verify_response(struct context *ctx) {
+    uint8_t *data;
+    ssize_t size;
+    rps_status_t status;
+    struct http_response resp;
+    int result;
+
+    data = (uint8_t *)ctx->rbuf;
+    size = (size_t)ctx->nread;
+
+    http_response_init(&resp);
+
+    status = http_response_parse(&resp, data, size);
+    if (status != RPS_OK) {
+        return http_verify_error;
+    }
+
+    switch (resp.code) {
+        case http_ok:
+            result = http_verify_success;
+            break;
+        case http_proxy_auth_required:
+            result = http_verify_fail;
+            break;
+        case http_forbidden:
+        case http_server_error:
+        case http_bad_gateway:
+        default:
+            result = http_verify_error;
+    }
+
+    return result;
+
+
+}
+
 static void
 http_do_handshake(struct context *ctx) {
     if (http_send_request(ctx) != RPS_OK) {
@@ -69,23 +106,9 @@ http_do_handshake(struct context *ctx) {
 
 static void
 http_do_handshake_resp(struct context *ctx) {
-    uint8_t *data;
-    ssize_t size;
-    rps_status_t status;
-    struct http_response resp;
+    int http_verify_result;
 
-    data = (uint8_t *)ctx->rbuf;
-    size = (size_t)ctx->nread;
-
-    http_response_init(&resp);
-
-    status = http_response_parse(&resp, data, size);
-    if (status != RPS_OK) {
-        ctx->state = c_retry;
-        server_do_next(ctx);
-        return;
-    }
-
+    http_verify_result = http_verify_response(ctx);
 }
 
 
