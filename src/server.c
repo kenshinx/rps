@@ -875,10 +875,12 @@ server_forward_retry(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
+    forward->retry++;
+
     log_debug("Upstream tunnel  %s -> %s failed, retry: %d", 
             forward->peername, remoteip, forward->retry);
 
-    if (forward->retry++ >= s->upstreams->maxretry) {
+    if (forward->retry >= s->upstreams->maxretry) {
         forward->state = c_failed;
         server_do_next(forward);
         return;
