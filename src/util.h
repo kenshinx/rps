@@ -46,15 +46,25 @@
 #define rps_realloc(_p, _s)                                         \
     _rps_realloc(_p, (size_t)(_s), __FILE__, __LINE__)              \
 
+#ifdef RPS_MORE_VERBOSE
 #define rps_free(_p)                                                \
     _rps_free(_p, __FILE__, __LINE__)                               \
+
+void _rps_free(void *ptr, const char *name, int line);
+
+#else
+#define rps_free(_p)                                                \
+    _rps_free(_p)                                                   \
+
+void _rps_free(void *ptr);
+
+#endif
 
 
 void  *_rps_alloc(size_t size, const char *name, int line);
 void * _rps_zalloc(size_t size, const char *name, int line);
 void *_rps_calloc(size_t nmemb, size_t size, const char *name, int line);
 void *_rps_realloc(void *ptr, size_t size, const char *name, int line);
-void _rps_free(void *ptr, const char *name, int line);
 
 typedef enum { false, true } bool;
 
@@ -111,7 +121,7 @@ int rps_unresolve_addr(rps_addr_t *addr, char *name);
 uint16_t rps_unresolve_port(rps_addr_t *addr);
 void rps_addr_in4(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
 void rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
-void rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
+void rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint16_t port);
 
 int rps_random(int max);
 

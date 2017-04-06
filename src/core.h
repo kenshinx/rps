@@ -145,6 +145,7 @@ struct context {
     uint8_t             rstat;
     uint8_t             wstat;
 
+    uint8_t             connecting:1;
     uint8_t             connected:1;
     uint8_t             established:1;
 };

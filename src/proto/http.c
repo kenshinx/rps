@@ -2,13 +2,11 @@
 #include "core.h"
 #include "util.h"
 #include "b64/cdecode.h"
+#include "b64/cencode.h"
 
 
 #include <uv.h>
 
-
-#define HTTP_HEADER_MAX_KEY_LENGTH     256
-#define HTTP_HEADER_MAX_VALUE_LENGTH   512
 
 void
 http_request_init(struct http_request *req) {
@@ -40,8 +38,10 @@ http_request_auth_deinit(struct http_request_auth *auth) {
 
 void
 http_response_init(struct http_response *resp) {
-    resp->code = http_ok;
+    resp->code = http_undefine;
     string_init(&resp->body);
+    string_init(&resp->status);
+    string_init(&resp->protocol);
     hashmap_init(&resp->headers, 
             HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
 }
@@ -50,6 +50,8 @@ void
 http_response_deinit(struct http_response *resp) {
     hashmap_deinit(&resp->headers);
     string_deinit(&resp->body);
+    string_deinit(&resp->status);
+    string_deinit(&resp->protocol);
 }
 
 static size_t
@@ -491,6 +493,26 @@ http_request_check(struct http_request *req) {
     return RPS_OK;
 } 
 
+static rps_status_t
+http_response_check(struct http_response *resp) {
+    const char http0[] = "HTTP/1.0";
+    const char http1[] = "HTTP/1.1";
+
+    if (rps_strcmp(&resp->protocol, http0) != 0 && 
+            rps_strcmp(&resp->protocol, http1) != 0) {
+        log_error("http response check error, invalid http protocol: %s", 
+                resp->protocol.data);
+        return RPS_ERROR;
+    }
+
+    if (resp->code < HTTP_MIN_STATUS_CODE || resp->code > HTTP_MAX_STATUS_CODE) {
+        log_error("http response check error, invalid http code: %d", resp->code);
+        return RPS_ERROR;
+    }
+
+    return RPS_OK;
+}
+
 #ifdef RPS_DEBUG_OPEN
 /* implement hashmap_iter_t */
 static void
@@ -504,36 +526,34 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
     skey[key_size] = '\0';
     svalue[value_size] = '\0';
 
-    log_verb("%s: %s", skey, svalue);
+    log_verb("\t%s: %s", skey, svalue);
 }
-#endif
 
-
-#ifdef RPS_DEBUG_OPEN
 void
-http_request_dump(struct http_request *req) {
-
-    char *method;
-
-    switch (req->method) {
-        case http_get:
-            method = "GET";
-            break;
-        case http_post:
-            method = "POST";
-            break;
-        case http_connect:
-            method = "CONNECT";
-            break;
-        default:
-            method = "UNKNOWN";
+http_request_dump(struct http_request *req, uint8_t rs) {
+    if (rs == http_recv) {
+        log_verb("[http recv request]");
+    } else {
+        log_verb("[http send request]");
     }
 
-    log_verb("[http request]");
-    log_verb("%s %s:%d %s", method, req->host.data, 
+    log_verb("\t%s %s:%d %s", http_method_str(req->method), req->host.data, 
             req->port, req->protocol.data);
 
     hashmap_iter(&req->headers, http_header_dump);
+}
+
+void 
+http_response_dump(struct http_response *resp, uint8_t rs) {
+    if (rs == http_recv) {
+        log_verb("[http recv response]");
+    } else {
+        log_verb("[http send response]");
+    }
+
+    log_verb("\t%s %d %s", resp->protocol.data, resp->code, 
+        resp->status.data);
+    hashmap_iter(&resp->headers, http_header_dump);
 }
 #endif
 
@@ -552,6 +572,7 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
 
         len = http_read_line(data, i, size, &line);
         if (len <= CRLF_LEN) {
+            string_deinit(&line);
             /* read empty line, only contain /r/n */
             break;
         }
@@ -578,7 +599,7 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     }
 
     if (i < size - 3 *CRLF_LEN) {
-        log_error("http tunnel handshake contain junk: %s", data);
+        log_error("http request contain junk: %s", data);
         /* 2*CRLF_LEN == last line \r\n\r\n */
         return RPS_ERROR;
     }
@@ -589,11 +610,192 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     }
 
 #ifdef RPS_DEBUG_OPEN
-    http_request_dump(req);
+    http_request_dump(req, http_recv);
 #endif
 
     return RPS_OK;
 }
+
+static rps_status_t
+http_parse_response_line(rps_str_t *line, struct http_response *resp) {
+    uint8_t *start, *end;
+    uint8_t ch;
+    size_t i, len;
+
+    enum {
+        sw_start = 0,
+        sw_protocol,
+        sw_space_before_code,
+        sw_code,
+        sw_space_before_status,
+        sw_status,
+        sw_end,
+    } state;
+
+    state = sw_start;
+
+    for (i = 0; i < line->len; i++) {
+        ch = line->data[i];
+
+        switch (state) {
+            case sw_start:
+                start = &line->data[i];
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_protocol;
+                break;
+
+            case sw_protocol:
+                if (ch == ' ') {
+                    end = &line->data[i];
+                    len = end - start;
+                    if (len <= 0) {
+                        log_error("http parse response line error: invalid protocol");
+                        return RPS_ERROR;
+                    }
+                    
+                    string_duplicate(&resp->protocol, (const char *)start, end - start);
+
+                    start = end;
+                    state = sw_space_before_code;
+                    break;
+                }
+                
+                break;
+
+            case sw_space_before_code:
+                start = &line->data[i];
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_code;
+                break;
+
+            case sw_code:
+                if (ch >= '0' && ch <= '9') {
+                    break;
+                }
+
+                if (ch == ' ') {
+                    end = &line->data[i];
+                    len = end - start;
+
+                    if (len != 3) {
+                        log_error("http parse response line error: invalid code");
+                        return RPS_ERROR;
+                    }
+                    
+                    for (; start < end; start++) {
+                        resp->code = resp->code * 10 + (*start - '0');
+                    }
+
+                    start = end;
+                    state = sw_space_before_status;
+                    break;
+                }
+
+                log_error("http parse response line error: invalid code");
+                return RPS_ERROR;
+
+            case  sw_space_before_status:
+                start = &line->data[i];
+                if (ch == ' ') {
+                    break;
+                }
+
+                state = sw_status;
+                break;
+
+            case sw_status:
+                end = &line->data[i];
+                break;
+
+            case sw_end:
+                if (ch != ' ') {
+                    log_error("http parse respone line error: junk in response line");
+                    return RPS_ERROR;
+                }
+                break;
+
+            default:
+                NOT_REACHED();
+                
+        }
+    }
+
+    if (end - start <= 0) {
+        log_error("http parse response line error, invalid status");
+        return RPS_ERROR;
+    }
+    
+
+    len = end - start + 1;
+    string_duplicate(&resp->status, (const char *)start, len);
+
+
+    return RPS_OK;
+}
+
+rps_status_t
+http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
+    size_t i, len;
+    int n;
+    rps_str_t line;
+
+    i = 0;
+    n = 0;
+
+    for (;;) {
+        string_init(&line);
+
+        len = http_read_line(data, i, size, &line);
+        if (len <= CRLF_LEN) {
+            string_deinit(&line);
+            /* read empty line, only contain /r/n */
+            break;
+        }
+
+
+        i += len;
+        n++;
+
+        if (n == 1) {
+            if (http_parse_response_line(&line, resp) != RPS_OK) {
+                log_error("parse http response line error: %s", line.data);
+                string_deinit(&line);
+                return RPS_ERROR;
+            }
+        } else {
+            if (http_parse_header_line(&line, &resp->headers) != RPS_OK) {
+                log_error("parse http response header line error: %s", line.data);
+                string_deinit(&line);
+                return RPS_ERROR;
+            }
+        }
+
+        string_deinit(&line);
+    }
+
+    if (i < size - 3 * CRLF_LEN) {
+        log_error("http response contain junk: %s", data);
+        return RPS_ERROR;
+    }
+
+    if (http_response_check(resp) != RPS_OK) {
+        log_error("invalid http response: %s", data);
+        return RPS_ERROR;
+    }
+
+#ifdef RPS_DEBUG_OPEN
+    http_response_dump(resp, http_recv);
+#endif
+
+    return RPS_OK;
+}
+
 
 int
 http_basic_auth(struct context *ctx, rps_str_t *param) {
@@ -635,6 +837,25 @@ http_basic_auth(struct context *ctx, rps_str_t *param) {
     return false;
 }
 
+int 
+http_basic_auth_gen(const char *uname, const char *passwd, char *output) {
+    base64_encodestate bstate;   
+    int length;
+    char input[HTTP_HEADER_MAX_VALUE_LENGTH];
+
+    snprintf(input, HTTP_HEADER_MAX_VALUE_LENGTH, "%s:%s", uname, passwd);
+    
+
+    length = 0;
+    base64_init_encodestate(&bstate);
+
+    length = base64_encode_block(input, strlen(input), output, &bstate);
+    length += base64_encode_blockend(&output[length], &bstate);
+    output[length] = '\0';
+
+    return length;
+}
+
 static int
 http_header_message(char *message, int size, struct hashmap_entry *header) {
     size_t key_size, val_size;
@@ -667,7 +888,7 @@ http_response_message(char *message, struct http_response *resp) {
     size = HTTP_MESSAGE_MAX_LENGTH;
 
     len += snprintf(message, size, "%s %d %s\r\n", 
-            HTTP_DEFAULT_VERSION, resp->code, http_resp_code_str(resp->code));
+            resp->protocol.data, resp->code, resp->status.data);
     
     for (i = 0; i < resp->headers.size; i++) {
         header = resp->headers.buckets[i];
@@ -678,16 +899,46 @@ http_response_message(char *message, struct http_response *resp) {
         }
     }
 
-    len += snprintf(message + len, size - len, "\r\n");
+    len += snprintf(message + len, size - len, "\r\n\r\n");
 
     len += snprintf(message + len, size - len, "%s", resp->body.data);
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("[http response]");
-    log_verb("%s %d %s", HTTP_DEFAULT_VERSION, resp->code, 
-        http_resp_code_str(resp->code));
-    hashmap_iter(&resp->headers, http_header_dump);
+    http_response_dump(resp, http_send);
 #endif
     
     return len;
+}
+
+int 
+http_request_message(char *message, struct http_request *req) {
+    int len;
+    int size;
+    uint32_t i;
+    struct hashmap_entry *header;
+
+    len = 0;
+    size = HTTP_MESSAGE_MAX_LENGTH;
+
+    len += snprintf(message, size, "%s %s:%d %s\r\n", 
+            http_method_str(req->method), req->host.data, 
+            req->port, req->protocol.data);
+
+    for (i = 0; i < req->headers.size; i++) {
+        header = req->headers.buckets[i];
+        
+        while (header != NULL) {
+            len += http_header_message(message + len, size - len, header);
+            header = header->next;
+        }
+    }
+
+    len += snprintf(message + len, size - len, "\r\n\r\n");
+
+#ifdef RPS_DEBUG_OPEN
+    http_request_dump(req, http_send);
+#endif
+
+    return len;
+
 }

@@ -207,8 +207,9 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
             /* First byte is hostname length */
             alen = req->daddr[0]; 
             /* Last 2 byte is dport */
-            memcpy(req->dport, &req->daddr[alen+1], 2);  
-            rps_addr_name(remote, &req->daddr[1], alen, req->dport);
+            uint16_t port;
+            memcpy(&port, &req->daddr[alen+1], 2);  
+            rps_addr_name(remote, &req->daddr[1], alen, ntohs(port));
             break;
 
         default:
