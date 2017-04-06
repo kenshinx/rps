@@ -95,6 +95,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->retry = 0;
     ctx->connected = 0;
     ctx->established = 0;
+    ctx->reply_code = UNDEFINED_REPLY_CODE;
     ctx->rstat = c_stop;
     ctx->wstat = c_stop;
     ctx->handle.handle.data  = ctx;
@@ -695,6 +696,8 @@ server_finish(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(!forward->established);
+
+    request->state = c_reply;
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
