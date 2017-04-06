@@ -64,6 +64,7 @@ http_verify_response(struct context *ctx) {
     rps_status_t status;
     struct http_response resp;
     int result;
+    char remoteip[MAX_INET_ADDRSTRLEN];
 
     data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
@@ -72,20 +73,45 @@ http_verify_response(struct context *ctx) {
 
     status = http_response_parse(&resp, data, size);
     if (status != RPS_OK) {
+        log_debug("http upstream %s return invalid response", ctx->peername);
         return http_verify_error;
     }
+
+    rps_unresolve_addr(&ctx->sess->remote, remoteip);
 
     switch (resp.code) {
         case http_ok:
             result = http_verify_success;
+#ifdef RPS_DEBUG_OPEN
+            log_verb("http upstream %s connect remote %s success", 
+                    ctx->peername, remoteip);
+#endif
             break;
+
         case http_proxy_auth_required:
+            log_debug("http upstream %s 407 authentication failed", 
+                    ctx->peername);
             result = http_verify_fail;
             break;
+
         case http_forbidden:
+            log_debug("http upstream %s 403 forbidden", ctx->peername);
+            result = http_verify_error;
+            break;
+            
         case http_server_error:
+            log_debug("http upstream %s 500 server error", ctx->peername);
+            result = http_verify_error;
+            break;
+            
         case http_bad_gateway:
+            log_debug("http upstream %s 502 bad gateway", ctx->peername);
+            result = http_verify_error;
+            break;
+
         default:
+            log_debug("http upstream %s return undefined status code, %s", 
+                    ctx->peername, resp.status.data);
             result = http_verify_error;
     }
 
@@ -109,6 +135,25 @@ http_do_handshake_resp(struct context *ctx) {
     int http_verify_result;
 
     http_verify_result = http_verify_response(ctx);
+
+    switch (http_verify_result) {
+        case http_verify_success:
+            ctx->established = 1;
+            ctx->state = c_exchange;
+            break;
+        case http_verify_fail:
+#ifdef RPS_HTTP_CLIENT_REAUTH
+            ctx->state = c_auth_req;
+            break;
+#endif
+        case http_verify_error:
+            ctx->state = c_retry;
+            break;
+
+        default:
+            NOT_REACHED();
+             
+    }
 }
 
 
@@ -122,7 +167,6 @@ http_client_do_next(struct context *ctx) {
         case c_handshake_resp:
             http_do_handshake_resp(ctx);
             break;
-
 
         default:
             NOT_REACHED();
