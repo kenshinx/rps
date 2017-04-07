@@ -65,10 +65,8 @@ http_request_verify(struct context *ctx) {
 
     if (http_basic_auth(ctx, &auth.param)) {
         result = http_verify_success;
-        log_verb("http client authentication success.");
     } else {
         result = http_verify_fail;
-        log_verb("http client authentication failed.");
     };
 
     http_request_auth_deinit(&auth);
@@ -86,17 +84,17 @@ next:
 }
 
 static rps_status_t
-http_send_auth_require(struct context *ctx) {
-    /* send http 407, auth required */
+http_send_response(struct context *ctx, uint16_t code) {
     struct http_response resp;
     size_t len;
     char body[HTTP_BODY_MAX_LENGTH];
     char message[HTTP_MESSAGE_MAX_LENGTH];
 
+    ASSERT(http_valid_code(code));
+
     http_response_init(&resp);
     
-    
-    resp.code = http_proxy_auth_required;
+    resp.code = code;
     string_duplicate(&resp.status, http_resp_code_str(resp.code), strlen(http_resp_code_str(resp.code)));
     string_duplicate(&resp.protocol, HTTP_DEFAULT_PROTOCOL, strlen(HTTP_DEFAULT_PROTOCOL));
     
@@ -124,15 +122,23 @@ http_send_auth_require(struct context *ctx) {
             (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
 #endif
 
-    /* set proxy-authenticate header */
-
+    /* set poxy authenticate required header */
     const char key3[] = "Proxy-Authenticate";
     char val3[64];
     int v3len;
-    
-    v3len = snprintf(val3, 64, "%s realm=\"%s\"", HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
-    
-    hashmap_set(&resp.headers, (void *)key3, strlen(key3), (void *)val3, v3len);
+
+    switch (code) {
+        case http_proxy_auth_required:
+            v3len = snprintf(val3, 64, "%s realm=\"%s\"", 
+                    HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
+
+            hashmap_set(&resp.headers, (void *)key3, strlen(key3), 
+                    (void *)val3, v3len);
+            break;
+        default:
+            break;
+    }
+
 
     len = http_response_message(message, &resp);
     
@@ -152,13 +158,16 @@ http_do_handshake(struct context *ctx) {
 
     switch (http_verify_result) {
         case http_verify_error:
+            log_verb("http client handshake error");
             ctx->state = c_kill;
             break;
         case http_verify_success:
             ctx->state = c_exchange;
+            log_verb("http client handshake success");
             break;
         case http_verify_fail:
             ctx->state = c_handshake_resp;
+            log_verb("http client handshake authentication required");
             break;
     }
 
@@ -167,7 +176,7 @@ http_do_handshake(struct context *ctx) {
 
 static void
 http_do_handshake_resp(struct context *ctx) {
-    if (http_send_auth_require(ctx) != RPS_OK) {
+    if (http_send_response(ctx, http_proxy_auth_required) != RPS_OK) {
         ctx->state = c_kill;
         server_do_next(ctx);
     } else {
@@ -183,13 +192,16 @@ http_do_auth(struct context *ctx) {
 
     switch (http_verify_result) {
         case http_verify_success:
+            log_verb("http client authenticate success");
             ctx->state = c_exchange;
             break;
         case http_verify_fail:
             ctx->state = c_auth_resp;
+            log_verb("http client authenticate fail");
             break;
         case http_verify_error:
             ctx->state = c_kill;
+            log_verb("http client authenticate error");
             break;
     }
 
@@ -198,9 +210,35 @@ http_do_auth(struct context *ctx) {
 
 static void
 http_do_auth_resp(struct context *ctx) {
-    http_send_auth_require(ctx);
+    http_send_response(ctx, http_proxy_auth_required);
     ctx->state = c_kill;
     server_do_next(ctx);
+}
+
+static void
+http_do_reply(struct context *ctx) {
+    if (ctx->reply_code == UNDEFINED_REPLY_CODE) {
+        ctx->reply_code = http_server_error;
+    }
+
+    if (http_send_response(ctx, ctx->reply_code) != RPS_OK) {
+        ctx->established = 0;
+        ctx->state = c_kill;
+        return;
+    }
+
+    if (ctx->reply_code != http_ok) {
+        ctx->established = 0;
+        ctx->state = c_kill;
+    } else {
+        ctx->established = 1;
+        ctx->state = c_established;
+    }
+
+#ifdef RPS_DEBUG_OPEN
+    log_verb("http client reply, connect remote %s", http_resp_code_str(ctx->reply_code));
+#endif
+
 }
 
 
@@ -221,7 +259,7 @@ http_server_do_next(struct context *ctx) {
             http_do_auth_resp(ctx);
             break;
         case c_reply:
-            /* send http 200 */
+            http_do_reply(ctx);
             break;
         default:
             NOT_REACHED();

@@ -150,6 +150,8 @@ http_do_handshake_resp(struct context *ctx) {
             NOT_REACHED();
              
     }
+
+    server_do_next(ctx);
 }
 
 
