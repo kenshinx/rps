@@ -62,11 +62,12 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     ASSERT(string_empty(line));
 
     n = 0;
-    len = 1;
+    len = 0;
 
     for (i=start; i<end; i++, len++) {
         c = data[i];
         if (c == LF) {
+            len += 1; // make the start pointer jump current LF in last loop
             if (last == CR) {
                 n = len - CRLF_LEN;
             } else {
@@ -744,23 +745,48 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
     size_t i, len;
     int n;
     rps_str_t line;
+    int body_start;
+    int body_len;
 
     i = 0;
     n = 0;
+    body_start = 0;
+    body_len = 0;
 
     for (;;) {
         string_init(&line);
 
         len = http_read_line(data, i, size, &line);
-        if (len <= CRLF_LEN) {
-            string_deinit(&line);
-            /* read empty line, only contain /r/n */
+
+        i += len;
+        n++;
+
+        if (len == CRLF_LEN || len == LF_LEN) {
+            /* empty line, just contain /r/n/r/n or /r/n, mean body start */
+            body_start = i;
+            continue;
+        }
+
+        if (len == 0) {
+            /* read end */
+            break;
+        }
+
+        if (body_start) {
+            /* free the has been read first line of body */
+            string_deinit(&line); 
+
+            body_len = size - body_start;
+            if (body_len >= HTTP_BODY_MAX_LENGTH) {
+                /* body too large, ignore*/
+                break;
+            }
+
+            string_duplicate(&resp->body, (const char *)&data[body_start], body_len);
             break;
         }
 
 
-        i += len;
-        n++;
 
         if (n == 1) {
             if (http_parse_response_line(&line, resp) != RPS_OK) {

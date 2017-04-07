@@ -81,8 +81,7 @@
 #define HTTP_HEADER_MAX_KEY_LENGTH     256
 #define HTTP_HEADER_MAX_VALUE_LENGTH   512
 
-//http body size always be small in our approach.
-#define HTTP_BODY_MAX_LENGTH    256
+#define HTTP_BODY_MAX_LENGTH    2048
 // 1k is big enough in our approach
 #define HTTP_MESSAGE_MAX_LENGTH    1024
 
