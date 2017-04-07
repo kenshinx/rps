@@ -546,6 +546,9 @@ http_request_dump(struct http_request *req, uint8_t rs) {
 
 void 
 http_response_dump(struct http_response *resp, uint8_t rs) {
+    size_t len;
+    char body[80];
+
     if (rs == http_recv) {
         log_verb("[http recv response]");
     } else {
@@ -555,6 +558,17 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
     log_verb("\t%s %d %s", resp->protocol.data, resp->code, 
         resp->status.data);
     hashmap_iter(&resp->headers, http_header_dump);
+
+    if (!string_empty(&resp->body)) {
+        log_verb("");
+        len = snprintf(body, 80, "%s", resp->body.data);
+        if (len > 80) {
+            /* body length larger than 80 bytes, 
+             * show 75 character and four dots and one \0 */
+            snprintf(&body[75], 5, ".....");
+         }
+        log_verb("\t%s", body);
+    }
 }
 #endif
 
@@ -783,9 +797,10 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
             }
 
             string_duplicate(&resp->body, (const char *)&data[body_start], body_len);
+            
+            i = i - len + body_len;
             break;
         }
-
 
 
         if (n == 1) {
