@@ -506,7 +506,7 @@ http_response_check(struct http_response *resp) {
         return RPS_ERROR;
     }
 
-    if (resp->code < HTTP_MIN_STATUS_CODE || resp->code > HTTP_MAX_STATUS_CODE) {
+    if (!http_valid_code(resp->code)) {
         log_error("http response check error, invalid http code: %d", resp->code);
         return RPS_ERROR;
     }

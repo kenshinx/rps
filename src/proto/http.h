@@ -144,6 +144,11 @@ http_method_str(uint16_t code) {
     return "EMETHOD";
 }
 
+static inline int
+http_valid_code(uint16_t code) {
+    return (code > HTTP_MIN_STATUS_CODE) && (code < HTTP_MAX_STATUS_CODE);
+}
+
 enum http_request_verify_result {
     http_verify_error = -1,
     http_verify_success = 0,
