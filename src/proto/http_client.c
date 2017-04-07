@@ -79,6 +79,8 @@ http_verify_response(struct context *ctx) {
 
     rps_unresolve_addr(&ctx->sess->remote, remoteip);
 
+    ctx->reply_code = resp.code;
+
     switch (resp.code) {
         case http_ok:
             result = http_verify_success;
@@ -95,17 +97,11 @@ http_verify_response(struct context *ctx) {
             break;
 
         case http_forbidden:
-            log_debug("http upstream %s 403 forbidden", ctx->peername);
-            result = http_verify_error;
-            break;
-            
+        case http_not_found:
         case http_server_error:
-            log_debug("http upstream %s 500 server error", ctx->peername);
-            result = http_verify_error;
-            break;
-            
         case http_bad_gateway:
-            log_debug("http upstream %s 502 bad gateway", ctx->peername);
+            log_debug("http upstream %s error, %d %s", ctx->peername, 
+                    resp.code, resp.status.data);
             result = http_verify_error;
             break;
 

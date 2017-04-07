@@ -99,6 +99,7 @@ static const char HTTP_DEFAULT_PROXY_AGENT[] = "RPS/1.0";
     V(0,   http_undefine, "Undefine")                                   \
     V(200, http_ok, "OK")                                               \
     V(403, http_forbidden, "Forbidden")                                 \
+    V(404, http_not_found, "Not Found")                                 \
     V(407, http_proxy_auth_required, "Proxy Authentication Required")   \
     V(500, http_server_error, "Internal Server Error")                  \
     V(502, http_bad_gateway, "Bad Gateway")                             \
