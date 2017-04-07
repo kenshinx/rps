@@ -153,7 +153,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                 }
 
                 if ((ch < 'A' || ch > 'Z') && ch != '_') {
-                    log_error("http parse request line error, invalid method");
+                    log_error("http parse request line error, '%s' : invalid method",  line->data);
                     return RPS_ERROR;
                 }
                 break;
@@ -171,7 +171,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                 if (ch == ':') {
                     end = &line->data[i];
                     if (end - start <= 0) {
-                        log_error("http parse request line error, invalid host");
+                        log_error("http parse request line error, '%s' : invalid host", line->data);
                         return RPS_ERROR;
                     }
                     string_duplicate(&req->host, (const char *)start, end - start);
@@ -181,14 +181,14 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                 }
 
                 if (ch == ' ') {
-                    log_error("http parse request line error, need port");
+                    log_error("http parse request line error, '%s' : need port", line->data);
                     return RPS_ERROR;
                 }
 
                  
                 /* rule is not too strict, adapt to punycode encode doamin */
                 if (ch < '-' || ch > 'z') {
-                    log_error("http parse request line error, invalid host");
+                    log_error("http parse request line error, '%s' : invalid host", line->data);
                     return RPS_ERROR;
                 }
                 break;
@@ -203,7 +203,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                     len = end - start;
 
                     if (len <=0 || len >= 6) {
-                        log_error("http parse request line error, invalid port");
+                        log_error("http parse request line error, '%s' : invalid port", line->data);
                         return RPS_ERROR;
                     }
 
@@ -216,7 +216,8 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                     break;
                 }
                 
-                log_error("http parse request line error, invalid port");
+                log_error("http parse request line error, '%s' : invalid port", 
+                        line->data);
                 return RPS_ERROR;
 
             case sw_space_before_protocol:
@@ -239,7 +240,8 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
 
             case sw_end:
                 if (ch != ' ') {
-                    log_error("http parse request line error, junk in request line");
+                    log_error("http parse request line error, '%s' : junk in request line", 
+                            line->data);
                     return RPS_ERROR;
                 }
             
@@ -249,14 +251,14 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
     }
 
     if (end - start <= 0) {
-        log_error("http parse request line error, invalid protocol");
+        log_error("http parse request line error, '%s' : invalid protocol", line->data);
         return RPS_ERROR;
     }
 
     string_duplicate(&req->protocol, (const char *)start, end - start +1);
 
     if (state != sw_protocol && state != sw_end) {
-        log_error("http parse request line error, parse failed");
+        log_error("http parse request line error, '%s' : parse failed", line->data);
         return RPS_ERROR;
     }
     
