@@ -946,7 +946,7 @@ http_response_message(char *message, struct http_response *resp) {
         }
     }
 
-    len += snprintf(message + len, size - len, "\r\n\r\n");
+    len += snprintf(message + len, size - len, "\r\n");
 
     len += snprintf(message + len, size - len, "%s", resp->body.data);
 
@@ -980,7 +980,7 @@ http_request_message(char *message, struct http_request *req) {
         }
     }
 
-    len += snprintf(message + len, size - len, "\r\n\r\n");
+    len += snprintf(message + len, size - len, "\r\n");
 
 #ifdef RPS_DEBUG_OPEN
     http_request_dump(req, http_send);
