@@ -894,9 +894,13 @@ http_basic_auth_gen(const char *uname, const char *passwd, char *output) {
 
     length = base64_encode_block(input, strlen(input), output, &bstate);
     length += base64_encode_blockend(&output[length], &bstate);
-    output[length] = '\0';
 
-    return length;
+    ASSERT (length > 1);
+
+    /* base64_encode_blockend append \n at the last of outoput, we need remove the \n */
+    output[length - 1] = '\0';
+
+    return length - 1;
 }
 
 static int
