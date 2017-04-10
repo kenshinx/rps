@@ -154,6 +154,51 @@ http_do_handshake_resp(struct context *ctx) {
     server_do_next(ctx);
 }
 
+static void
+http_do_auth(struct context *ctx) {
+    struct upstream *u;
+
+    u = &ctx->sess->upstream;
+
+    if (string_empty(&u->uname)) {
+        goto retry;
+    }
+
+    if (http_send_request(ctx) != RPS_OK) {
+        printf("ssssss\n");
+        goto retry;
+    }
+
+    ctx->state = c_auth_resp;
+    return;
+
+retry:
+    ctx->state = c_retry;
+    server_do_next(ctx);
+}
+
+static void
+http_do_auth_resp(struct context *ctx) {
+    int http_verify_result;
+    
+    http_verify_result = http_verify_response(ctx);
+
+    switch (http_verify_result) {
+        case http_verify_success:
+            ctx->established = 1;
+            ctx->state = c_exchange;
+            break;
+        case http_verify_fail:
+        case http_verify_error:
+            ctx->state = c_retry;
+            break;
+        default:
+            NOT_REACHED();
+    }
+
+    server_do_next(ctx);
+}
+
 
 void
 http_client_do_next(struct context *ctx) {
@@ -165,7 +210,12 @@ http_client_do_next(struct context *ctx) {
         case c_handshake_resp:
             http_do_handshake_resp(ctx);
             break;
-
+        case c_auth_req:
+            http_do_auth(ctx);
+            break;
+        case c_auth_resp:
+            http_do_auth_resp(ctx);
+            break;
         default:
             NOT_REACHED();
     }
