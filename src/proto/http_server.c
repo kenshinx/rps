@@ -122,6 +122,7 @@ http_send_response(struct context *ctx, uint16_t code) {
             (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
 #endif
 
+
     /* set poxy authenticate required header */
     const char key3[] = "Proxy-Authenticate";
     char val3[64];
@@ -138,6 +139,14 @@ http_send_response(struct context *ctx, uint16_t code) {
         default:
             break;
     }
+
+#ifdef HTTP_PROXY_CONNECTION
+    /* set proxy-agent header*/
+    const char key4[] = "Porxy-Connection";
+    hashmap_set(&resp.headers, (void *)key4, strlen(key4), 
+            (void *)HTTP_DEFAULT_PROXY_CONNECTION, strlen(HTTP_DEFAULT_PROXY_CONNECTION));
+    
+#endif
 
 
     len = http_response_message(message, &resp);
