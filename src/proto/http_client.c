@@ -48,6 +48,15 @@ http_send_request(struct context *ctx) {
         hashmap_set(&req.headers, (void *)key3, strlen(key3), (void *)val3, v3len);
     }
 
+#ifdef HTTP_PROXY_CONNECTION
+    /* set proxy-connection header*/
+    const char key4[] = "Porxy-Connection";
+    hashmap_set(&req.headers, (void *)key4, strlen(key4), 
+            (void *)HTTP_DEFAULT_PROXY_CONNECTION, strlen(HTTP_DEFAULT_PROXY_CONNECTION));
+    
+#endif
+
+
     len = http_request_message(message, &req);
 
     ASSERT(len > 0);
@@ -165,7 +174,6 @@ http_do_auth(struct context *ctx) {
     }
 
     if (http_send_request(ctx) != RPS_OK) {
-        printf("ssssss\n");
         goto retry;
     }
 
