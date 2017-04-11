@@ -214,6 +214,8 @@ server_ctx_close(rps_ctx_t *ctx) {
         return;
     }
 
+    uv_timer_stop(&ctx->timer);
+
     if (!ctx->connecting && !ctx->connected) {
         // we still need free context and session 
         // even if connect didn't establised 
@@ -223,7 +225,6 @@ server_ctx_close(rps_ctx_t *ctx) {
     }
 
     ctx->state = c_closing;
-    uv_timer_stop(&ctx->timer);
     uv_read_stop(&ctx->handle.stream);
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
 }
