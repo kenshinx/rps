@@ -28,7 +28,7 @@ distclean:
 
 yaml:
 	@printf '%b %b\n' $(MAKECOLOR)MAKE$(ENDCOLOR) $(BINCOLOR)$@$(ENDCOLOR)
-	cd $(LIBYAML) && ./configure && $(MAKE) 1>&2 
+	cd $(LIBYAML) && autoreconf --force --install && ./configure && $(MAKE) 1>&2 
 
 .PHONY: yaml
 

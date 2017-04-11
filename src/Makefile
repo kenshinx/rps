@@ -16,7 +16,7 @@ DEBUG=-g -ggdb
 RPS_DEBUG = $(RPS_DEBUG_OPEN)
 GNU_SOURCE=-D_GNU_SOURCE #libuv need this declaration in linux platform.
 
-DEPENDENCY_TARGETS=yaml libuv
+DEPENDENCY_TARGETS=yaml libuv hiredis jansson
 LIBYAML=yaml-0.1.5
 LIBUV=libuv-v1.9.1
 HIREDIS=hiredis-0.13.3
@@ -67,7 +67,7 @@ RPS_OBJ=rps.o log.o config.o util.o array.o hashmap.o _string.o upstream.o serve
 default: single
 
 
-all: make-contrib $(RPS_BIN)
+all: make-contrib make-proto $(RPS_BIN)
 .PHONY: all
 
 make-contrib:
