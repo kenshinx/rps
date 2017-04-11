@@ -311,7 +311,9 @@ server_timer_reset(rps_ctx_t *ctx) {
     err = uv_timer_start(&ctx->timer, 
             (uv_timer_cb)server_on_timer_expire, timeout, 0);
     if (err) {
-        UV_SHOW_ERROR(err, "reset timer");
+        char why[256];
+        snprintf(why, 256, "reset timer %s", ctx->peername);
+        UV_SHOW_ERROR(err, why);
     }
 }
 
@@ -402,7 +404,9 @@ server_on_write_done(uv_write_t *req, int err) {
     ctx->wstat = c_done;
 
     if (err) {
-        UV_SHOW_ERROR(err, "on write done");
+        char why[256];
+        snprintf(why, 256, "on write to %s", ctx->peername);
+        UV_SHOW_ERROR(err, why);
         ctx->state = c_kill;
         server_do_next(ctx);
         return;
@@ -452,7 +456,9 @@ server_write(rps_ctx_t *ctx, const void *data, size_t len) {
              server_on_write_done);
 
     if (err) {
-        UV_SHOW_ERROR(err, "write");
+        char why[256];
+        snprintf(why, 256, "write to %s", ctx->peername);
+        UV_SHOW_ERROR(err, why);
         return RPS_ERROR;
     }
     
@@ -486,7 +492,9 @@ server_on_connect_done(uv_connect_t *req, int err) {
     }
 
     if (err) {
-        UV_SHOW_ERROR(err, "on connect done");
+        char why[256];
+        snprintf(why, 256, "on connect with %s", ctx->peername);
+        UV_SHOW_ERROR(err, why);
         ctx->connected = 0;
     } else {
         ctx->connected = 1;
@@ -513,7 +521,9 @@ server_connect(rps_ctx_t *ctx) {
             server_on_connect_done);
 
     if (err) {
-        UV_SHOW_ERROR(err, "tcp connect");
+        char why[256];
+        snprintf(why, 256, "tcp connect %s", ctx->peername);
+        UV_SHOW_ERROR(err, why);
         return RPS_ERROR;
     }
 
