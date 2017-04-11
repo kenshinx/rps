@@ -216,6 +216,8 @@ upstream_json_parse(const char *str, struct upstream *u) {
     void *kv;
     rps_status_t status;
 
+    port = 0;
+
     string_init(&host);
 
     root = json_loads(str, 0, &error);

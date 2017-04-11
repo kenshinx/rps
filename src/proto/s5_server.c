@@ -13,8 +13,6 @@ s5_select_auth(struct s5_method_request *req) {
     int i;
     uint8_t method;
 
-    ASSERT(req->nmethods <= 255);
-
     /* Select no authentication required if rps server didn't set user and password */
 
     for (i=0; i<req->nmethods; i++) {
@@ -42,7 +40,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
     }
 
     /* ver(1) + nmethods(1) + methods(nmethods) */
-    if (size != (2 + req->nmethods)) {
+    if (size != (size_t)(2 + req->nmethods)) {
         log_error("s5 client handshake error: junk");
         goto kill;
     }
@@ -79,6 +77,8 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
             new_state = c_kill;
             log_error("s5 client handshake error: unacceptable authentication.");
             break;
+        default:
+            new_state = c_kill;
     }
 
 #ifdef RPS_DEBUG_OPEN
@@ -115,7 +115,7 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     req->passwd[req->plen] = '\0';
 
     /* ver(1) + ulen(1) + uname(ulen) + plen(1) + passwd(plen) */
-    if ((3 + req->ulen + req->plen) != size) {
+    if ((size_t)(3 + req->ulen + req->plen) != size) {
         log_error("s5 client auth error: junk");
         goto kill;
     }
@@ -224,7 +224,7 @@ s5_do_request(struct context *ctx, uint8_t *data, size_t size) {
      * In some case of atyp_domain, alen didn't calculate the last '\0' 
      * suffix with hostname, in order fix this pattern, so we need size -1.
      */
-    if ((6 + alen) != size && (6 + alen) != (size-1)) {
+    if ((size_t)(6 + alen) != size && (size_t)(6 + alen) != (size-1)) {
         log_error("s5 client request error: junk");
         goto kill;
     }

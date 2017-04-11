@@ -13,6 +13,7 @@ RPS_DEBUG = $(RPS_DEBUG_OPEN)
 
 
 LIBUV=libuv-v1.9.1
+LIBYAML=yaml-0.1.5
 
 
 FINAL_CFLAGS=$(WARN) $(OPT) $(DEBUG) $(RPS_DEBUG) $(CFLAGS)
@@ -28,6 +29,7 @@ endif
 FINAL_CFLAGS+= -I../
 
 FINAL_CFLAGS+= -I../../contrib/$(LIBUV)/include 
+FINAL_CFLAGS+= -I../../contrib/$(LIBYAML)/include 
 
 CC?=gcc
 AR?=ar 

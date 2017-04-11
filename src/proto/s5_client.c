@@ -216,12 +216,10 @@ s5_do_request(struct context *ctx) {
 static void
 s5_do_reply(struct context *ctx) {
     uint8_t    *data;
-    size_t     size;
     struct s5_in4_response *resp;
     char remoteip[MAX_INET_ADDRSTRLEN];
 
     data = (uint8_t *)ctx->rbuf;
-    size = (size_t)ctx->nread;
 
     resp = (struct s5_in4_response *)data; 
     if (resp->ver != SOCKS5_VERSION) {
