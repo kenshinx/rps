@@ -62,11 +62,12 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
     ASSERT(string_empty(line));
 
     n = 0;
-    len = 1;
+    len = 0;
 
     for (i=start; i<end; i++, len++) {
         c = data[i];
         if (c == LF) {
+            len += 1; // make the start pointer jump current LF in last loop
             if (last == CR) {
                 n = len - CRLF_LEN;
             } else {
@@ -152,7 +153,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                 }
 
                 if ((ch < 'A' || ch > 'Z') && ch != '_') {
-                    log_error("http parse request line error, invalid method");
+                    log_error("http parse request line error, '%s' : invalid method",  line->data);
                     return RPS_ERROR;
                 }
                 break;
@@ -170,7 +171,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                 if (ch == ':') {
                     end = &line->data[i];
                     if (end - start <= 0) {
-                        log_error("http parse request line error, invalid host");
+                        log_error("http parse request line error, '%s' : invalid host", line->data);
                         return RPS_ERROR;
                     }
                     string_duplicate(&req->host, (const char *)start, end - start);
@@ -180,14 +181,14 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                 }
 
                 if (ch == ' ') {
-                    log_error("http parse request line error, need port");
+                    log_error("http parse request line error, '%s' : need port", line->data);
                     return RPS_ERROR;
                 }
 
                  
                 /* rule is not too strict, adapt to punycode encode doamin */
                 if (ch < '-' || ch > 'z') {
-                    log_error("http parse request line error, invalid host");
+                    log_error("http parse request line error, '%s' : invalid host", line->data);
                     return RPS_ERROR;
                 }
                 break;
@@ -202,7 +203,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                     len = end - start;
 
                     if (len <=0 || len >= 6) {
-                        log_error("http parse request line error, invalid port");
+                        log_error("http parse request line error, '%s' : invalid port", line->data);
                         return RPS_ERROR;
                     }
 
@@ -215,7 +216,8 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                     break;
                 }
                 
-                log_error("http parse request line error, invalid port");
+                log_error("http parse request line error, '%s' : invalid port", 
+                        line->data);
                 return RPS_ERROR;
 
             case sw_space_before_protocol:
@@ -238,7 +240,8 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
 
             case sw_end:
                 if (ch != ' ') {
-                    log_error("http parse request line error, junk in request line");
+                    log_error("http parse request line error, '%s' : junk in request line", 
+                            line->data);
                     return RPS_ERROR;
                 }
             
@@ -248,14 +251,14 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
     }
 
     if (end - start <= 0) {
-        log_error("http parse request line error, invalid protocol");
+        log_error("http parse request line error, '%s' : invalid protocol", line->data);
         return RPS_ERROR;
     }
 
     string_duplicate(&req->protocol, (const char *)start, end - start +1);
 
     if (state != sw_protocol && state != sw_end) {
-        log_error("http parse request line error, parse failed");
+        log_error("http parse request line error, '%s' : parse failed", line->data);
         return RPS_ERROR;
     }
     
@@ -505,7 +508,7 @@ http_response_check(struct http_response *resp) {
         return RPS_ERROR;
     }
 
-    if (resp->code < HTTP_MIN_STATUS_CODE || resp->code > HTTP_MAX_STATUS_CODE) {
+    if (!http_valid_code(resp->code)) {
         log_error("http response check error, invalid http code: %d", resp->code);
         return RPS_ERROR;
     }
@@ -545,6 +548,9 @@ http_request_dump(struct http_request *req, uint8_t rs) {
 
 void 
 http_response_dump(struct http_response *resp, uint8_t rs) {
+    size_t len;
+    char body[80];
+
     if (rs == http_recv) {
         log_verb("[http recv response]");
     } else {
@@ -554,6 +560,17 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
     log_verb("\t%s %d %s", resp->protocol.data, resp->code, 
         resp->status.data);
     hashmap_iter(&resp->headers, http_header_dump);
+
+    if (!string_empty(&resp->body)) {
+        log_verb("");
+        len = snprintf(body, 80, "%s", resp->body.data);
+        if (len > 80) {
+            /* body length larger than 80 bytes, 
+             * show 75 character and four dots and one \0 */
+            snprintf(&body[75], 5, ".....");
+         }
+        log_verb("\t%s", body);
+    }
 }
 #endif
 
@@ -744,23 +761,49 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
     size_t i, len;
     int n;
     rps_str_t line;
+    int body_start;
+    int body_len;
 
     i = 0;
     n = 0;
+    body_start = 0;
+    body_len = 0;
 
     for (;;) {
         string_init(&line);
 
         len = http_read_line(data, i, size, &line);
-        if (len <= CRLF_LEN) {
-            string_deinit(&line);
-            /* read empty line, only contain /r/n */
-            break;
-        }
-
 
         i += len;
         n++;
+
+        if (len == CRLF_LEN || len == LF_LEN) {
+            /* empty line, just contain /r/n/r/n or /r/n, mean body start */
+            body_start = i;
+            continue;
+        }
+
+        if (len == 0) {
+            /* read end */
+            break;
+        }
+
+        if (body_start) {
+            /* free the has been read first line of body */
+            string_deinit(&line); 
+
+            body_len = size - body_start;
+            if (body_len >= HTTP_BODY_MAX_LENGTH) {
+                /* body too large, ignore*/
+                break;
+            }
+
+            string_duplicate(&resp->body, (const char *)&data[body_start], body_len);
+            
+            i = i - len + body_len;
+            break;
+        }
+
 
         if (n == 1) {
             if (http_parse_response_line(&line, resp) != RPS_OK) {
@@ -851,9 +894,13 @@ http_basic_auth_gen(const char *uname, const char *passwd, char *output) {
 
     length = base64_encode_block(input, strlen(input), output, &bstate);
     length += base64_encode_blockend(&output[length], &bstate);
-    output[length] = '\0';
 
-    return length;
+    ASSERT (length > 1);
+
+    /* base64_encode_blockend append \n at the last of outoput, we need remove the \n */
+    output[length - 1] = '\0';
+
+    return length - 1;
 }
 
 static int
@@ -899,7 +946,7 @@ http_response_message(char *message, struct http_response *resp) {
         }
     }
 
-    len += snprintf(message + len, size - len, "\r\n\r\n");
+    len += snprintf(message + len, size - len, "\r\n");
 
     len += snprintf(message + len, size - len, "%s", resp->body.data);
 
@@ -933,7 +980,7 @@ http_request_message(char *message, struct http_request *req) {
         }
     }
 
-    len += snprintf(message + len, size - len, "\r\n\r\n");
+    len += snprintf(message + len, size - len, "\r\n");
 
 #ifdef RPS_DEBUG_OPEN
     http_request_dump(req, http_send);

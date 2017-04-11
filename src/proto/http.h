@@ -81,8 +81,7 @@
 #define HTTP_HEADER_MAX_KEY_LENGTH     256
 #define HTTP_HEADER_MAX_VALUE_LENGTH   512
 
-//http body size always be small in our approach.
-#define HTTP_BODY_MAX_LENGTH    256
+#define HTTP_BODY_MAX_LENGTH    2048
 // 1k is big enough in our approach
 #define HTTP_MESSAGE_MAX_LENGTH    1024
 
@@ -93,12 +92,14 @@ static const char HTTP_DEFAULT_PROTOCOL[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";
 static const char HTTP_DEFAULT_REALM[] = "rps";
 static const char HTTP_DEFAULT_PROXY_AGENT[] = "RPS/1.0";
+static const char HTTP_DEFAULT_PROXY_CONNECTION[] = "Keep-Alive";
 
 
 #define HTTP_RESP_MAP(V)                                                \
     V(0,   http_undefine, "Undefine")                                   \
     V(200, http_ok, "OK")                                               \
     V(403, http_forbidden, "Forbidden")                                 \
+    V(404, http_not_found, "Not Found")                                 \
     V(407, http_proxy_auth_required, "Proxy Authentication Required")   \
     V(500, http_server_error, "Internal Server Error")                  \
     V(502, http_bad_gateway, "Bad Gateway")                             \
@@ -142,6 +143,11 @@ http_method_str(uint16_t code) {
     }
 #undef HTTP_METHOD_GEN
     return "EMETHOD";
+}
+
+static inline int
+http_valid_code(uint16_t code) {
+    return (code > HTTP_MIN_STATUS_CODE) && (code < HTTP_MAX_STATUS_CODE);
 }
 
 enum http_request_verify_result {

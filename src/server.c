@@ -750,8 +750,9 @@ server_finish(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Establish tunnel %s:%d -> rps -> upstream -> %s:%d failed.",
-            request->peername, rps_unresolve_port(&request->peer),
+    log_info("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> upstream -> %s:%d failed.",
+            request->peername, rps_unresolve_port(&request->peer), 
+            rps_proto_str(request->proto), rps_proto_str(forward->proto), 
             remoteip, rps_unresolve_port(&sess->remote));
 
     forward->state = c_kill;
@@ -781,11 +782,11 @@ server_establish(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Establish tunnel %s:%d -> rps -> %s:%d -> %s:%d",
-            request->peername, rps_unresolve_port(&request->peer),
-            forward->peername, rps_unresolve_port(&forward->peer),
+    log_info("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
+            request->peername, rps_unresolve_port(&request->peer), 
+            rps_proto_str(request->proto), rps_proto_str(forward->proto), 
+            forward->peername, rps_unresolve_port(&forward->peer), 
             remoteip, rps_unresolve_port(&sess->remote));
-    
 }
 
 static void

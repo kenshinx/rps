@@ -48,6 +48,15 @@ http_send_request(struct context *ctx) {
         hashmap_set(&req.headers, (void *)key3, strlen(key3), (void *)val3, v3len);
     }
 
+#ifdef HTTP_PROXY_CONNECTION
+    /* set proxy-connection header*/
+    const char key4[] = "Porxy-Connection";
+    hashmap_set(&req.headers, (void *)key4, strlen(key4), 
+            (void *)HTTP_DEFAULT_PROXY_CONNECTION, strlen(HTTP_DEFAULT_PROXY_CONNECTION));
+    
+#endif
+
+
     len = http_request_message(message, &req);
 
     ASSERT(len > 0);
@@ -79,6 +88,8 @@ http_verify_response(struct context *ctx) {
 
     rps_unresolve_addr(&ctx->sess->remote, remoteip);
 
+    ctx->reply_code = resp.code;
+
     switch (resp.code) {
         case http_ok:
             result = http_verify_success;
@@ -95,17 +106,11 @@ http_verify_response(struct context *ctx) {
             break;
 
         case http_forbidden:
-            log_debug("http upstream %s 403 forbidden", ctx->peername);
-            result = http_verify_error;
-            break;
-            
+        case http_not_found:
         case http_server_error:
-            log_debug("http upstream %s 500 server error", ctx->peername);
-            result = http_verify_error;
-            break;
-            
         case http_bad_gateway:
-            log_debug("http upstream %s 502 bad gateway", ctx->peername);
+            log_debug("http upstream %s error, %d %s", ctx->peername, 
+                    resp.code, resp.status.data);
             result = http_verify_error;
             break;
 
@@ -154,6 +159,52 @@ http_do_handshake_resp(struct context *ctx) {
             NOT_REACHED();
              
     }
+
+    server_do_next(ctx);
+}
+
+static void
+http_do_auth(struct context *ctx) {
+    struct upstream *u;
+
+    u = &ctx->sess->upstream;
+
+    if (string_empty(&u->uname)) {
+        goto retry;
+    }
+
+    if (http_send_request(ctx) != RPS_OK) {
+        goto retry;
+    }
+
+    ctx->state = c_auth_resp;
+    return;
+
+retry:
+    ctx->state = c_retry;
+    server_do_next(ctx);
+}
+
+static void
+http_do_auth_resp(struct context *ctx) {
+    int http_verify_result;
+    
+    http_verify_result = http_verify_response(ctx);
+
+    switch (http_verify_result) {
+        case http_verify_success:
+            ctx->established = 1;
+            ctx->state = c_exchange;
+            break;
+        case http_verify_fail:
+        case http_verify_error:
+            ctx->state = c_retry;
+            break;
+        default:
+            NOT_REACHED();
+    }
+
+    server_do_next(ctx);
 }
 
 
@@ -167,7 +218,12 @@ http_client_do_next(struct context *ctx) {
         case c_handshake_resp:
             http_do_handshake_resp(ctx);
             break;
-
+        case c_auth_req:
+            http_do_auth(ctx);
+            break;
+        case c_auth_resp:
+            http_do_auth_resp(ctx);
+            break;
         default:
             NOT_REACHED();
     }
