@@ -181,10 +181,14 @@ rps_upstream_load(struct application *app) {
     uv_loop_t *loop;
     uv_timer_t *timer;
 
+    loop = rps_alloc(sizeof(uv_loop_t));
+
+    ASSERT(loop != NULL);
+    
+    uv_loop_init(loop);
+
     upstreams_init(&app->upstreams, &app->cfg.redis, &app->cfg.upstreams);
     
-    loop = uv_default_loop();
-
     timer = (uv_timer_t *)rps_alloc(sizeof(*timer));
     
     timer->data = &app->upstreams;
@@ -196,6 +200,8 @@ rps_upstream_load(struct application *app) {
 
     uv_loop_close(loop);
     uv_loop_delete(loop);
+    rps_free(loop);
+    rps_free(timer);
 }
 
 static void
