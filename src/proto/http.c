@@ -63,6 +63,7 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
 
     n = 0;
     len = 0;
+    last = '\0';
 
     for (i=start; i<end; i++, len++) {
         c = data[i];
@@ -104,6 +105,8 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
     } state;
 
     state = sw_start;
+    start = line->data;
+    end = line->data;
 
     for (i = 0; i < line->len; i++) {
 
@@ -388,6 +391,8 @@ http_request_auth_parse(struct http_request_auth *auth,
     } state;
 
     state = sw_start;
+    start = credentials;
+    end = credentials;
 
     for (i = 0;  i < credentials_size; i++) {
         ch = credentials[i];
@@ -650,6 +655,8 @@ http_parse_response_line(rps_str_t *line, struct http_response *resp) {
     } state;
 
     state = sw_start;
+    start = line->data;
+    end = line->data;
 
     for (i = 0; i < line->len; i++) {
         ch = line->data[i];
