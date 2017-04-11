@@ -160,7 +160,7 @@ rps_unresolve_port(rps_addr_t *addr) {
     } else if (addr->family == AF_DOMAIN) {
         return addr->addr.name.port;
     } else {
-        NOT_REACHED();
+        log_error("Unknow inet family:%d", addr->family);
         return -1;
     }
 }
