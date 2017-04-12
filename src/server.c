@@ -373,8 +373,8 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     server_do_next(ctx);
 }
 
-rps_status_t
-server_read(rps_ctx_t *ctx) {
+static rps_status_t
+server_read_start(rps_ctx_t *ctx) {
     int err;
 
     err = uv_read_start(&ctx->handle.stream, 
@@ -386,6 +386,12 @@ server_read(rps_ctx_t *ctx) {
     ctx->rstat = c_busy;
 
     return RPS_OK;
+}
+
+static void
+server_read_stop(rps_ctx_t *ctx) {
+    uv_read_stop(&ctx->handle.stream);
+    ctx->rstat = c_stop;
 }
 
 static void
@@ -621,7 +627,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
     /*
      * Beigin receive data
      */
-    status = server_read(request);
+    status = server_read_start(request);
     if (status != RPS_OK) {
         goto error;
     }
@@ -634,7 +640,7 @@ error:
 }
 
 static void
-server_forward_kickin(rps_sess_t *sess) {
+server_switch(rps_sess_t *sess) {
     struct server *s;
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
@@ -643,6 +649,8 @@ server_forward_kickin(rps_sess_t *sess) {
 
     s = sess->server;
     request = sess->request;
+    /* request stop read, wait for upstream establishment finished */
+    server_read_stop(request);
 
     forward = (struct context *)rps_alloc(sizeof(struct context));
     if (forward == NULL) {
@@ -690,7 +698,7 @@ server_forward_connect(rps_sess_t *sess) {
             log_debug("Connect upstream %s://%s:%d success", rps_proto_str(forward->proto), forward->peername, 
                     rps_unresolve_port(&forward->peer));
             
-            if (server_read(forward) != RPS_OK) {
+            if (server_read_start(forward) != RPS_OK) {
                 goto kill;
             }
 
@@ -787,6 +795,10 @@ server_establish(rps_sess_t *sess) {
     request->state = c_reply;
     request->reply_code = forward->reply_code;
     server_do_next(request);
+    
+    ASSERT(request->rstat == c_stop);
+    /* reuqest start read data again */
+    server_read_start(request);
 
 
     forward->state = c_established;
@@ -910,8 +922,8 @@ server_do_next(rps_ctx_t *ctx) {
     switch (ctx->state) {
         case c_exchange:
             if (ctx->flag == c_request) {
-                /* exchange from request context to forward context */
-                server_forward_kickin(ctx->sess);
+                /* switch context from request to forward and request stop read */
+                server_switch(ctx->sess);
             } else {
                 /* finish dural context handshake, tunnel established */
                 server_establish(ctx->sess);
