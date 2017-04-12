@@ -621,12 +621,14 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     }
 
     if (i < size - 3 *CRLF_LEN) {
+        data[size] = '\0';
         log_error("http request contain junk: %s", data);
         /* 2*CRLF_LEN == last line \r\n\r\n */
         return RPS_ERROR;
     }
             
     if (http_request_check(req) != RPS_OK) {
+        data[size] = '\0';
         log_error("invalid http request: %s", data);
         return RPS_ERROR;
     }
@@ -830,11 +832,13 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
     }
 
     if (i < size - 3 * CRLF_LEN) {
+        data[size] = '\0';
         log_error("http response contain junk: %s", data);
         return RPS_ERROR;
     }
 
     if (http_response_check(resp) != RPS_OK) {
+        data[size] = '\0';
         log_error("invalid http response: %s", data);
         return RPS_ERROR;
     }
