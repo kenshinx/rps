@@ -31,7 +31,7 @@ class HTTPTunnelPorxy(object):
         payload = "CONNECT %s:%d HTTP/1.1\r\n" %(host, port)
         payload = payload + "HOST: %s\r\n" %host
         payload = payload + "User-agent: RPS/HTTP PROXY\r\n"
-        payload = payload + "\r\n\r\n"
+        payload = payload + "\r\n"
 
         print "---------------------------------------------"
         print "send:\n"
@@ -72,7 +72,7 @@ class HTTPTunnelPorxy(object):
         payload = payload + "HOST: %s\r\n" %host
         payload = payload + "User-agent: RPS/HTTP PROXY\r\n"
         payload = payload + "Proxy-Authorization: %s\r\n" %credential 
-        payload = payload + "\r\n\r\n"
+        payload = payload + "\r\n"
 
         print "---------------------------------------------"
         print "send:\n"
@@ -109,7 +109,7 @@ class HTTPTunnelPorxy(object):
 
         payload = "GET / HTTP/1.1\r\n"
         payload = payload + "HOST: %s\r\n" %host
-        payload = payload + "\r\n\r\n"
+        payload = payload + "\r\n"
 
         print "---------------------------------------------"
         print "send: \n"
@@ -128,7 +128,7 @@ class HTTPTunnelPorxy(object):
         
         payload = "GET https://%s HTTP/1.1\r\n" %host
         payload = payload + "HOST: %s\r\n" %host
-        payload = payload + "\r\n\r\n"
+        payload = payload + "\r\n"
 
         print "---------------------------------------------"
         print "send: \n"
