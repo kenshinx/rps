@@ -146,13 +146,11 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
         goto kill;
     }
 
-#ifdef RPS_DEBUG_OPEN
     if (resp.status ==  s5_auth_allow) {
-        log_verb("s5 client authentication success.");
+        log_debug("s5 client authentication success.");
     } else {
-        log_verb("s5 client authentication failed.");
+        log_debug("s5 client authentication failed.");
     }
-#endif
 
     ctx->state = new_state;
     return;

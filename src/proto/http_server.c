@@ -76,6 +76,7 @@ next:
     if (result == http_verify_success) {
         remote = &ctx->sess->remote;
         rps_addr_name(remote, req.host.data, req.host.len, req.port);
+        log_debug("http client handshake success");
         log_debug("remote: %s:%d", req.host.data, req.port);
     }
 
@@ -201,16 +202,16 @@ http_do_auth(struct context *ctx) {
 
     switch (http_verify_result) {
         case http_verify_success:
-            log_verb("http client authenticate success");
+            log_debug("http client authenticate success");
             ctx->state = c_exchange;
             break;
         case http_verify_fail:
             ctx->state = c_auth_resp;
-            log_verb("http client authenticate fail");
+            log_debug("http client authenticate fail");
             break;
         case http_verify_error:
             ctx->state = c_kill;
-            log_verb("http client authenticate error");
+            log_debug("http client authenticate error");
             break;
     }
 
