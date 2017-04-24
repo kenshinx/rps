@@ -7,19 +7,24 @@
 static int
 http_send_request(struct context *ctx) {
     struct http_request req;
-    rps_addr_t  *remote;
     struct upstream *u;
+    rps_addr_t  *remote;
+    char remote_addr[MAX_INET_ADDRSTRLEN];
     char message[HTTP_MESSAGE_MAX_LENGTH];
     int len;
 
     remote = &ctx->sess->remote;
-    ASSERT(remote->family == AF_DOMAIN);
+
+    if (rps_unresolve_addr(remote, remote_addr) != RPS_OK) {
+        return RPS_ERROR;
+    }
+
 
     http_request_init(&req);
     
     req.method = http_connect;
-    req.port = (int)remote->addr.name.port;
-    string_duplicate(&req.host, remote->addr.name.host, strlen(remote->addr.name.host));
+    req.port = (int)rps_unresolve_port(remote);
+    string_duplicate(&req.host, remote_addr, strlen(remote_addr));
     string_duplicate(&req.protocol, HTTP_DEFAULT_PROTOCOL, strlen(HTTP_DEFAULT_PROTOCOL));
 
     const char key1[] = "Host";
