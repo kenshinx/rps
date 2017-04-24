@@ -86,12 +86,10 @@ server_sess_free(rps_sess_t *sess) {
 }
 
 static rps_status_t
-server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, 
-        rps_proto_t proto, uint32_t timeout) {
+server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout) {
     ctx->sess = sess;
     ctx->flag = flag;
     ctx->state = c_init;
-    ctx->proto = proto;
     ctx->nread = 0;
     ctx->nwrite = 0;
     ctx->nwrite2 = 0;
@@ -120,6 +118,14 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag,
         return RPS_ENOMEM;
     }
 
+    return RPS_OK;
+}
+
+static void 
+server_ctx_set_proto(rps_ctx_t *ctx, rps_proto_t proto) {
+
+    ctx->proto = proto;
+
     if (ctx->proto == SOCKS5) {
         switch (ctx->flag) {
             case c_request:
@@ -143,10 +149,8 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag,
                 NOT_REACHED();
         }
     } else {
-        return RPS_ERROR;
+        NOT_REACHED();
     }
-
-    return RPS_OK;
 }
 
 
@@ -578,10 +582,12 @@ server_on_request_connect(uv_stream_t *us, int err) {
         return;
     }
     sess->request = request;
-    status = server_ctx_init(request, sess, c_request, s->proto, s->rtimeout);
+    status = server_ctx_init(request, sess, c_request, s->rtimeout);
     if (status != RPS_OK) {
         return;
     }
+
+    server_ctx_set_proto(request, s->proto);
     
     uv_tcp_init(us->loop, &request->handle.tcp);
     uv_timer_init(us->loop, &request->timer);
@@ -661,7 +667,7 @@ server_switch(rps_sess_t *sess) {
         return;
     }
 
-    if (server_ctx_init(forward, sess, c_forward, request->proto, s->ftimeout) != RPS_OK) {
+    if (server_ctx_init(forward, sess, c_forward,  s->ftimeout) != RPS_OK) {
         request->state = c_kill;
         server_do_next(request);
         return;
@@ -704,6 +710,8 @@ server_forward_connect(rps_sess_t *sess) {
                 goto kill;
             }
 
+            /* Set forward protocol after upstream has connected */
+            server_ctx_set_proto(forward, sess->upstream.proto);
             forward->reconn = 0;
             forward->state = c_handshake_req;
             server_do_next(forward);
@@ -719,16 +727,13 @@ server_forward_connect(rps_sess_t *sess) {
 
     upstream_deinit(&sess->upstream);
 
-    if (upstreams_get(s->upstreams, forward->proto, &sess->upstream) != RPS_OK) {
+    if (upstreams_get(s->upstreams, sess->request->proto, &sess->upstream) != RPS_OK) {
         log_error("no available %s upstream proxy.", rps_proto_str(forward->proto));
         goto kill;
     }
 
-    /* upstream proto may be changed in hybrid mode */
-    forward->proto = sess->upstream.proto;
 
     memcpy(&forward->peer, &sess->upstream.server, sizeof(sess->upstream.server));
-
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {;
         goto kill;
