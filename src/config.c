@@ -222,7 +222,7 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         } else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section, "servers")) {
+    } else if (rps_strcmp(section, "servers") == 0) {
         if (rps_strcmp(key, "rtimeout") == 0) {
             /*convert uint from second to millsecond*/
             cfg->servers.rtimeout = (atoi((char *)val->data)) * 1000;
@@ -231,7 +231,7 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         } else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section, "ss") == 0 ) {
+    } else if (rps_strcmp(section, "ss") == 0) {
         server = (struct config_server *)array_head(cfg->servers.ss);
         if (rps_strcmp(key, "proto") == 0) {
             status = string_copy(&server->proto, val);
@@ -472,6 +472,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
                 server = (struct config_server *)array_push(cfg->servers.ss);
                 if (server == NULL) {
                     status = RPS_ENOMEM;
+                    break;
                 }
                 config_server_init(server);
             }
@@ -481,6 +482,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
                 upstream = (struct config_upstream *)array_push(cfg->upstreams.pools);
                 if (upstream == NULL) {
                     status = RPS_ENOMEM;
+                    break;
                 }
                 config_upstream_init(upstream);
             }
@@ -527,6 +529,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
     config_event_done(cfg);
     
     if (status != RPS_OK) {
+        log_warn("config parse section %s error", section->data);
         return status;
     }
 
@@ -537,6 +540,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
     if (leaf) {
         status = config_handler(cfg, section);
         if (status != RPS_OK) {
+            log_warn("config parse section %s error", section->data);
             return status;
         }
     }

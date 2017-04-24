@@ -11,7 +11,7 @@ servers:
 
     #Forward timeout should consider retry times
     #So set forward timeout less than request timeout is make sense in general
-    ftimeout: 15
+    ftimeout: 20
 
     #servers
     ss:
@@ -27,7 +27,6 @@ servers:
           port: 9891
           username: rps
           password: secret
-
 
 upstreams:
     refresh: 600 #5 minutes

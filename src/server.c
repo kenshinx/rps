@@ -86,7 +86,8 @@ server_sess_free(rps_sess_t *sess) {
 }
 
 static rps_status_t
-server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t proto) {
+server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, 
+        rps_proto_t proto, uint32_t timeout) {
     ctx->sess = sess;
     ctx->flag = flag;
     ctx->state = c_init;
@@ -102,6 +103,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, rps_proto_t prot
     ctx->reply_code = UNDEFINED_REPLY_CODE;
     ctx->rstat = c_stop;
     ctx->wstat = c_stop;
+    ctx->timeout = timeout;
     ctx->handle.handle.data  = ctx;
     ctx->write_req.data = ctx;
     ctx->timer.data = ctx;
@@ -308,12 +310,9 @@ server_on_timer_expire(uv_timer_t *handle) {
 static void 
 server_timer_reset(rps_ctx_t *ctx) {
     int err;
-    int timeout;
-
-    timeout = ctx->sess->server->cfg->timeout;
 
     err = uv_timer_start(&ctx->timer, 
-            (uv_timer_cb)server_on_timer_expire, timeout, 0);
+            (uv_timer_cb)server_on_timer_expire, ctx->timeout, 0);
     if (err) {
         char why[256];
         snprintf(why, 256, "reset timer %s", ctx->peername);
@@ -579,7 +578,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
         return;
     }
     sess->request = request;
-    status = server_ctx_init(request, sess, c_request, s->proto);
+    status = server_ctx_init(request, sess, c_request, s->proto, s->rtimeout);
     if (status != RPS_OK) {
         return;
     }
@@ -662,7 +661,7 @@ server_switch(rps_sess_t *sess) {
         return;
     }
 
-    if (server_ctx_init(forward, sess, c_forward, request->proto) != RPS_OK) {
+    if (server_ctx_init(forward, sess, c_forward, request->proto, s->ftimeout) != RPS_OK) {
         request->state = c_kill;
         server_do_next(request);
         return;

@@ -107,6 +107,8 @@ struct context {
 
     rps_next_t          do_next;
 
+    uint32_t            timeout;
+
     uv_timer_t          timer;
     uv_write_t          write_req;
     uv_connect_t        connect_req;
