@@ -302,12 +302,13 @@ server_on_timer_expire(uv_timer_t *handle) {
     
 
     if (ctx->flag == c_request) {
+        ctx->state = c_kill;
         log_debug("Request from %s timeout", ctx->peername);
     } else {
+        ctx->state = c_retry;
         log_debug("Forward to %s timeout", ctx->peername);
     }
 
-    ctx->state = c_kill;
     server_do_next(ctx);
 }
 
@@ -899,7 +900,6 @@ server_forward_retry(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->state == c_retry);
-    ASSERT(forward->connected);
     ASSERT(!forward->established);
 
     rps_unresolve_addr(&sess->remote, remoteip);
@@ -911,6 +911,13 @@ server_forward_retry(rps_sess_t *sess) {
 
     if (forward->retry >= s->upstreams->maxretry) {
         forward->state = c_failed;
+        server_do_next(forward);
+        return;
+    }
+
+    /* forward maybe still in unconnected state */
+    if (!forward->connected) {
+        forward->state = c_conn;
         server_do_next(forward);
         return;
     }
