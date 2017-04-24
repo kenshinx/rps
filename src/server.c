@@ -8,7 +8,8 @@
 
 
 rps_status_t
-server_init(struct server *s, struct config_server *cfg, struct upstreams *us) {
+server_init(struct server *s, struct config_server *cfg, 
+        struct upstreams *us, uint32_t rtimeout, uint32_t ftimeout) {
     int err;
     int status;
 
@@ -41,6 +42,8 @@ server_init(struct server *s, struct config_server *cfg, struct upstreams *us) {
 
     s->cfg = cfg;
     s->upstreams = us;
+    s->rtimeout = rtimeout;
+    s->ftimeout = ftimeout;
 
     return RPS_OK;
 }

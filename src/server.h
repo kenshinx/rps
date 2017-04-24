@@ -23,12 +23,16 @@ struct server {
     
     rps_addr_t              listen;
     
+    uint32_t                rtimeout; /* request context timeout */
+    uint32_t                ftimeout; /* forward context timeout */
+
     struct config_server    *cfg;
 
     struct upstreams        *upstreams;
 };
 
-rps_status_t server_init(struct server *s, struct config_server *cs, struct upstreams *us);
+rps_status_t server_init(struct server *s, struct config_server *cs, 
+        struct upstreams *us, uint32_t rtimeout, uint32_t ftimeout);
 void server_deinit(struct server *s);
 void server_run(struct server *s);
 // void server_stop(struct server *);

@@ -143,7 +143,7 @@ rps_server_load(struct application *app) {
 
 	array_null(&app->servers);
 
-    n = array_n(app->cfg.servers);
+    n = array_n(app->cfg.servers.ss);
 
     status = array_init(&app->servers, n , sizeof(struct server));   
     if (status != RPS_OK) {
@@ -151,13 +151,14 @@ rps_server_load(struct application *app) {
     }
     
     for (i = 0; i < n; i++) {
-        cfg = (struct config_server *)array_get(app->cfg.servers, i);
+        cfg = (struct config_server *)array_get(app->cfg.servers.ss, i);
         s = (struct server *)array_push(&app->servers);
         if (s == NULL) {
             goto error;
         }
         
-        status = server_init(s, cfg, &app->upstreams);
+        status = server_init(s, cfg, &app->upstreams, 
+                app->cfg.servers.rtimeout, app->cfg.servers.ftimeout);
         if (status != RPS_OK) {
             goto error;
         }

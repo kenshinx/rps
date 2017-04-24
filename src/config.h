@@ -26,7 +26,6 @@ struct config_server {
     uint16_t        port;
     rps_str_t       username;
     rps_str_t       password;
-    uint32_t        timeout;
 };
 
 struct config_upstream {

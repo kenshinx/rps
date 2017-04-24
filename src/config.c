@@ -99,7 +99,7 @@ config_server_deinit(struct config_server *server) {
 
 static rps_status_t
 config_servers_init(struct config_servers *servers) {
-    servers->ss = array_create(CONFIG_SERVERS_NUM. sizeof(struct config_server));  
+    servers->ss = array_create(CONFIG_SERVERS_NUM, sizeof(struct config_server));  
     if (servers->ss == NULL) {
         return RPS_ENOMEM;
     }
@@ -582,8 +582,6 @@ config_end_parse(struct config *cfg) {
 static rps_status_t
 config_parse(struct config *cfg){
     rps_status_t status;
-    
-    ASSERT(array_n(cfg->servers) == 0);   
 
     status = config_begin_parse(cfg);
     if (status != RPS_OK) {
