@@ -52,6 +52,20 @@ rps_proto_int(const char *proto) {
 }
 
 
+/* Unified reply code, will mapping with http and socks5 reponse code */
+typedef enum {
+    rps_rep_ok,
+    rps_rep_forbidden,
+    rps_rep_auth_require,
+    rps_rep_not_found,
+    rps_rep_invalid_request,
+    rps_rep_server_error,
+    rps_rep_timeout,
+    rps_rep_bad_request,
+    rps_rep_unreachable,
+    rps_rep_undefined,
+} rps_reply_code_t;
+
 typedef struct context rps_ctx_t;
 typedef struct session rps_sess_t;
 

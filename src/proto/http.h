@@ -122,6 +122,38 @@ http_resp_code_str(uint16_t code) {
     return "Invalid response status code.";
 }
 
+#define HTTP_REPLY_CODE_MAP(V)                                      \
+    V(http_ok,                  rps_rep_ok)                         \
+    V(http_forbidden,           rps_rep_forbidden)                  \
+    V(http_not_found,           rps_rep_not_found                   \
+    V(http_proxy_auth_required, rps_rep_auth_require)               \
+    V(http_server_error,        rps_rep_server_error)               \
+    V(http_bad_gateway,         rps_rep_unreachable)                \
+
+
+static inline int
+http_reply_code_lookup(int code) {
+    #define HTTP_REPLY_CODE_GEN(c1, c2) case c1: return c2;
+    switch(code) {
+        HTTP_REPLY_CODE_MAP(HTTP_REPLY_CODE_GEN)
+        default: ;
+    }
+    #undef HTTP_REPLY_CODE_GEN
+    return rps_rep_undefined;
+}
+
+static inline int
+http_reply_code_reverse(int code) {
+    #define HTTP_REPLY_CODE_GEN(c1, c2) case c2: return c1;
+    switch(code) {
+        HTTP_REPLY_CODE_MAP(HTTP_REPLY_CODE_GEN)
+        default: ;
+    }
+    #undef HTTP_REPLY_CODE_GEN
+    return http_undefine;
+}
+
+
 #define HTTP_METHOD_MAP(V)                  \
     V(0, http_emethod, "EMETHOD")           \
     V(1, http_get, "GET")                   \

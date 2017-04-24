@@ -126,6 +126,39 @@ s5_strrep(s5_rep_t code) {
     return "Unknown rep.";
 }
 
+#define S5_REPLY_CODE_MAP(V)                                    \
+    V(s5_rep_success,           rps_rep_ok)                     \
+    V(s5_rep_socks_fail,        rps_rep_bad_request)            \
+    V(s5_rep_conn_deny,         rps_rep_auth_require)           \
+    V(s5_rep_net_unreach,       rps_rep_unreachable)            \
+    V(s5_rep_conn_refuse,       rps_rep_forbidden)              \
+    V(s5_rep_ttl_expire,        rps_rep_timeout)                \
+    V(s5_rep_cmd_not_support,   rps_rep_invalid_request)        \
+    V(s5_rep_unassigned,        rps_rep_undefined)              \
+
+static inline int
+s5_reply_code_lookup(int code) {
+    #define S5_REPLY_CODE_GEN(c1, c2) case c1: return c2;
+    switch(code) {
+        S5_REPLY_CODE_MAP(S5_REPLY_CODE_GEN)
+        default: ;
+    }
+    #undef S5_REPLY_CODE_GEN
+    return rps_rep_undefined;
+}
+
+static inline int
+s5_reply_code_reverse(int code) {
+    #define S5_REPLY_CODE_GEN(c1, c2) case c2: return c1;
+    switch(code) {
+        S5_REPLY_CODE_MAP(S5_REPLY_CODE_GEN)
+        default: ;
+    }
+    #undef S5_REPLY_CODE_GEN
+    return s5_rep_unassigned;
+}
+
+
 #define SOCKS5_VERSION  5
 #define SOCKS5_AUTH_PASSWD_VERSION 1
 
