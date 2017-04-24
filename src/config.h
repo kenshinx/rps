@@ -14,6 +14,12 @@
 #define UPSTREAM_DEFAULT_MAXRECONN   3
 #define UPSTREAM_DEFAULT_MAXRETRY   3
 
+struct config_servers {
+    rps_array_t     *ss;
+    uint32_t        rtimeout;
+    uint32_t        ftimeout;
+};
+
 struct config_server {
     rps_str_t       proto;
     rps_str_t       listen;
@@ -57,10 +63,10 @@ struct config {
     rps_str_t               pidfile;
     FILE                    *fd;
     unsigned                daemon:1;
+    struct config_servers   servers;
     struct config_upstreams upstreams;
     struct config_redis     redis;
     struct config_log       log;
-    rps_array_t             *servers;
     rps_array_t             *args;
     uint32_t                depth;
     unsigned                seq:1;

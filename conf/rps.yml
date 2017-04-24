@@ -6,20 +6,28 @@ daemon: false
 pidfile: /var/run/rps.pid
 
 servers:
-    - proto: socks5
-      listen: 0.0.0.0
-      port: 9890
-      #username: rps
-      #password: secret
-      timeout: 30 #30 seconds
-      
+    #Request timeout
+    rtimeout: 30
 
-    - proto: http
-      listen: "0.0.0.0"
-      port: 9891
-      username: rps
-      password: secret
-      timeout: 30 #30 seconds
+    #Forward timeout should consider retry times
+    #So set forward timeout less than request timeout is make sense in general
+    ftimeout: 15
+
+    #servers
+    ss:
+        - proto: socks5
+          listen: 0.0.0.0
+          port: 9890
+          username: rps
+          password: secret
+          
+
+        - proto: http
+          listen: "0.0.0.0"
+          port: 9891
+          username: rps
+          password: secret
+
 
 upstreams:
     refresh: 600 #5 minutes
@@ -29,7 +37,7 @@ upstreams:
     #wrr: weighted round robin
     schedule: rr
 
-    # Just make hybrid=false if you don't understand what will happen 
+    # Just leave hybrid=false if you don't understand what will happen 
     # after enable hybrid
     hybrid: false
 

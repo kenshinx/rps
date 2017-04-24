@@ -80,6 +80,45 @@ config_pop_scalar(struct config *cfg) {
 }
 
 static void
+config_server_init(struct config_server *server) {
+    string_init(&server->proto);
+    string_init(&server->listen);
+    server->port = 0;
+    string_init(&server->username);
+    string_init(&server->password);
+}
+
+static void
+config_server_deinit(struct config_server *server) {
+    string_deinit(&server->proto);
+    string_deinit(&server->listen);
+    string_deinit(&server->username);
+    string_deinit(&server->password);
+}
+
+
+static rps_status_t
+config_servers_init(struct config_servers *servers) {
+    servers->ss = array_create(CONFIG_SERVERS_NUM. sizeof(struct config_server));  
+    if (servers->ss == NULL) {
+        return RPS_ENOMEM;
+    }
+
+    servers->rtimeout = 0;
+    servers->ftimeout = 0;
+
+    return RPS_OK;
+}
+
+static void
+config_servers_deinit(struct config_servers *servers) {
+    while (array_n(servers->ss)) {
+        config_server_deinit((struct config_server *)array_pop(servers->ss));
+    }
+    array_destroy(servers->ss);
+}
+
+static void
 config_upstream_init(struct config_upstream *upstream) {
     string_init(&upstream->proto);
     string_init(&upstream->rediskey);
@@ -148,24 +187,6 @@ config_log_deinit(struct config_log *log) {
     string_deinit(&log->level);
 }
 
-static void
-config_server_init(struct config_server *server) {
-    string_init(&server->proto);
-    string_init(&server->listen);
-    server->port = 0;
-    server->timeout = 0;
-    string_init(&server->username);
-    string_init(&server->password);
-}
-
-static void
-config_server_deinit(struct config_server *server) {
-    string_deinit(&server->proto);
-    string_deinit(&server->listen);
-    string_deinit(&server->username);
-    string_deinit(&server->password);
-}
-
 static int
 config_parse_bool(rps_str_t *str) {
     if (rps_strcmp(str, "true") == 0 ) {
@@ -201,8 +222,17 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         } else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section, "servers") == 0 ) {
-        server = (struct config_server *)array_head(cfg->servers);
+    } else if (rps_strcmp(section, "servers")) {
+        if (rps_strcmp(key, "rtimeout") == 0) {
+            /*convert uint from second to millsecond*/
+            cfg->servers.rtimeout = (atoi((char *)val->data)) * 1000;
+        } else if (rps_strcmp(key, "ftimeout") == 0){
+            cfg->servers.ftimeout = (atoi((char *)val->data)) * 1000;
+        } else {
+            status = RPS_ERROR;
+        }
+    } else if (rps_strcmp(section, "ss") == 0 ) {
+        server = (struct config_server *)array_head(cfg->servers.ss);
         if (rps_strcmp(key, "proto") == 0) {
             status = string_copy(&server->proto, val);
         } else if (rps_strcmp(key, "listen") == 0) {
@@ -213,10 +243,7 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
             status = string_copy(&server->username, val);
         } else if (rps_strcmp(key, "password") == 0) {
             status = string_copy(&server->password, val);
-        } else if (rps_strcmp(key, "timeout") == 0) { 
-            /*convert uint from second to millsecond*/
-            server->timeout = (atoi((char *)val->data)) * 1000;
-        }else {
+        } else {
             status = RPS_ERROR;
         }
     } else if (rps_strcmp(section, "upstreams") == 0) {
@@ -304,20 +331,19 @@ config_load(char *filename, struct config *cfg) {
         return RPS_ERROR;
     }
     
-    cfg->servers = array_create(CONFIG_SERVERS_NUM, sizeof(struct config_server));
-    if (cfg->servers == NULL) {
+    cfg->args = array_create(CONFIG_DEFAULT_ARGS, sizeof(rps_str_t));
+    if (cfg->args == NULL) {
         goto error;
     }
 
-    cfg->args = array_create(CONFIG_DEFAULT_ARGS, sizeof(rps_str_t));
-    if (cfg->args == NULL) {
-        array_destroy(cfg->servers);
+    if (config_servers_init(&cfg->servers) != RPS_OK) {
+        array_destroy(cfg->args);
         goto error;
     }
 
     if (config_upstreams_init(&cfg->upstreams) != RPS_OK) {
-        array_destroy(cfg->servers);
         array_destroy(cfg->args);
+        config_servers_deinit(&cfg->servers);
         goto error;
     }
 
@@ -441,9 +467,9 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
         } 
 
         if (cfg->seq) {
-            if (rps_strcmp(section, "servers") == 0 ) {
+            if (rps_strcmp(section, "ss") == 0 ) {
                 /* new server block */
-                server = (struct config_server *)array_push(cfg->servers);
+                server = (struct config_server *)array_push(cfg->servers.ss);
                 if (server == NULL) {
                     status = RPS_ENOMEM;
                 }
@@ -587,7 +613,6 @@ config_dump_server(void *data) {
     log_debug("\t   port: %d", server->port);
     log_debug("\t   username: %s", server->username.data);
     log_debug("\t   password: %s", server->password.data);
-    log_debug("\t   timeout: %d", server->timeout/1000);
     log_debug("");
 }
 
@@ -607,8 +632,10 @@ config_dump(struct config *cfg) {
     log_debug("demon: %d", cfg->daemon);
 
     log_debug("[servers]");
+    log_debug("rtimeout: %d", cfg->servers.rtimeout);
+    log_debug("ftimeout: %d", cfg->servers.ftimeout);
     log_debug("");
-    array_foreach(cfg->servers, config_dump_server);
+    array_foreach(cfg->servers.ss, config_dump_server);
 
     log_debug("[upstreams]");
     log_debug("\t schedule: %s", cfg->upstreams.schedule.data);
@@ -670,10 +697,7 @@ config_deinit(struct config *cfg) {
     }
     array_destroy(cfg->args);
 
-    while (array_n(cfg->servers)) {
-        config_server_deinit((struct config_server *)array_pop(cfg->servers));
-    }
-    array_destroy(cfg->servers);
+    config_servers_deinit(&cfg->servers);
 
     config_upstreams_deinit(&cfg->upstreams);
 
