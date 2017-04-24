@@ -230,7 +230,7 @@ s5_do_reply(struct context *ctx) {
     rps_unresolve_addr(&ctx->sess->remote, remoteip);
 
     /* save reply status and will be sent to request client */
-    ctx->reply_code = resp->rep;
+    ctx->reply_code = s5_reply_code_lookup(resp->rep);
 
     if (resp->rep != s5_rep_success) {
         log_debug("s5 upstream %s reply error, connect remote %s failed : %s", 

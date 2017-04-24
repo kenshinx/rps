@@ -634,8 +634,8 @@ config_dump(struct config *cfg) {
     log_debug("demon: %d", cfg->daemon);
 
     log_debug("[servers]");
-    log_debug("rtimeout: %d", cfg->servers.rtimeout);
-    log_debug("ftimeout: %d", cfg->servers.ftimeout);
+    log_debug("\t rtimeout: %d", cfg->servers.rtimeout);
+    log_debug("\t ftimeout: %d", cfg->servers.ftimeout);
     log_debug("");
     array_foreach(cfg->servers.ss, config_dump_server);
 

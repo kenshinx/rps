@@ -227,17 +227,21 @@ http_do_auth_resp(struct context *ctx) {
 
 static void
 http_do_reply(struct context *ctx) {
-    if (ctx->reply_code == UNDEFINED_REPLY_CODE) {
-        ctx->reply_code = http_server_error;
+    int code;
+
+    code = http_reply_code_reverse(ctx->reply_code);
+
+    if (code == http_undefine) {
+        code = http_server_error;
     }
 
-    if (http_send_response(ctx, ctx->reply_code) != RPS_OK) {
+    if (http_send_response(ctx, code) != RPS_OK) {
         ctx->established = 0;
         ctx->state = c_kill;
         return;
     }
 
-    if (ctx->reply_code != http_ok) {
+    if (code != http_ok) {
         ctx->established = 0;
         ctx->state = c_kill;
     } else {
@@ -246,7 +250,7 @@ http_do_reply(struct context *ctx) {
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("http client reply, connect remote %s", http_resp_code_str(ctx->reply_code));
+    log_verb("http client reply, connect remote %s", http_resp_code_str(code));
 #endif
 
 }

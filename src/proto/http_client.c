@@ -88,7 +88,8 @@ http_verify_response(struct context *ctx) {
 
     rps_unresolve_addr(&ctx->sess->remote, remoteip);
 
-    ctx->reply_code = resp.code;
+    /* convert http response code to rps unified reply code */
+    ctx->reply_code = http_reply_code_lookup(resp.code);
 
     switch (resp.code) {
         case http_ok:

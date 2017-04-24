@@ -98,7 +98,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout
     ctx->connecting = 0;
     ctx->connected = 0;
     ctx->established = 0;
-    ctx->reply_code = UNDEFINED_REPLY_CODE;
+    ctx->reply_code = rps_rep_undefined;
     ctx->rstat = c_stop;
     ctx->wstat = c_stop;
     ctx->timeout = timeout;
@@ -767,8 +767,7 @@ server_finish(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(!forward->established);
-    ASSERT(forward->reply_code != s5_rep_success && 
-            forward->reply_code != http_ok);
+    ASSERT(forward->reply_code != rps_rep_ok);
 
     request->state = c_reply;
     request->reply_code = forward->reply_code;
@@ -796,8 +795,7 @@ server_establish(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->established);
-    ASSERT(forward->reply_code == s5_rep_success || 
-            forward->reply_code == http_ok);
+    ASSERT(forward->reply_code == rps_rep_ok);
 
     request->state = c_reply;
     request->reply_code = forward->reply_code;

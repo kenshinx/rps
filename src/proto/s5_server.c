@@ -248,6 +248,7 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
     uint8_t resp[512];
     int len, alen;
     rps_addr_t *remote;
+    int code;
 
     UNUSED(data);
     UNUSED(size);
@@ -255,15 +256,18 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
     len = 0;
     alen = 0;
 
-    if (ctx->reply_code == UNDEFINED_REPLY_CODE) {
+    /* convert from unified rps reply code to socks5-dependent reply code */
+    code = s5_reply_code_reverse(ctx->reply_code);
+
+    if (code == s5_rep_unassigned) {
         /* establish failed after retry */
-        ctx->reply_code = s5_rep_socks_fail;
+        code = s5_rep_socks_fail;
     }
 
     remote = &ctx->sess->remote;
 
     resp[len++] = SOCKS5_VERSION;
-    resp[len++] = ctx->reply_code; //rep
+    resp[len++] = code; //rep
     resp[len++] = 0x00; //rsv
 
     switch (remote->family) {
@@ -305,7 +309,7 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
         return;
     }
 
-    if (ctx->reply_code != s5_rep_success) {
+    if (code != s5_rep_success) {
         /* needn't close current context immediately, close will be closed in upstream context*/
         ctx->established = 0;
         ctx->state = c_kill;
@@ -315,7 +319,7 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("s5 client reply, connect remote %s.", s5_strrep(ctx->reply_code));
+    log_verb("s5 client reply, connect remote %s.", s5_strrep(code));
 #endif
 }
 
