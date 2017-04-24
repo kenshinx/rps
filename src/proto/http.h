@@ -125,7 +125,7 @@ http_resp_code_str(uint16_t code) {
 #define HTTP_REPLY_CODE_MAP(V)                                      \
     V(http_ok,                  rps_rep_ok)                         \
     V(http_forbidden,           rps_rep_forbidden)                  \
-    V(http_not_found,           rps_rep_not_found                   \
+    V(http_not_found,           rps_rep_not_found)                  \
     V(http_proxy_auth_required, rps_rep_auth_require)               \
     V(http_server_error,        rps_rep_server_error)               \
     V(http_bad_gateway,         rps_rep_unreachable)                \
