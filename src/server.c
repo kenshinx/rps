@@ -227,7 +227,7 @@ server_ctx_close(rps_ctx_t *ctx) {
 
     if (!ctx->connecting && !ctx->connected) {
         // we still need free context and session 
-        // even if connect didn't establised 
+        // even if connect didn't established 
         server_ctx_deinit(ctx);
         server_do_next(ctx);
         return;
@@ -305,7 +305,12 @@ server_on_timer_expire(uv_timer_t *handle) {
         ctx->state = c_kill;
         log_debug("Request from %s timeout", ctx->peername);
     } else {
-        ctx->state = c_retry;
+        /* bidirectional handshake has been established retry dosen’t make sense */
+        if (ctx->established) {
+            ctx->state = c_kill;
+        } else {
+            ctx->state = c_retry;
+        }
         log_debug("Forward to %s timeout", ctx->peername);
     }
 
@@ -880,6 +885,7 @@ server_on_forward_close(uv_handle_t* handle) {
 
     forward = handle->data;
 
+    forward->reconn = 0;
     forward->connecting = 0;
     forward->connected = 0;
     forward->established = 0;
@@ -901,6 +907,7 @@ server_forward_retry(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->state == c_retry);
+    ASSERT(!forward->established);
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
@@ -909,14 +916,6 @@ server_forward_retry(rps_sess_t *sess) {
     log_debug("Upstream tunnel  %s -> %s failed, retry: %d", 
             forward->peername, remoteip, forward->retry);
 
-    /* bidirectional handshake has been established, part of data may has been redirect to endpoint
-     * or on the fly, retry dosen't make sense in this approach, kill the connection directly.
-     */
-    if (forward->established) {
-        forward->state = c_kill;
-        server_do_next(forward);
-        return;
-    }
 
     if (forward->retry >= s->upstreams->maxretry) {
         forward->state = c_failed;
@@ -924,13 +923,16 @@ server_forward_retry(rps_sess_t *sess) {
         return;
     }
 
-    /* forward maybe still in unconnected state, goto retry directly */
-    if (!forward->connected) {
+
+    if (!forward->connected && !forward->connecting) {
+        forward->reconn = 0;
+        forward->connecting = 0;
+        forward->connected = 0;
+        forward->established = 0;
         forward->state = c_conn;
         server_do_next(forward);
         return;
     }
-
 
     uv_read_stop(&forward->handle.stream);
     uv_timer_stop(&forward->timer);
