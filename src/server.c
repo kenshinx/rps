@@ -703,6 +703,8 @@ server_forward_connect(rps_sess_t *sess) {
                     rps_unresolve_port(&forward->peer), forward->reconn);
         } else {
 
+            server_ctx_set_proto(forward, sess->upstream.proto);
+
             /* Connect success */
             log_debug("Connect upstream %s://%s:%d success", rps_proto_str(forward->proto), forward->peername, 
                     rps_unresolve_port(&forward->peer));
@@ -712,7 +714,6 @@ server_forward_connect(rps_sess_t *sess) {
             }
 
             /* Set forward protocol after upstream has connected */
-            server_ctx_set_proto(forward, sess->upstream.proto);
             forward->reconn = 0;
             forward->state = c_handshake_req;
             server_do_next(forward);
@@ -729,7 +730,7 @@ server_forward_connect(rps_sess_t *sess) {
     upstream_deinit(&sess->upstream);
 
     if (upstreams_get(s->upstreams, sess->request->proto, &sess->upstream) != RPS_OK) {
-        log_error("no available %s upstream proxy.", rps_proto_str(forward->proto));
+        log_error("no available %s upstream proxy.", rps_proto_str(sess->request->proto));
         goto kill;
     }
 
