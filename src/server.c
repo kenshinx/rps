@@ -227,7 +227,7 @@ server_ctx_close(rps_ctx_t *ctx) {
 
     if (!ctx->connecting && !ctx->connected) {
         // we still need free context and session 
-        // even if connect didn't establised 
+        // even if connect didn't established 
         server_ctx_deinit(ctx);
         server_do_next(ctx);
         return;
@@ -302,12 +302,18 @@ server_on_timer_expire(uv_timer_t *handle) {
     
 
     if (ctx->flag == c_request) {
+        ctx->state = c_kill;
         log_debug("Request from %s timeout", ctx->peername);
     } else {
+        /* bidirectional handshake has been established retry dosen’t make sense */
+        if (ctx->established) {
+            ctx->state = c_kill;
+        } else {
+            ctx->state = c_retry;
+        }
         log_debug("Forward to %s timeout", ctx->peername);
     }
 
-    ctx->state = c_kill;
     server_do_next(ctx);
 }
 
