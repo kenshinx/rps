@@ -884,6 +884,7 @@ server_on_forward_close(uv_handle_t* handle) {
 
     forward = handle->data;
 
+    forward->reconn = 0;
     forward->connecting = 0;
     forward->connected = 0;
     forward->established = 0;
@@ -905,7 +906,6 @@ server_forward_retry(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->state == c_retry);
-    ASSERT(forward->connected);
     ASSERT(!forward->established);
 
     rps_unresolve_addr(&sess->remote, remoteip);
@@ -917,6 +917,16 @@ server_forward_retry(rps_sess_t *sess) {
 
     if (forward->retry >= s->upstreams->maxretry) {
         forward->state = c_failed;
+        server_do_next(forward);
+        return;
+    }
+
+    if (!forward->connected && !forward->connecting) {
+        forward->reconn = 0;
+        forward->connecting = 0;
+        forward->connected = 0;
+        forward->established = 0;
+        forward->state = c_conn;
         server_do_next(forward);
         return;
     }
