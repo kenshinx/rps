@@ -900,7 +900,6 @@ server_forward_retry(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->state == c_retry);
-    ASSERT(!forward->established);
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
@@ -909,18 +908,28 @@ server_forward_retry(rps_sess_t *sess) {
     log_debug("Upstream tunnel  %s -> %s failed, retry: %d", 
             forward->peername, remoteip, forward->retry);
 
+    /* bidirectional handshake has been established, part of data may has been redirect to endpoint
+     * or on the fly, retry dosen't make sense in this approach, kill the connection directly.
+     */
+    if (forward->established) {
+        forward->state = c_kill;
+        server_do_next(forward);
+        return;
+    }
+
     if (forward->retry >= s->upstreams->maxretry) {
         forward->state = c_failed;
         server_do_next(forward);
         return;
     }
 
-    /* forward maybe still in unconnected state */
+    /* forward maybe still in unconnected state, goto retry directly */
     if (!forward->connected) {
         forward->state = c_conn;
         server_do_next(forward);
         return;
     }
+
 
     uv_read_stop(&forward->handle.stream);
     uv_timer_stop(&forward->timer);

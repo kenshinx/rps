@@ -229,6 +229,7 @@ static void
 http_do_reply(struct context *ctx) {
     int code;
 
+    /* traslate rps unified reply code to http response code */
     code = http_reply_code_reverse(ctx->reply_code);
 
     if (code == http_undefine) {

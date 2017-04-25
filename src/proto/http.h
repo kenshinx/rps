@@ -184,8 +184,8 @@ http_valid_code(uint16_t code) {
 
 enum http_request_verify_result {
     http_verify_error = -1,
-    http_verify_success = 0,
-    http_verify_fail,
+    http_verify_fail = 0,
+    http_verify_success = 1,
 };
 
 
