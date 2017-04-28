@@ -56,7 +56,7 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     va_list args;
     struct timeval  tv;
     
-    if (l->fd == NULL) {
+    if (l->fp == NULL) {
         return;
     }
 
@@ -85,8 +85,8 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     va_end(args);
 
     buf[len++] = '\n';
-
-    fwrite(buf, 1, len, l->fd);
+    fwrite(buf, len, 1, l->fp);
+    fflush(l->fp);
 }
 
 int
@@ -107,10 +107,10 @@ log_set_output(char *fname) {
     struct logger *l = &logger;
        
     if (fname == NULL || !(strlen(fname))) {
-        l->fd = stdout;
+        l->fp = stdout;
     } else {
-        l->fd = fopen(fname, "a");
-        if (l->fd == NULL) {
+        l->fp = fopen(fname, "a");
+        if (l->fp == NULL) {
             log_stderr("opening log file '%s' failed: %s", fname, strerror(errno));
             return -1;
         }
@@ -140,11 +140,11 @@ void
 log_deinit() {
     struct logger *l = &logger;
     
-    if (l->fd == NULL || l->fd == stdout || l->fd == stderr) {
+    if (l->fp == NULL || l->fp == stdout || l->fp == stderr) {
         return;
     }
     
-    fclose(l->fd);
+    fclose(l->fp);
 }
 
 #ifdef LOG_TEST
