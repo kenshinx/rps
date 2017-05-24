@@ -38,7 +38,7 @@ upstreams:
 
     # Just leave hybrid=false if you don't understand what will happen 
     # after enable hybrid
-    hybrid: true
+    hybrid: false
 
     # If connect upstream failed in upstream phase, attempt connect new upstream.
     # re-connect is low cost operation relative to retry.
