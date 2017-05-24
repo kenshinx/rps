@@ -5,6 +5,7 @@
 #include "util.h"
 #include "server.h"
 #include "upstream.h"
+#include "_signal.h"
 
 #include <uv.h>
 
@@ -220,6 +221,7 @@ rps_teardown(struct application *app) {
 
 static rps_status_t
 rps_pre_run(struct application *app) {
+    signal_init();
 
     return RPS_OK;
 }
