@@ -125,5 +125,26 @@ void rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint16_t port)
 
 int rps_random(int max);
 
+
+/* Copy from twitter tweemproxy
+ * A (very) limited version of snprintf
+ * @param   to   Destination buffer
+ * @param   n    Size of destination buffer
+ * @param   fmt  printf() style format string
+ * @returns Number of bytes written, including terminating '\0'
+ * Supports 'd' 'i' 'u' 'x' 'p' 's' conversion
+ * Supports 'l' and 'll' modifiers for integral types
+ * Does not support any width/precision
+ * Implemented with simplicity, and async-signal-safety in mind
+ */
+int _rps_safe_vsnprintf(char *to, size_t size, const char *format, va_list ap);
+int _rps_safe_snprintf(char *to, size_t n, const char *fmt, ...);
+
+#define rps_safe_snprintf(_s, _n, ...)       \
+    _rps_safe_snprintf((char *)(_s), (size_t)(_n), __VA_ARGS__)
+
+#define rps_safe_vsnprintf(_s, _n, _f, _a)   \
+    _rps_safe_vsnprintf((char *)(_s), (size_t)(_n), _f, _a)
+
 #endif
 
