@@ -1,4 +1,5 @@
 #include "log.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +7,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <time.h>
+#include <unistd.h>
 #include <sys/time.h>
 
 
@@ -89,6 +91,33 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     fflush(l->fp);
 }
 
+/* Reentrant function, can be safely called in signal handler */
+void
+_log_safe(const char *fmt, ...) {
+    struct logger *l = &logger;
+    int len, size, errno_save;
+    char buf[LOG_MAX_LEN];
+    va_list args;
+    
+    if (l->fp == NULL) {
+        return;
+    }
+
+    /* save and restore errno */
+    errno_save = errno;
+    len = 0;
+    size = LOG_MAX_LEN;
+
+    va_start(args, fmt);
+    len += vsnprintf(buf + len, size - len, fmt, args);
+    va_end(args);
+
+    buf[len++] = '\n';
+    write(fileno(l->fp), buf, len);
+
+    errno = errno_save;
+}
+
 int
 log_level_set(log_level level) {
     struct logger *l = &logger;
@@ -108,9 +137,9 @@ log_level_up(void) {
 
     if (l->level < LOG_VERBOSE) {
         l->level++;
-        log_stderr("up log level to %s", log_level_to_text(l->level));
+        log_safe("up log level to %s", log_level_to_text(l->level));
     } else {
-        log_stderr("up log level faild, current has been %s", 
+        log_safe("up log level faild, current has been %s", 
                 log_level_to_text(l->level));
     }
 }
@@ -121,9 +150,9 @@ log_level_down(void) {
 
     if (l->level > LOG_CRITICAL) {
         l->level--;
-        log_stderr("down log level to %s", log_level_to_text(l->level));
+        log_safe("down log level to %s", log_level_to_text(l->level));
     } else {
-        log_stderr("down log level faild, current has been %s", 
+        log_safe("down log level faild, current has been %s", 
                 log_level_to_text(l->level));
     }
 }

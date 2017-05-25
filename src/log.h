@@ -68,6 +68,10 @@ static const char *LOG_LEVEL_TEXT[] = {
     _log(LOG_CRITICAL, __FILE__, __LINE__, __VA_ARGS__);        \
 } while(0)                                                      \
 
+#define log_safe(...) do {                                      \
+    _log_safe(__VA_ARGS__);                                     \
+} while(0)                                                      \
+
 #define log_level_to_text(level)    (LOG_LEVEL_TEXT[level])
 
 static inline log_level
@@ -94,6 +98,7 @@ struct logger {
 void _log_stream(FILE *stream, const char *fmt, ...);
 void _log(log_level level, const char *file, int line, const char *fmt, ...);
 void _log_hex(log_level level, const char *file, int line, char *data, int n);
+void _log_safe(const char *fmt, ...);
 int log_level_set(log_level level);
 void log_level_up(void);
 void log_level_down(void);
