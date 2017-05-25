@@ -90,7 +90,7 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
 }
 
 int
-log_set_level(log_level level) {
+log_level_set(log_level level) {
     struct logger *l = &logger;
     
     if (level < LOG_CRITICAL || level > LOG_VERBOSE) {
@@ -102,8 +102,34 @@ log_set_level(log_level level) {
     return 0;
 }
 
+void
+log_level_up(void) {
+    struct logger *l = &logger;
+
+    if (l->level < LOG_VERBOSE) {
+        l->level++;
+        log_stderr("up log level to %s", log_level_to_text(l->level));
+    } else {
+        log_stderr("up log level faild, current has been %s", 
+                log_level_to_text(l->level));
+    }
+}
+
+void
+log_level_down(void) {
+    struct logger *l = &logger;
+
+    if (l->level > LOG_CRITICAL) {
+        l->level--;
+        log_stderr("down log level to %s", log_level_to_text(l->level));
+    } else {
+        log_stderr("down log level faild, current has been %s", 
+                log_level_to_text(l->level));
+    }
+}
+
 int
-log_set_output(char *fname) {
+log_output_set(char *fname) {
     struct logger *l = &logger;
        
     if (fname == NULL || !(strlen(fname))) {
@@ -123,12 +149,12 @@ int
 log_init(log_level level, char *fname) {
     int status;
     
-    status = log_set_level(level);
+    status = log_level_set(level);
     if (status != 0) {
         return status;
     }
 
-    status = log_set_output(fname);
+    status = log_output_set(fname);
     if (status != 0) {
         return status;
     }

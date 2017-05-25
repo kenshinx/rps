@@ -94,8 +94,10 @@ struct logger {
 void _log_stream(FILE *stream, const char *fmt, ...);
 void _log(log_level level, const char *file, int line, const char *fmt, ...);
 void _log_hex(log_level level, const char *file, int line, char *data, int n);
-int log_set_level(log_level level);
-int log_set_output(char *fname);
+int log_level_set(log_level level);
+void log_level_up(void);
+void log_level_down(void);
+int log_output_set(char *fname);
 int log_init(log_level level, char *fname);
 void log_deinit();
 
