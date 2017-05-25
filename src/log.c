@@ -10,6 +10,10 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+#ifdef RPS_STACKTRACE
+#include <execinfo.h>
+#endif
+
 
 static struct logger logger;
 
@@ -200,6 +204,22 @@ log_deinit() {
     }
     
     fclose(l->fp);
+}
+
+void
+log_stacktrace() {
+#ifdef RPS_STACKTRACE
+    struct logger *l = &logger;
+    void *stack[64];
+    int size;
+    
+    if (l->fp == NULL) {
+        return;
+    }
+
+    size = backtrace(stack, 64);
+    backtrace_symbols_fd(stack, size, fileno(l->fp));
+#endif
 }
 
 #ifdef LOG_TEST

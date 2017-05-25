@@ -13,6 +13,7 @@ STD=-std=c99 -pedantic
 WARN=-Wall -W -Wno-missing-field-initializers
 OPT=$(OPTIMIZATION)
 DEBUG=-g -ggdb
+DYNAMIC=-rdynamic
 RPS_DEBUG = $(RPS_DEBUG_OPEN)
 GNU_SOURCE=-D_GNU_SOURCE #libuv need this declaration in linux platform.
 
@@ -26,7 +27,7 @@ JANSSON=jansson-2.9
 
 FINAL_CFLAGS=$(WARN) $(OPT) $(DEBUG) $(RPS_DEBUG) $(CFLAGS)
 
-FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG)
+FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG) $(DYNAMIC)
 
 ifeq ($(OS), Linux)
 	FINAL_CFLAGS+=$(GNU_SOURCE) 

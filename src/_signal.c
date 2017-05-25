@@ -87,7 +87,7 @@ signal_handler(int signo) {
         break;
 
     case SIGSEGV:
-        //log_stacktrace();
+        log_stacktrace();
         actionstr = ", core dumping";
         raise(SIGSEGV);
         break;

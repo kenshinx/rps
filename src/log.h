@@ -105,5 +105,6 @@ void log_level_down(void);
 int log_output_set(char *fname);
 int log_init(log_level level, char *fname);
 void log_deinit();
+void log_stacktrace();
 
 #endif
