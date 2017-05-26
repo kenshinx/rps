@@ -110,6 +110,95 @@ rps_get_options(int argc, char **argv, struct application *app) {
     return RPS_OK;
 }
 
+static void
+rps_daemonize() {
+    pid_t pid, sid;
+    int fd;
+    struct sigaction sa;
+
+    pid = fork();
+    switch (pid) {
+    case -1:
+        log_stderr("fork() failed: %s", strerror(errno));
+        exit(1);
+        
+    case 0:
+        break;
+
+    default:
+        /* parent terminates */
+        _exit(0);
+    }
+    
+    /* start new session */
+    sid = setsid();
+    if (sid < 0) {
+        log_stderr("setuid() failed, %s", strerror(errno));
+        exit(1);
+    }
+    
+     sa.sa_handler = SIG_IGN;
+     sigemptyset(&sa.sa_mask);
+     sa.sa_flags = 0;
+     if (sigaction(SIGHUP, &sa, NULL) < 0) {
+        log_stderr("sigaction() failed, can't ignore SIGHUOP\n");
+        exit(1);
+     }
+
+
+    pid = fork();
+    switch (pid) {
+    case -1:
+        log_stderr("the second fork() failed: %s", strerror(errno));
+        exit(1);
+        
+    case 0:
+        break;
+
+    default:
+        /* parent terminates */
+        exit(0);
+    }
+    
+    if (chdir("/") < 0) {
+        log_stderr("chdir(/) failed: %s", strerror(errno));
+    }
+
+    /* clear file mode creation mask */
+    umask(0);
+
+
+    /* close stdin, stdout, stderr */
+    fd = open("/dev/null", O_RDWR);
+    if (fd < 0) {
+        log_stderr("open(\"/dev/null\") failed: %s", strerror(errno));  
+        exit(1);
+    }
+
+    if (dup2(fd, STDIN_FILENO) < 0) {
+        log_stderr("dup2(%d, STDIN) failed: %s", fd, strerror(errno));
+        close(fd);
+        exit(1);
+    }
+
+    if (dup2(fd, STDOUT_FILENO) < 0) {
+        log_stderr("dup2(%d, STDOUT) failed: %s", fd, strerror(errno));
+        close(fd);
+        exit(1);
+    }
+
+    if (dup2(fd, STDERR_FILENO) < 0) {
+        log_stderr("dup2(%d, STDERR) failed: %s", fd, strerror(errno));
+        close(fd);
+        exit(1);
+    }
+
+    /* close  /dev/null , in fact is close stdin, stdout, stderr */
+    if (fd > STDERR_FILENO) {
+        close(fd);
+    }
+}
+
 static rps_status_t
 rps_set_log(struct application *app) {
     log_level level;
@@ -221,7 +310,13 @@ rps_teardown(struct application *app) {
 
 static rps_status_t
 rps_pre_run(struct application *app) {
+    
+    if (app->daemon) {
+        rps_daemonize();
+    }
+
     signal_init();
+    
 
     return RPS_OK;
 }
