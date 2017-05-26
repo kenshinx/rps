@@ -62,7 +62,7 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     va_list args;
     struct timeval  tv;
     
-    if (l->fp == NULL) {
+    if (l->fd < 0) {
         return;
     }
 
@@ -91,8 +91,7 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     va_end(args);
 
     buf[len++] = '\n';
-    fwrite(buf, len, 1, l->fp);
-    fflush(l->fp);
+    write(l->fd, buf, len);
 }
 
 /* Reentrant function, can be safely called in signal handler */
@@ -103,7 +102,7 @@ _log_safe(const char *fmt, ...) {
     char buf[LOG_MAX_LEN];
     va_list args;
     
-    if (l->fp == NULL) {
+    if (l->fd < 0) {
         return;
     }
 
@@ -117,7 +116,7 @@ _log_safe(const char *fmt, ...) {
     va_end(args);
 
     buf[len++] = '\n';
-    write(fileno(l->fp), buf, len);
+    write(l->fd, buf, len);
 
     errno = errno_save;
 }
@@ -166,10 +165,10 @@ log_output_set(char *fname) {
     struct logger *l = &logger;
        
     if (fname == NULL || !(strlen(fname))) {
-        l->fp = stdout;
+        l->fd = STDOUT_FILENO;
     } else {
-        l->fp = fopen(fname, "a");
-        if (l->fp == NULL) {
+        l->fd = open(fname, O_WRONLY | O_APPEND | O_CREAT, 0644);
+        if (l->fd < 0) {
             log_stderr("opening log file '%s' failed: %s", fname, strerror(errno));
             return -1;
         }
@@ -199,11 +198,11 @@ void
 log_deinit() {
     struct logger *l = &logger;
     
-    if (l->fp == NULL || l->fp == stdout || l->fp == stderr) {
+    if (l->fd < 0  || l->fd == STDOUT_FILENO || l->fd == STDERR_FILENO) {
         return;
     }
     
-    fclose(l->fp);
+    close(l->fd);
 }
 
 void
@@ -213,12 +212,12 @@ log_stacktrace() {
     void *stack[64];
     int size;
     
-    if (l->fp == NULL) {
+    if (l->fd < 0) {
         return;
     }
 
     size = backtrace(stack, 64);
-    backtrace_symbols_fd(stack, size, fileno(l->fp));
+    backtrace_symbols_fd(stack, size, l->fd);
 #endif
 }
 

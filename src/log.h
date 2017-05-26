@@ -90,7 +90,7 @@ log_level_to_int(const char *level) {
 
 
 struct logger {
-    FILE        *fp;
+    int         fd;
     log_level   level;
 };
 
