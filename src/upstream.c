@@ -146,6 +146,16 @@ upstreams_init(struct upstreams *us, struct config_redis *cr,
         }
     }
 
+    if (uv_mutex_init(&us->mutex) < 0) {
+        goto error;     
+    }
+
+    if (uv_cond_init(&us->ready) < 0) {
+        goto error;     
+    }
+    
+    us->once = 0;
+
     return  RPS_OK;
 
 error:
@@ -162,6 +172,9 @@ upstreams_deinit(struct upstreams *us) {
     while(array_n(&us->pools)) {
         upstream_pool_deinit((struct upstream_pool *)array_pop(&us->pools));
     }
+
+    uv_mutex_destroy(&us->mutex);
+    uv_cond_destroy(&us->ready);
 }
 
 static redisContext *
@@ -350,6 +363,8 @@ upstream_pool_refresh(struct upstream_pool *up) {
     return RPS_OK;
 }
 
+
+
 void
 upstreams_refresh(uv_timer_t *handle) {
     struct upstreams *us;
@@ -369,10 +384,20 @@ upstreams_refresh(uv_timer_t *handle) {
         if (upstream_pool_refresh(up) != RPS_OK) { 
             log_error("update %s upstream proxy pool failed", proto) ;
     log_debug("");
+            return;
         } else {
             log_debug("refresh %s upstream pool, get <%d> proxys", proto, array_n(up->pool));
         }
     }
+
+    
+    //run only once
+    if (us->once == 0) {
+        uv_mutex_lock(&us->mutex);
+        uv_cond_broadcast(&us->ready);
+        uv_mutex_unlock(&us->mutex);
+    }
+    us->once = 1;
 }
 
 static struct upstream *

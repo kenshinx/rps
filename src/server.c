@@ -984,6 +984,11 @@ void
 server_run(struct server *s) {
     int err;
 
+    /* wait for upstreams load success */
+    uv_mutex_lock(&s->upstreams->mutex);
+    uv_cond_wait(&s->upstreams->ready, &s->upstreams->mutex);
+    uv_mutex_unlock(&s->upstreams->mutex);
+
     err = uv_tcp_bind(&s->us, (struct sockaddr *)&s->listen.addr, 0);
     if (err) {
         UV_SHOW_ERROR(err, "bind");

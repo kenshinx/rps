@@ -47,6 +47,9 @@ struct upstreams {
     uint16_t                maxreconn;
     uint16_t                maxretry;
     rps_array_t             pools;
+    uv_cond_t               ready;
+    uv_mutex_t              mutex;
+    uint8_t                 once:1;
 };
 
 void upstream_init(struct upstream *u);

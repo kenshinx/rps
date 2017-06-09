@@ -278,8 +278,6 @@ rps_upstream_load(struct application *app) {
     
     uv_loop_init(loop);
 
-    upstreams_init(&app->upstreams, &app->cfg.redis, &app->cfg.upstreams);
-    
     timer = (uv_timer_t *)rps_alloc(sizeof(*timer));
     
     timer->data = &app->upstreams;
@@ -328,6 +326,8 @@ rps_run(struct application *app) {
     rps_status_t status;
     uv_thread_t *tid;
     rps_array_t threads;
+
+    upstreams_init(&app->upstreams, &app->cfg.redis, &app->cfg.upstreams);
 
     status = rps_server_load(app);
     if (status != RPS_OK) {
