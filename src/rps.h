@@ -17,6 +17,7 @@
 #define RPS_DEFAULT_LOG_FILE        NULL
 #define RPS_DEFAULT_CONFIG_FILE     "../conf/rps.yml"
 #define RPS_DEFAULT_PID_FILE        NULL
+#define RPS_PID_MAX_LENGTH          16
 
 
 struct application {

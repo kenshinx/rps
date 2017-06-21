@@ -35,14 +35,13 @@ rps_show_usage() {
         "Options:" CRLF
         "   -h, --help           :this help" CRLF
         "   -V, --version        :show version and exit" CRLF
-        "   -v, --verbose        :set log level be debug"
+        "   -v, --verbose        :set log level be debug"  
     );
     log_stderr(
         "   -d, --daemon         :run as daemonize" CRLF
         "   -c, --config=S       :set configuration file (default: %s)" CRLF
         "",
-        RPS_DEFAULT_CONFIG_FILE, 
-        RPS_DEFAULT_PID_FILE == NULL ? "off" : RPS_DEFAULT_PID_FILE
+        RPS_DEFAULT_CONFIG_FILE 
     );
     exit(1);
 }
@@ -59,6 +58,7 @@ rps_init(struct application *app) {
     app->log_filename = RPS_DEFAULT_LOG_FILE;
     
     app->pid = (pid_t)-1;
+    app->pid_filename = RPS_DEFAULT_PID_FILE;
     
     app->config_filename = RPS_DEFAULT_CONFIG_FILE;
 
@@ -95,9 +95,6 @@ rps_get_options(int argc, char **argv, struct application *app) {
                 break;
             case 'c':
                 app->config_filename = optarg;
-                break;
-            case 'p':
-                app->pid_filename = optarg;
                 break;
             case '?':
                 /* getopt_long already printed an error message. */
@@ -305,6 +302,39 @@ rps_teardown(struct application *app) {
 	log_deinit();
 }
 
+static rps_status_t
+rps_create_pidfile(struct application *app) {
+    char pid[RPS_PID_MAX_LENGTH];
+    int fd, len;
+
+    fd = open(app->pid_filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
+        log_error("open pidfile %s failed: %s", app->pid_filename, strerror(errno));
+        return RPS_ERROR;
+    }
+
+    len = snprintf(pid, RPS_PID_MAX_LENGTH, "%d", app->pid);
+
+    if (write(fd, pid, len) < 0) {
+        log_error("write to pidfile %s failed, %s", app->pid_filename, strerror(errno));
+        close(fd);
+        return RPS_ERROR;
+    }
+    
+    close(fd);
+
+    log_debug("write pid(%d) to pidfile '%s'", app->pid, app->pid_filename);
+
+    return RPS_OK;
+}
+
+static void
+rps_remove_pidfile(struct application *app) {
+    if (unlink(app->pid_filename) < 0) {
+        log_error("unlink pidfile '%s' failed: %s", app->pid_filename, strerror(errno));
+    }
+
+}
 
 static rps_status_t
 rps_pre_run(struct application *app) {
@@ -313,8 +343,13 @@ rps_pre_run(struct application *app) {
         rps_daemonize();
     }
 
+    app->pid = getpid();
+
     signal_init();
-    
+
+    if (app->pid_filename != NULL) {
+        rps_create_pidfile(app);
+    }
 
     return RPS_OK;
 }
@@ -361,9 +396,9 @@ rps_run(struct application *app) {
 
 static void
 rps_post_run(struct application *app) {
-    /*
-     * remove pidfile, signal_deinit
-     */
+    if (app->pid_filename != NULL) {
+        rps_remove_pidfile(app);
+    }
 }
 
 int
@@ -384,6 +419,10 @@ main(int argc, char **argv) {
     }
 
     app.daemon = app.daemon ||  app.cfg.daemon;
+
+    if (!string_empty(&app.cfg.pidfile)) {
+        app.pid_filename = strndup((const char *)app.cfg.pidfile.data, app.cfg.pidfile.len);
+    }
 
     status = rps_set_log(&app);
     if (status != RPS_OK) {

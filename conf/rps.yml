@@ -3,7 +3,7 @@ title: Rotating Proxy Server
 
 daemon: false
 
-pidfile: /var/run/rps.pid
+pidfile: /tmp/rps.pid
 
 servers:
     #Request timeout

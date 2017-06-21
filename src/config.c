@@ -529,7 +529,9 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
     config_event_done(cfg);
     
     if (status != RPS_OK) {
-        log_warn("config parse section %s error", section->data);
+        if (section != NULL) {
+            log_warn("config parse section %s error", section->data);
+        }
         return status;
     }
 
@@ -540,7 +542,9 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
     if (leaf) {
         status = config_handler(cfg, section);
         if (status != RPS_OK) {
-            log_warn("config parse section %s error", section->data);
+            if (section != NULL) {
+                log_warn("config parse section %s error", section->data);
+            }
             return status;
         }
     }
