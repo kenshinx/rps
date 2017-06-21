@@ -992,13 +992,13 @@ server_run(struct server *s) {
     err = uv_tcp_bind(&s->us, (struct sockaddr *)&s->listen.addr, 0);
     if (err) {
         UV_SHOW_ERROR(err, "bind");
-        return;
+        exit(1);
     }
     
     err = uv_listen((uv_stream_t*)&s->us, TCP_BACKLOG, server_on_request_connect);
     if (err) {
         UV_SHOW_ERROR(err, "listen");
-        return;
+        exit(1);
     }
 
     log_notice("%s proxy run on %s:%d", s->cfg->proto.data, s->cfg->listen.data, s->cfg->port);
