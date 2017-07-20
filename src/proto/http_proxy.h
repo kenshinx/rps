@@ -67,5 +67,7 @@
  *              +                        +                       +              +
 */
 
+void http_server_do_next(struct context *ctx);
+void http_client_do_next(struct context *ctx);
 
 #endif

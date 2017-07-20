@@ -4,6 +4,7 @@
 #include "util.h"
 #include "upstream.h"
 #include "proto/s5.h"
+#include "proto/http_proxy.h"
 #include "proto/http_tunnel.h"
 
 
@@ -133,6 +134,17 @@ server_ctx_set_proto(rps_ctx_t *ctx, rps_proto_t proto) {
                 break;
             case c_forward:
                 ctx->do_next = s5_client_do_next;
+                break;
+            default:
+                NOT_REACHED();
+        }
+    } else if (ctx->proto == HTTP) {
+        switch (ctx->flag) {
+            case c_request:
+                ctx->do_next = http_server_do_next;
+                break;
+            case c_forward:
+                ctx->do_next = http_client_do_next;
                 break;
             default:
                 NOT_REACHED();
