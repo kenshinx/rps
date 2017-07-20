@@ -46,9 +46,12 @@ s5_client.o: s5_client.c s5.h
 http.o: http.c http.h
 http_tunnel_server.o: http_tunnel_server.c http.h http_tunnel.h
 http_tunnel_client.o: http_tunnel_client.c http.h http_tunnel.h
+http_proxy_server.o: http_proxy_server.c http.h http_proxy.h
+http_proxy_client.o: http_proxy_client.c http.h http_proxy.h
 
 
-PROTO_OBJS=s5_server.o s5_client.o http.o http_tunnel_server.o http_tunnel_client.o
+PROTO_OBJS=s5_server.o s5_client.o http.o http_tunnel_server.o http_tunnel_client.o \
+		   	http_proxy_server.o http_proxy_client.o
 
 
 

@@ -1,8 +1,5 @@
 #include "http.h"
 #include "http_tunnel.h"
-#include "core.h"
-
-#include <uv.h>
 
 static int
 http_send_request(struct context *ctx) {
