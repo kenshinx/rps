@@ -1,4 +1,5 @@
 #include "http.h"
+#include "http_tunnel.h"
 
 
 static int
@@ -258,7 +259,7 @@ http_do_reply(struct context *ctx) {
 
 
 void
-http_server_do_next(struct context *ctx) {
+http_tunnel_server_do_next(struct context *ctx) {
 
     switch (ctx->state) {
         case c_handshake_req:

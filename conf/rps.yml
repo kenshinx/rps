@@ -22,7 +22,7 @@ servers:
           #password: secret
           
 
-        - proto: http
+        - proto: http_tunnel
           listen: "0.0.0.0"
           port: 9891
           username: rps
@@ -52,8 +52,8 @@ upstreams:
         - proto: socks5
           rediskey: rps:upstream:socks5
 
-        - proto: http
-          rediskey: rps:upstream:http
+        - proto: http_tunnel
+          rediskey: rps:upstream:http_tunnel
 
 redis:
     host: dev1

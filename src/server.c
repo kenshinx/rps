@@ -4,7 +4,7 @@
 #include "util.h"
 #include "upstream.h"
 #include "proto/s5.h"
-#include "proto/http.h"
+#include "proto/http_tunnel.h"
 
 
 rps_status_t
@@ -137,13 +137,13 @@ server_ctx_set_proto(rps_ctx_t *ctx, rps_proto_t proto) {
             default:
                 NOT_REACHED();
         }
-    } else if (ctx->proto == HTTP) {
+    } else if (ctx->proto == HTTP_TUNNEL) {
         switch (ctx->flag) {
             case c_request:
-                ctx->do_next = http_server_do_next;
+                ctx->do_next = http_tunnel_server_do_next;
                 break;
             case c_forward:
-                ctx->do_next = http_client_do_next;
+                ctx->do_next = http_tunnel_client_do_next;
                 break;
             default:
                 NOT_REACHED();

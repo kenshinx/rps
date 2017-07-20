@@ -44,10 +44,11 @@ default:$(PROTO_LIB)
 s5_server.o: s5_server.c s5.h
 s5_client.o: s5_client.c s5.h
 http.o: http.c http.h
-http_server.o: http_server.c http.h
-http_client.o: http_client.c http.h
+http_tunnel_server.o: http_tunnel_server.c http.h http_tunnel.h
+http_tunnel_client.o: http_tunnel_client.c http.h http_tunnel.h
 
-PROTO_OBJS=s5_server.o s5_client.o http.o http_server.o http_client.o
+
+PROTO_OBJS=s5_server.o s5_client.o http.o http_tunnel_server.o http_tunnel_client.o
 
 
 

@@ -1,5 +1,5 @@
-
 #include "http.h"
+#include "http_tunnel.h"
 #include "core.h"
 
 #include <uv.h>
@@ -215,7 +215,7 @@ http_do_auth_resp(struct context *ctx) {
 
 
 void
-http_client_do_next(struct context *ctx) {
+http_tunnel_client_do_next(struct context *ctx) {
     
     switch (ctx->state) {
         case c_handshake_req:

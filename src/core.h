@@ -23,8 +23,9 @@ typedef int rps_status_t;
     V(-1, UNSUPPORT, "unsupport")             \
     V(1,  SOCKS5, "socks5")                   \
     V(2,  HTTP, "http")                       \
-    V(3,  SOCKS4, "socks4")                   \
-    V(4,  PRIVATE, "private")                 \
+    V(3,  HTTP_TUNNEL, "http_tunnel")         \
+    V(4,  SOCKS4, "socks4")                   \
+    V(5,  PRIVATE, "private")                 \
 
 typedef enum {
 #define RPS_PROTO_GEN(code, name, _) name = code,
