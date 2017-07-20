@@ -22,7 +22,7 @@ http_send_request(struct context *ctx) {
     req.method = http_connect;
     req.port = (int)rps_unresolve_port(remote);
     string_duplicate(&req.host, remote_addr, strlen(remote_addr));
-    string_duplicate(&req.protocol, HTTP_DEFAULT_PROTOCOL, strlen(HTTP_DEFAULT_PROTOCOL));
+    string_duplicate(&req.version, HTTP_DEFAULT_VERSION, strlen(HTTP_DEFAULT_VERSION));
 
     const char key1[] = "Host";
     char val1[HTTP_HEADER_MAX_VALUE_LENGTH];

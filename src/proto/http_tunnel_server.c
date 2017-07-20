@@ -34,6 +34,7 @@ http_request_verify(struct context *ctx) {
         goto next;
     }
 
+    /* All HTTP header has been stored in lowercase */
     const char auth_header[] = "proxy-authorization";
     uint8_t *credentials;
     size_t credentials_size;
@@ -98,7 +99,7 @@ http_send_response(struct context *ctx, uint16_t code) {
     
     resp.code = code;
     string_duplicate(&resp.status, http_resp_code_str(resp.code), strlen(http_resp_code_str(resp.code)));
-    string_duplicate(&resp.protocol, HTTP_DEFAULT_PROTOCOL, strlen(HTTP_DEFAULT_PROTOCOL));
+    string_duplicate(&resp.version, HTTP_DEFAULT_VERSION, strlen(HTTP_DEFAULT_VERSION));
     
     /* write http body */ 
     len = snprintf(body, HTTP_BODY_MAX_LENGTH, "%d %s", 

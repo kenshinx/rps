@@ -11,7 +11,8 @@
 void
 http_request_init(struct http_request *req) {
     req->method = http_emethod;
-    string_init(&req->protocol);
+    string_init(&req->uri);
+    string_init(&req->version);
     string_init(&req->host);
     req->port = 0;
     hashmap_init(&req->headers, 
@@ -20,7 +21,7 @@ http_request_init(struct http_request *req) {
 
 void
 http_request_deinit(struct http_request *req) {
-    string_deinit(&req->protocol);
+    string_deinit(&req->version);
     string_deinit(&req->host);
     hashmap_deinit(&req->headers);
 }
@@ -41,7 +42,7 @@ http_response_init(struct http_response *resp) {
     resp->code = http_undefine;
     string_init(&resp->body);
     string_init(&resp->status);
-    string_init(&resp->protocol);
+    string_init(&resp->version);
     hashmap_init(&resp->headers, 
             HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
 }
@@ -51,7 +52,7 @@ http_response_deinit(struct http_response *resp) {
     hashmap_deinit(&resp->headers);
     string_deinit(&resp->body);
     string_deinit(&resp->status);
-    string_deinit(&resp->protocol);
+    string_deinit(&resp->version);
 }
 
 static size_t
@@ -99,8 +100,8 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
         sw_space_before_host,
         sw_host,
         sw_port,
-        sw_space_before_protocol,
-        sw_protocol,
+        sw_space_before_version,
+        sw_version,
         sw_end,
     } state;
 
@@ -215,7 +216,7 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                     }
 
                     start = end;
-                    state = sw_space_before_protocol;
+                    state = sw_space_before_version;
                     break;
                 }
                 
@@ -223,16 +224,16 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                         line->data);
                 return RPS_ERROR;
 
-            case sw_space_before_protocol:
+            case sw_space_before_version:
                 start = &line->data[i];
                 if (ch == ' ') {
                     break;
                 }
 
-                state = sw_protocol;
+                state = sw_version;
                 break;
 
-            case sw_protocol:
+            case sw_version:
                 if (ch == ' ') {
                     state = sw_end;
                     break;
@@ -254,13 +255,13 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
     }
 
     if (end - start <= 0) {
-        log_error("http parse request line error, '%s' : invalid protocol", line->data);
+        log_error("http parse request line error, '%s' : invalid version", line->data);
         return RPS_ERROR;
     }
 
-    string_duplicate(&req->protocol, (const char *)start, end - start +1);
+    string_duplicate(&req->version, (const char *)start, end - start +1);
 
-    if (state != sw_protocol && state != sw_end) {
+    if (state != sw_version && state != sw_end) {
         log_error("http parse request line error, '%s' : parse failed", line->data);
         return RPS_ERROR;
     }
@@ -506,10 +507,10 @@ http_response_check(struct http_response *resp) {
     const char http0[] = "HTTP/1.0";
     const char http1[] = "HTTP/1.1";
 
-    if (rps_strcmp(&resp->protocol, http0) != 0 && 
-            rps_strcmp(&resp->protocol, http1) != 0) {
-        log_error("http response check error, invalid http protocol: %s", 
-                resp->protocol.data);
+    if (rps_strcmp(&resp->version, http0) != 0 && 
+            rps_strcmp(&resp->version, http1) != 0) {
+        log_error("http response check error, invalid http version: %s", 
+                resp->version.data);
         return RPS_ERROR;
     }
 
@@ -546,7 +547,7 @@ http_request_dump(struct http_request *req, uint8_t rs) {
     }
 
     log_verb("\t%s %s:%d %s", http_method_str(req->method), req->host.data, 
-            req->port, req->protocol.data);
+            req->port, req->version.data);
 
     hashmap_iter(&req->headers, http_header_dump);
 }
@@ -562,7 +563,7 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
         log_verb("[http send response]");
     }
 
-    log_verb("\t%s %d %s", resp->protocol.data, resp->code, 
+    log_verb("\t%s %d %s", resp->version.data, resp->code, 
         resp->status.data);
     hashmap_iter(&resp->headers, http_header_dump);
 
@@ -648,7 +649,7 @@ http_parse_response_line(rps_str_t *line, struct http_response *resp) {
 
     enum {
         sw_start = 0,
-        sw_protocol,
+        sw_version,
         sw_space_before_code,
         sw_code,
         sw_space_before_status,
@@ -670,19 +671,19 @@ http_parse_response_line(rps_str_t *line, struct http_response *resp) {
                     break;
                 }
 
-                state = sw_protocol;
+                state = sw_version;
                 break;
 
-            case sw_protocol:
+            case sw_version:
                 if (ch == ' ') {
                     end = &line->data[i];
                     len = end - start;
                     if (len <= 0) {
-                        log_error("http parse response line error: invalid protocol");
+                        log_error("http parse response line error: invalid version");
                         return RPS_ERROR;
                     }
                     
-                    string_duplicate(&resp->protocol, (const char *)start, end - start);
+                    string_duplicate(&resp->version, (const char *)start, end - start);
 
                     start = end;
                     state = sw_space_before_code;
@@ -946,7 +947,7 @@ http_response_message(char *message, struct http_response *resp) {
     size = HTTP_MESSAGE_MAX_LENGTH;
 
     len += snprintf(message, size, "%s %d %s\r\n", 
-            resp->protocol.data, resp->code, resp->status.data);
+            resp->version.data, resp->code, resp->status.data);
     
     for (i = 0; i < resp->headers.size; i++) {
         header = resp->headers.buckets[i];
@@ -980,7 +981,7 @@ http_request_message(char *message, struct http_request *req) {
 
     len += snprintf(message, size, "%s %s:%d %s\r\n", 
             http_method_str(req->method), req->host.data, 
-            req->port, req->protocol.data);
+            req->port, req->version.data);
 
     for (i = 0; i < req->headers.size; i++) {
         header = req->headers.buckets[i];
