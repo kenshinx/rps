@@ -67,7 +67,7 @@ s5_do_handshake(struct context *ctx, uint8_t *data, size_t size) {
 
     switch (resp.method) {
         case s5_auth_none:
-            new_state = c_requests;
+            new_state = c_request;
             break;
         case s5_auth_passwd:
             new_state = c_auth_req;
@@ -135,7 +135,7 @@ s5_do_auth(struct context *ctx, uint8_t *data, size_t size) {
     if (rps_strcmp(&s->cfg->username, req->uname) == 0 && 
         rps_strcmp(&s->cfg->password, req->passwd) == 0) {
         resp.status = s5_auth_allow;
-        new_state = c_requests;
+        new_state = c_request;
     } else {
         resp.status = s5_auth_deny;
         new_state = c_kill;
@@ -338,7 +338,7 @@ s5_server_do_next(struct context *ctx) {
         case c_auth_req:
             s5_do_auth(ctx, data, size);
             break;
-        case c_requests:
+        case c_request:
             s5_do_request(ctx, data, size);
             break;
         case c_reply:

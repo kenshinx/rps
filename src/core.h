@@ -91,7 +91,7 @@ typedef enum context_state {
     c_handshake_resp = (1 << 3),
     c_auth_req = (1 << 4),
     c_auth_resp = (1 << 5),
-    c_requests = (1 << 6),
+    c_request = (1 << 6),
     c_exchange = (1 << 7),
     c_reply = (1 << 8),
     c_retry = (1 << 9),
