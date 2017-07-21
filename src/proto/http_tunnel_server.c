@@ -132,15 +132,15 @@ http_send_response(struct context *ctx, uint16_t code) {
     int v3len;
 
     switch (code) {
-        case http_proxy_auth_required:
-            v3len = snprintf(val3, 64, "%s realm=\"%s\"", 
-                    HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
+    case http_proxy_auth_required:
+        v3len = snprintf(val3, 64, "%s realm=\"%s\"", 
+                HTTP_DEFAULT_AUTH, HTTP_DEFAULT_REALM);
 
-            hashmap_set(&resp.headers, (void *)key3, strlen(key3), 
-                    (void *)val3, v3len);
-            break;
-        default:
-            break;
+        hashmap_set(&resp.headers, (void *)key3, strlen(key3), 
+                (void *)val3, v3len);
+        break;
+    default:
+        break;
     }
 
 #ifdef HTTP_PROXY_CONNECTION
@@ -169,18 +169,18 @@ http_do_handshake(struct context *ctx) {
     http_verify_result = http_request_verify(ctx);
 
     switch (http_verify_result) {
-        case http_verify_error:
-            log_verb("http client handshake error");
-            ctx->state = c_kill;
-            break;
-        case http_verify_success:
-            ctx->state = c_exchange;
-            log_verb("http client handshake success");
-            break;
-        case http_verify_fail:
-            ctx->state = c_handshake_resp;
-            log_verb("http client handshake authentication required");
-            break;
+    case http_verify_error:
+        log_verb("http client handshake error");
+        ctx->state = c_kill;
+        break;
+    case http_verify_success:
+        ctx->state = c_exchange;
+        log_verb("http client handshake success");
+        break;
+    case http_verify_fail:
+        ctx->state = c_handshake_resp;
+        log_verb("http client handshake authentication required");
+        break;
     }
 
     server_do_next(ctx);
@@ -203,18 +203,18 @@ http_do_auth(struct context *ctx) {
     http_verify_result = http_request_verify(ctx);
 
     switch (http_verify_result) {
-        case http_verify_success:
-            log_debug("http client authenticate success");
-            ctx->state = c_exchange;
-            break;
-        case http_verify_fail:
-            ctx->state = c_auth_resp;
-            log_debug("http client authenticate fail");
-            break;
-        case http_verify_error:
-            ctx->state = c_kill;
-            log_debug("http client authenticate error");
-            break;
+    case http_verify_success:
+        log_debug("http client authenticate success");
+        ctx->state = c_exchange;
+        break;
+    case http_verify_fail:
+        ctx->state = c_auth_resp;
+        log_debug("http client authenticate fail");
+        break;
+    case http_verify_error:
+        ctx->state = c_kill;
+        log_debug("http client authenticate error");
+        break;
     }
 
     server_do_next(ctx);
@@ -263,23 +263,23 @@ void
 http_tunnel_server_do_next(struct context *ctx) {
 
     switch (ctx->state) {
-        case c_handshake_req:
-            http_do_handshake(ctx);
-            break;
-        case c_handshake_resp:
-            http_do_handshake_resp(ctx);
-            break;
-        case c_auth_req:
-            http_do_auth(ctx);
-            break;
-        case c_auth_resp:
-            http_do_auth_resp(ctx);
-            break;
-        case c_reply:
-            http_do_reply(ctx);
-            break;
-        default:
-            NOT_REACHED();
+    case c_handshake_req:
+        http_do_handshake(ctx);
+        break;
+    case c_handshake_resp:
+        http_do_handshake_resp(ctx);
+        break;
+    case c_auth_req:
+        http_do_auth(ctx);
+        break;
+    case c_auth_resp:
+        http_do_auth_resp(ctx);
+        break;
+    case c_reply:
+        http_do_reply(ctx);
+        break;
+    default:
+        NOT_REACHED();
     }
 }
 
