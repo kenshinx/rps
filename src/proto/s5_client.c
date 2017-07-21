@@ -60,7 +60,7 @@ s5_do_handshake_resp(struct context *ctx) {
 
     switch (resp->method) {
         case s5_auth_none:
-            new_state = c_request;
+            new_state = c_requests;
             break;
         case s5_auth_passwd:
             new_state = c_auth_req;
@@ -149,7 +149,7 @@ s5_do_auth_resp(struct context *ctx) {
     log_verb("s5 upstream '%s' auth allow.", ctx->peername);
 #endif
 
-    ctx->state = c_request;
+    ctx->state = c_requests;
     server_do_next(ctx);
     return;
 
@@ -269,7 +269,7 @@ s5_client_do_next(struct context *ctx) {
         case c_auth_resp:
             s5_do_auth_resp(ctx);
             break;
-        case c_request:
+        case c_requests:
             s5_do_request(ctx);
             break;
         case c_reply:
