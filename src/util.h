@@ -105,7 +105,7 @@ typedef struct sockinfo {
 
 static inline bool 
 rps_valid_port(int port) {
-    return (port > 1 && port < UINT16_MAX);  
+    return (port >= 0 && port < UINT16_MAX);  
 }
 
 static inline void

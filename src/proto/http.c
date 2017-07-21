@@ -11,18 +11,25 @@
 void
 http_request_init(struct http_request *req) {
     req->method = http_emethod;
-    string_init(&req->uri);
-    string_init(&req->version);
+    string_init(&req->full_uri);
+    string_init(&req->schema);
     string_init(&req->host);
     req->port = 0;
+    string_init(&req->path);
+    string_init(&req->params);
+    string_init(&req->version);
     hashmap_init(&req->headers, 
             HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
 }
 
 void
 http_request_deinit(struct http_request *req) {
-    string_deinit(&req->version);
+    string_deinit(&req->full_uri);
+    string_deinit(&req->schema);
     string_deinit(&req->host);
+    string_deinit(&req->path);
+    string_deinit(&req->params);
+    string_deinit(&req->version);
     hashmap_deinit(&req->headers);
 }
 
@@ -91,15 +98,23 @@ http_read_line(uint8_t *data, size_t start, size_t end, rps_str_t *line) {
 static rps_status_t
 http_parse_request_line(rps_str_t *line, struct http_request *req) {
     uint8_t *start, *end;
-    uint8_t ch;
+    uint8_t *uri_start, *uri_end;
+    uint8_t c, ch;
     size_t i, len;
 
     enum {
         sw_start = 0,
         sw_method,
+        sw_space_before_uri,
         sw_space_before_host,
+        sw_protocol,
+        sw_schema,
+        sw_schema_slash,
+        sw_schema_slash_slash,
         sw_host,
         sw_port,
+        sw_after_slash_in_uri,
+        sw_params,
         sw_space_before_version,
         sw_version,
         sw_end,
@@ -134,12 +149,24 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                                 req->method = http_get;
                                 break;
                             }
+
+                            if (rps_str4_cmp(start, 'P', 'U', 'T', ' ')) {
+                                req->method = http_put;
+                                break;
+                            }
+                           
                             break;
                         case 4:
                             if (rps_str4_cmp(start, 'P', 'O', 'S', 'T')) {
                                 req->method = http_post;
                                 break;
                             }
+                            
+                            if (rps_str4_cmp(start, 'H', 'E', 'A', 'D')) {
+                                req->method = http_head;
+                                break;
+                            }
+
                             break;
                         case 7:
                             if (rps_str7_cmp(start, 'C', 'O', 'N', 'N', 'E', 'C', 'T')) {
@@ -152,7 +179,11 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                     }
 
                     start = end;
-                    state = sw_space_before_host;
+                    if (req->method == http_connect) {
+                        state = sw_space_before_host;
+                    } else {
+                        state = sw_space_before_uri;
+                    }
                     break;
                 }
 
@@ -162,39 +193,110 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                 }
                 break;
 
-            case sw_space_before_host:
+            case sw_space_before_uri:
                 start = &line->data[i];
+                uri_start = start;
                 if (ch == ' ') {
                     break;
                 }
 
-                state = sw_host;
-                break;
+                if (ch == '/') {
+                    state = sw_after_slash_in_uri;
+                    break;
+                }
 
-            case sw_host:
+                //convert character to lowercase
+                c = ch | 0x20;
+                if (c >= 'a' && c <= 'z') {
+                    state = sw_schema;
+                    break;
+                }
+
+                log_error("http parse request line error, '%s' : invalid uri",  line->data);
+                return RPS_ERROR;
+
+            case sw_schema:
+                c = ch | 0x20;
+                if (c >= 'a' && c <= 'z') {
+                    break;
+                }
+
                 if (ch == ':') {
                     end = &line->data[i];
                     if (end - start <= 0) {
-                        log_error("http parse request line error, '%s' : invalid host", line->data);
+                        log_error("http parse request line error, '%s' : invalid schema", line->data);
                         return RPS_ERROR;
                     }
-                    string_duplicate(&req->host, (const char *)start, end - start);
-                    start = &line->data[i+1]; /* cross ':' */
-                    state = sw_port;
+                   
+                    string_duplicate(&req->schema, (const char *)start, end - start);
+                    state = sw_schema_slash;
                     break;
                 }
 
+                log_error("http parse request line error, '%s' : invalid schema", line->data);
+                return RPS_ERROR;
+
+            case sw_schema_slash:
+                if (ch == '/') {
+                    state = sw_schema_slash_slash;
+                    break;
+                }
+                log_error("http parse request line error, '%s' : invalid schema", line->data);
+                return RPS_ERROR;
+
+            case sw_schema_slash_slash:
+                start = &line->data[i+1]; /* cross last '/' */
+                if (ch == '/') {
+                    state = sw_host;
+                    break;
+                }
+                log_error("http parse request line error, '%s' : invalid schema", line->data);
+                return RPS_ERROR;
+
+            case sw_space_before_host:
+                start = &line->data[i];
+                uri_start = start;
                 if (ch == ' ') {
-                    log_error("http parse request line error, '%s' : need port", line->data);
-                    return RPS_ERROR;
+                    break;
+                }
+                state = sw_host;
+                break;
+                
+            case sw_host:
+
+                c = ch |0x20;
+                if (c >= 'a' && c <= 'z') {
+                    break;
                 }
 
-                 
-                /* rule is not too strict, adapt to punycode encode doamin */
-                if (ch < '-' || ch > 'z') {
+                //strict host pattern
+                if ((ch >= '0' && ch <= '9') || ch == '.' || ch == '-' || ch == '=' || ch == '_') {
+                    break;
+                }
+
+                switch (ch) {
+                case ':':
+                    state = sw_port;
+                    break;
+                case '/':
+                    state = sw_after_slash_in_uri;
+                    break;
+                case ' ':
+                    uri_end = &line->data[i];
+                    state = sw_space_before_version;
+                    break;
+                default:
                     log_error("http parse request line error, '%s' : invalid host", line->data);
                     return RPS_ERROR;
                 }
+
+                end = &line->data[i];
+                if (end - start <= 0) {
+                    log_error("http parse request line error, '%s' : invalid host", line->data);
+                    return RPS_ERROR;
+                }
+                string_duplicate(&req->host, (const char *)start, end - start);
+                start = &line->data[i]; 
                 break;
 
             case sw_port:
@@ -202,27 +304,78 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
                     break;
                 }
 
-                if (ch == ' ') {
-                    end = &line->data[i];
-                    len = end - start;
+                switch (ch) {
+                case '/':
+                    state = sw_after_slash_in_uri;
+                    break;
+                case ' ':
+                    uri_end = &line->data[i];
+                    state = sw_space_before_version;        
+                    break;
+                default:
+                    log_error("http parse request line error, '%s' : invalid port", line->data);
+                    return RPS_ERROR;
+                }
 
-                    if (len <=0 || len >= 6) {
-                        log_error("http parse request line error, '%s' : invalid port", line->data);
-                        return RPS_ERROR;
-                    }
+                start++; //cross ':'
+                end = &line->data[i];
+                len = end - start;
 
-                    for (; start < end; start++) {
-                        req->port = req->port * 10 + (*start - '0'); 
-                    }
+                if (len <=0 || len >= 6) {
+                    log_error("http parse request line error, '%s' : invalid port", line->data);
+                    return RPS_ERROR;
+                }
 
-                    start = end;
-                    state = sw_space_before_version;
+                for (; start < end; start++) {
+                    req->port = req->port * 10 + (*start - '0'); 
+                }
+
+                start = end;
+                break;
+
+            case sw_after_slash_in_uri:
+
+                if (ch != ' ' && ch != '?') {
                     break;
                 }
-                
-                log_error("http parse request line error, '%s' : invalid port", 
-                        line->data);
-                return RPS_ERROR;
+
+                switch (ch) {
+                case ' ':
+                    uri_end = &line->data[i];
+                    state = sw_space_before_version;
+                    break;
+
+                case '?':
+                    state = sw_params;
+                    break;
+                    
+                default:
+                    break;
+                }
+
+                end = &line->data[i];
+                if (end - start <= 0) {
+                    log_error("http parse request line error, '%s' : invalid path", line->data);
+                    return RPS_ERROR;
+                }
+                string_duplicate(&req->path, (const char *)start, end - start);
+                start = end;
+                break;
+
+            case sw_params:
+                if (ch != ' ') {
+                    break;
+                }
+                end = &line->data[i];
+                if (end - start <= 0) {
+                    log_error("http parse request line error, '%s' : invalid params", line->data);
+                    return RPS_ERROR;
+                }
+                string_duplicate(&req->params, (const char *)start, end - start);
+                uri_end = &line->data[i];
+                state = sw_space_before_version;
+                start = end;
+                break;
 
             case sw_space_before_version:
                 start = &line->data[i];
@@ -260,6 +413,13 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
     }
 
     string_duplicate(&req->version, (const char *)start, end - start +1);
+
+    if (uri_end - uri_start <= 0) {
+        log_error("http parse request line error, '%s' : invalid uri", line->data);
+        return RPS_ERROR;
+    }
+
+    string_duplicate(&req->full_uri, (const char *)uri_start, uri_end - uri_start);
 
     if (state != sw_version && state != sw_end) {
         log_error("http parse request line error, '%s' : parse failed", line->data);
@@ -482,9 +642,20 @@ http_request_auth_parse(struct http_request_auth *auth,
 
 static rps_status_t
 http_request_check(struct http_request *req) {
-    if (req->method != http_connect) {
-        log_error("http request check error, only connect support");
+    const char http[] = "http";
+    const char https[] = "https";
+
+    if (req->method < http_get || req->method > http_connect) {
+        log_error("http request check error, invalid http method");
         return RPS_ERROR;
+    }
+
+    if (!string_empty(&req->schema)) {
+        if (rps_strcmp(&req->schema, http) != 0 &&
+            rps_strcmp(&req->schema, https) != 0) {
+            log_error("http request check error, invalid http schema");
+            return RPS_ERROR;
+        }
     }
 
     if (!rps_valid_port(req->port)) {
@@ -546,8 +717,8 @@ http_request_dump(struct http_request *req, uint8_t rs) {
         log_verb("[http send request]");
     }
 
-    log_verb("\t%s %s:%d %s", http_method_str(req->method), req->host.data, 
-            req->port, req->version.data);
+    log_verb("\t%s %s %s", http_method_str(req->method), req->full_uri.data, 
+            req->version.data);
 
     hashmap_iter(&req->headers, http_header_dump);
 }
@@ -574,7 +745,7 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
             /* body length larger than 80 bytes, 
              * show 75 character and four dots and one \0 */
             snprintf(&body[75], 5, ".....");
-         }
+        }
         log_verb("\t%s", body);
     }
 }

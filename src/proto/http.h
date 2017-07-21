@@ -88,7 +88,9 @@ http_reply_code_reverse(int code) {
     V(0, http_emethod, "EMETHOD")           \
     V(1, http_get, "GET")                   \
     V(2, http_post, "POST")                 \
-    V(3, http_connect, "CONNECT")           \
+    V(3, http_put, "PUT")                   \
+    V(4, http_head, "HEAD")                 \
+    V(5, http_connect, "CONNECT")           \
 
 enum {
 #define HTTP_METHOD_GEN(code, name, _) name = code,
@@ -137,10 +139,12 @@ struct http_request_auth {
 
 struct http_request {
     uint8_t             method;
-    rps_str_t           protocol;
+    rps_str_t           full_uri;
+    rps_str_t           schema;
     rps_str_t           host;
     int                 port;
-    rps_str_t           uri;
+    rps_str_t           path;
+    rps_str_t           params;
     rps_str_t           version;
     rps_hashmap_t       headers;        
     
