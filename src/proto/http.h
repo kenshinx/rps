@@ -185,4 +185,7 @@ void http_response_dump(struct http_response *resp, uint8_t rs);
 int http_request_message(char *message, struct http_request *req);
 int http_response_message(char *message, struct http_response *resp);
 
+int http_request_verify(struct context *ctx);
+rps_status_t http_send_response(struct context *ctx, uint16_t code);
+
 #endif

@@ -31,7 +31,7 @@
  * +------------+ <-------------------+  |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
- *  Re-Request  |  HTTP Request          |                       |              |
+ * Authenticate |  HTTP Request          |                       |              |
  * +------------+ +--------------------> |                       |              |
  *              |  Host:                 |                       |              |
  *              |  Proxy_Authorization:  |                       |              |
@@ -67,7 +67,7 @@
  *              +                        +                       +              +
 */
 
-void http_server_do_next(struct context *ctx);
-void http_client_do_next(struct context *ctx);
+void http_proxy_server_do_next(struct context *ctx);
+void http_proxy_client_do_next(struct context *ctx);
 
 #endif

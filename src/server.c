@@ -141,10 +141,10 @@ server_ctx_set_proto(rps_ctx_t *ctx, rps_proto_t proto) {
     } else if (ctx->proto == HTTP) {
         switch (ctx->flag) {
             case c_request:
-                ctx->do_next = http_server_do_next;
+                ctx->do_next = http_proxy_server_do_next;
                 break;
             case c_forward:
-                ctx->do_next = http_client_do_next;
+                ctx->do_next = http_proxy_client_do_next;
                 break;
             default:
                 NOT_REACHED();
