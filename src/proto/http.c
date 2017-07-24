@@ -1201,6 +1201,8 @@ http_request_verify(struct context *ctx) {
     data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
+    ASSERT(ctx->req == NULL);
+
     ctx->req = (struct http_request *)rps_alloc(sizeof(struct http_request));
     if (ctx->req == NULL) {
         result = http_verify_error;

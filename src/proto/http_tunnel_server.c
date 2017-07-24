@@ -11,7 +11,7 @@ http_do_handshake(struct context *ctx) {
 
     req = (struct http_request *)ctx->req;
     if (req == NULL) {
-        log_verb("http tunnel client request error");
+        log_verb("http tunnel client handshake error");
         ctx->state = c_kill;
         server_do_next(ctx);
         return;
@@ -19,24 +19,25 @@ http_do_handshake(struct context *ctx) {
 
     switch (http_verify_result) {
     case http_verify_error:
-        log_verb("http tunnel client %s %s error", 
+        log_verb("http tunnel client handshake '%s %s' error", 
                 http_method_str(req->method), req->full_uri.data);
         ctx->state = c_kill;
         break;
     case http_verify_success:
         ctx->state = c_exchange;
-        log_verb("http tunnel client %s %s success", 
+        log_verb("http tunnel client handshake '%s %s' success", 
                 http_method_str(req->method), req->full_uri.data);
         break;
     case http_verify_fail:
         ctx->state = c_handshake_resp;
-        log_verb("http tunnel client %s %s need authentication", 
+        log_verb("http tunnel client handshake '%s %s' need authentication", 
                 http_method_str(req->method), req->full_uri.data);
         break;
     }
 
 
     http_request_deinit(ctx->req);
+    rps_free(ctx->req);
     server_do_next(ctx);
 }
 
@@ -53,23 +54,38 @@ http_do_handshake_resp(struct context *ctx) {
 static void
 http_do_auth(struct context *ctx) {
     int http_verify_result;
+    struct http_request *req;
 
     http_verify_result = http_request_verify(ctx);
 
+    req = (struct http_request *)ctx->req;
+    if (req == NULL) {
+        log_verb("http  tunnel client authentication error");
+        ctx->state = c_kill;
+        server_do_next(ctx);
+        return;
+    }
+
     switch (http_verify_result) {
     case http_verify_success:
-        log_debug("http client authenticate success");
+        log_debug("http tunnel client '%s %s' authenticate success",
+                    http_method_str(req->method), req->full_uri.data);
         ctx->state = c_exchange;
         break;
     case http_verify_fail:
         ctx->state = c_auth_resp;
-        log_debug("http client authenticate fail");
+        log_debug("http tunnel client '%s %s' authenticate fail",
+                    http_method_str(req->method), req->full_uri.data);
         break;
     case http_verify_error:
         ctx->state = c_kill;
-        log_debug("http client authenticate error");
+        log_debug("http tunnel client '%s %s' authenticate error", 
+                    http_method_str(req->method), req->full_uri.data);
         break;
     }
+
+    http_request_deinit(ctx->req);
+    rps_free(ctx->req);
 
     server_do_next(ctx);
 }
