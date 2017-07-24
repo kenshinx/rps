@@ -1274,7 +1274,7 @@ http_send_response(struct context *ctx, uint16_t code) {
     string_duplicate(&resp.version, HTTP_DEFAULT_VERSION, strlen(HTTP_DEFAULT_VERSION));
     
     /* write http body */ 
-    len = snprintf(body, HTTP_BODY_MAX_LENGTH, "%d %s", 
+    len = snprintf(body, HTTP_BODY_MAX_LENGTH, "%d %s\n", 
             resp.code, http_resp_code_str(resp.code));
 
     ASSERT(len > 0);
