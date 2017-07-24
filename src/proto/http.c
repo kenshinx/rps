@@ -1203,12 +1203,12 @@ http_request_verify(struct context *ctx) {
 
     ASSERT(ctx->req == NULL);
 
+    /* Make sure the memory be released in caller function */
     ctx->req = (struct http_request *)rps_alloc(sizeof(struct http_request));
     if (ctx->req == NULL) {
         result = http_verify_error;
         goto next;
     }
-
     
     http_request_init(ctx->req);
     

@@ -38,6 +38,7 @@ http_do_handshake(struct context *ctx) {
 
     http_request_deinit(ctx->req);
     rps_free(ctx->req);
+    ctx->req = NULL;
     server_do_next(ctx);
 }
 
@@ -86,6 +87,7 @@ http_do_auth(struct context *ctx) {
 
     http_request_deinit(ctx->req);
     rps_free(ctx->req);
+    ctx->req = NULL;
 
     server_do_next(ctx);
 }
