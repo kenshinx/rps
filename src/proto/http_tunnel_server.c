@@ -5,24 +5,38 @@
 static void
 http_do_handshake(struct context *ctx) {
     int http_verify_result;
+    struct http_request *req;
 
     http_verify_result = http_request_verify(ctx);
 
+    req = (struct http_request *)ctx->req;
+    if (req == NULL) {
+        log_verb("http tunnel client request error");
+        ctx->state = c_kill;
+        server_do_next(ctx);
+        return;
+    }
+
     switch (http_verify_result) {
     case http_verify_error:
-        log_verb("http client handshake error");
+        log_verb("http tunnel client %s %s error", 
+                http_method_str(req->method), req->full_uri.data);
         ctx->state = c_kill;
         break;
     case http_verify_success:
         ctx->state = c_exchange;
-        log_verb("http client handshake success");
+        log_verb("http tunnel client %s %s success", 
+                http_method_str(req->method), req->full_uri.data);
         break;
     case http_verify_fail:
         ctx->state = c_handshake_resp;
-        log_verb("http client handshake authentication required");
+        log_verb("http tunnel client %s %s need authentication", 
+                http_method_str(req->method), req->full_uri.data);
         break;
     }
 
+
+    http_request_deinit(ctx->req);
     server_do_next(ctx);
 }
 

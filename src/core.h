@@ -138,7 +138,8 @@ struct context {
     ssize_t             nwrite;
 
     /* The memory pointed to by the buffers must remain valid until the write callback gets called.
-     * So we use a buffer for write buffer ensure the wbuf is safe and won't be overwritten before write callback called.
+     * So we use a buffer for write buffer ensure the wbuf is safe 
+     * and won't be overwritten before write callback called.
      */
     char                *wbuf2;
     ssize_t             nwrite2;
@@ -148,6 +149,12 @@ struct context {
 
     ctx_flag_t          flag;
     ctx_state_t         state;
+
+
+    /* HTTP proxy and HTTP tunnel proxy need this pointer to transmit request params 
+     * from client to upstream (method, url, headers, e.g.) 
+     */
+    void                *req;
 
     /* reply code is protocol related
      * http tunnel may be http_ok or http_forbidden etc.. 

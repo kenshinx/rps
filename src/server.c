@@ -119,6 +119,8 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout
         return RPS_ENOMEM;
     }
 
+    ctx->req = NULL;
+
     return RPS_OK;
 }
 
@@ -184,6 +186,10 @@ server_ctx_deinit(rps_ctx_t *ctx) {
 
     rps_free(ctx->wbuf);
     rps_free(ctx->wbuf2);
+
+    if (ctx->req != NULL) {
+        rps_free(ctx->req);
+    }
 }
 
 

@@ -711,14 +711,27 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
 
 void
 http_request_dump(struct http_request *req, uint8_t rs) {
+    size_t len;
+    char uri[60];
+
     if (rs == http_recv) {
         log_verb("[http recv request]");
     } else {
         log_verb("[http send request]");
     }
 
-    log_verb("\t%s %s %s", http_method_str(req->method), req->full_uri.data, 
-            req->version.data);
+    if (!string_empty(&req->full_uri)) {
+        len = snprintf(uri, 60, "%s", req->full_uri.data);
+        if (len > 60) {
+            /* uri length larger than 60 bytes, 
+             * show 55 character and four dots and one \0 */
+            snprintf(&uri[55], 5, ".....");
+        }
+
+        log_verb("\t%s %s %s", http_method_str(req->method), uri, 
+                req->version.data);
+    }
+
 
     hashmap_iter(&req->headers, http_header_dump);
 }
@@ -1178,7 +1191,7 @@ int
 http_request_verify(struct context *ctx) {
     uint8_t *data;
     ssize_t size;
-    struct http_request req;
+    struct http_request *req;
     struct http_request_auth auth;
     struct server *s;
     rps_addr_t  *remote;
@@ -1188,16 +1201,23 @@ http_request_verify(struct context *ctx) {
     data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
+    ctx->req = (struct http_request *)rps_alloc(sizeof(struct http_request));
+    if (ctx->req == NULL) {
+        result = http_verify_error;
+        goto next;
+    }
+
     
-    http_request_init(&req);
+    http_request_init(ctx->req);
     
-    status = http_request_parse(&req, data, size);
+    status = http_request_parse(ctx->req, data, size);
     if (status != RPS_OK) {
         result = http_verify_error;
         goto next;
     }
 
     s = ctx->sess->server;
+    req = ctx->req;
     
     if (string_empty(&s->cfg->username) || string_empty(&s->cfg->password)) {
         /* rps server didn't assign username or password 
@@ -1211,7 +1231,7 @@ http_request_verify(struct context *ctx) {
     uint8_t *credentials;
     size_t credentials_size;
 
-    credentials = (uint8_t *)hashmap_get(&req.headers, (void *)auth_header, 
+    credentials = (uint8_t *)hashmap_get(&req->headers, (void *)auth_header, 
             strlen(auth_header), &credentials_size);
 
     if (credentials == NULL) {
@@ -1249,12 +1269,12 @@ next:
     
     if (result == http_verify_success) {
         remote = &ctx->sess->remote;
-        rps_addr_name(remote, req.host.data, req.host.len, req.port);
+        rps_addr_name(remote, req->host.data, req->host.len, req->port);
         log_debug("http client handshake success");
-        log_debug("remote: %s:%d", req.host.data, req.port);
+        log_debug("remote: %s:%d", req->host.data, req->port);
     }
 
-    http_request_deinit(&req);
+    //http_request_deinit(ctx->req);
     return result;
 }
 
