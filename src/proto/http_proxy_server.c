@@ -53,6 +53,25 @@ http_proxy_send_auth(struct context *ctx) {
 }
 
 
+/*
+ * This routine will be executed only after retry 3 times, still be failed.
+ * Send back the errro code to client.
+ * */        
+static void
+http_proxy_do_reply(struct context *ctx) {
+    int code;
+
+    code = http_reply_code_reverse(ctx->reply_code);
+    if (code == http_undefine) {
+        code = http_server_error;
+    }
+
+    http_send_response(ctx, code);
+    ctx->state = c_kill;
+    server_do_next(ctx);
+}
+
+
 void
 http_proxy_server_do_next(struct context *ctx) {
     switch (ctx->state) {
@@ -62,6 +81,9 @@ http_proxy_server_do_next(struct context *ctx) {
         break;
     case c_auth_resp:
         http_proxy_send_auth(ctx);
+        break;
+    case c_reply:
+        http_proxy_do_reply(ctx);
         break;
     default:
         NOT_REACHED();
