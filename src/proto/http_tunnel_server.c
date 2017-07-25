@@ -3,7 +3,7 @@
 
 
 static void
-http_do_handshake(struct context *ctx) {
+http_tunnel_do_handshake(struct context *ctx) {
     int http_verify_result;
     struct http_request *req;
 
@@ -43,7 +43,7 @@ http_do_handshake(struct context *ctx) {
 }
 
 static void
-http_do_handshake_resp(struct context *ctx) {
+http_tunnel_do_handshake_resp(struct context *ctx) {
     if (http_send_response(ctx, http_proxy_auth_required) != RPS_OK) {
         ctx->state = c_kill;
         server_do_next(ctx);
@@ -53,7 +53,7 @@ http_do_handshake_resp(struct context *ctx) {
 }
 
 static void
-http_do_auth(struct context *ctx) {
+http_tunnel_do_auth(struct context *ctx) {
     int http_verify_result;
     struct http_request *req;
 
@@ -93,14 +93,14 @@ http_do_auth(struct context *ctx) {
 }
 
 static void
-http_do_auth_resp(struct context *ctx) {
+http_tunnel_do_auth_resp(struct context *ctx) {
     http_send_response(ctx, http_proxy_auth_required);
     ctx->state = c_kill;
     server_do_next(ctx);
 }
 
 static void
-http_do_reply(struct context *ctx) {
+http_tunnel_do_reply(struct context *ctx) {
     int code;
 
     /* traslate rps unified reply code to http response code */
@@ -136,19 +136,19 @@ http_tunnel_server_do_next(struct context *ctx) {
 
     switch (ctx->state) {
     case c_handshake_req:
-        http_do_handshake(ctx);
+        http_tunnel_do_handshake(ctx);
         break;
     case c_handshake_resp:
-        http_do_handshake_resp(ctx);
+        http_tunnel_do_handshake_resp(ctx);
         break;
     case c_auth_req:
-        http_do_auth(ctx);
+        http_tunnel_do_auth(ctx);
         break;
     case c_auth_resp:
-        http_do_auth_resp(ctx);
+        http_tunnel_do_auth_resp(ctx);
         break;
     case c_reply:
-        http_do_reply(ctx);
+        http_tunnel_do_reply(ctx);
         break;
     default:
         NOT_REACHED();

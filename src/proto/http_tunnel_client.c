@@ -2,7 +2,7 @@
 #include "http_tunnel.h"
 
 static int
-http_send_request(struct context *ctx) {
+http_tunnel_send_proxy(struct context *ctx) {
     struct http_request req;
     struct upstream *u;
     rps_addr_t  *remote;
@@ -73,8 +73,8 @@ http_send_request(struct context *ctx) {
 }
 
 static void
-http_do_handshake(struct context *ctx) {
-    if (http_send_request(ctx) != RPS_OK) {
+http_tunnel_do_handshake(struct context *ctx) {
+    if (http_tunnel_send_proxy(ctx) != RPS_OK) {
         ctx->state = c_retry;
         server_do_next(ctx);
     } else {
@@ -83,7 +83,7 @@ http_do_handshake(struct context *ctx) {
 }
 
 static void
-http_do_handshake_resp(struct context *ctx) {
+http_tunnel_do_handshake_resp(struct context *ctx) {
     int http_verify_result;
 
     http_verify_result = http_response_verify(ctx);
@@ -111,7 +111,7 @@ http_do_handshake_resp(struct context *ctx) {
 }
 
 static void
-http_do_auth(struct context *ctx) {
+http_tunnel_do_auth(struct context *ctx) {
     struct upstream *u;
 
     u = &ctx->sess->upstream;
@@ -120,7 +120,7 @@ http_do_auth(struct context *ctx) {
         goto retry;
     }
 
-    if (http_send_request(ctx) != RPS_OK) {
+    if (http_tunnel_send_proxy(ctx) != RPS_OK) {
         goto retry;
     }
 
@@ -133,7 +133,7 @@ retry:
 }
 
 static void
-http_do_auth_resp(struct context *ctx) {
+http_tunnel_do_auth_resp(struct context *ctx) {
     int http_verify_result;
     
     http_verify_result = http_response_verify(ctx);
@@ -160,16 +160,16 @@ http_tunnel_client_do_next(struct context *ctx) {
     
     switch (ctx->state) {
     case c_handshake_req:
-        http_do_handshake(ctx);
+        http_tunnel_do_handshake(ctx);
         break;
     case c_handshake_resp:
-        http_do_handshake_resp(ctx);
+        http_tunnel_do_handshake_resp(ctx);
         break;
     case c_auth_req:
-        http_do_auth(ctx);
+        http_tunnel_do_auth(ctx);
         break;
     case c_auth_resp:
-        http_do_auth_resp(ctx);
+        http_tunnel_do_auth_resp(ctx);
         break;
     default:
         NOT_REACHED();

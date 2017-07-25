@@ -29,9 +29,9 @@
  *              |                        |                       |              |
  *  Response    |  HTTP 407 Auth Require |                       |              |
  * +------------+ <-------------------+  |                       |              |
+ *              |  Porxy_Authenticate    |                       |              |
  *              |                        |                       |              |
- *              |                        |                       |              |
- * Authenticate |  HTTP Request          |                       |              |
+ * Re-Request   |  HTTP Request          |                       |              |
  * +------------+ +--------------------> |                       |              |
  *              |  Host:                 |                       |              |
  *              |  Proxy_Authorization:  |                       |              |
@@ -41,27 +41,19 @@
  *              |                        |                       |              |
  *              |                        |  HTTP Request         |              |
  *              |                        |  +---------------->   |              |
- *              |                        |  Host:                |              |
- *              |                        |  Proxy_Authorization: |              |
- *              |                        |  (Maybe)              |              |
- *              |                        |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
  *              |                        | HTTP 407 Auth Require |              |
  *              |                        | <-------------------+ |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
- *              |                        |  HTTP Request         |              |
+ *              |                        |  HTTP Request(retry)  |              |
  *              |                        |  +------------------> |              |
- *              |                        |  Host:                | HTTP Request |
- *              |                        |  Proxy_Authorization: | +----------> |
- *              |                        |                       |              |
- *              |                        |                       |              |
  *              |                        |                       |              |
  *              |                        |                       |              |
  *              |                        |                       | HTTP Response|
  *              |                        |     HTTP Response     | <----------+ |
- *  Finished    |    HTTP Response       |  <-----------------+  |              |
+ *  Pipelined   |    HTTP Response       |  <-----------------+  |              |
  * +----------+ | <-------------------+  |                       |              |
  *              |                        |                       |              |
  *              +                        +                       +              +
