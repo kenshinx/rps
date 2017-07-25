@@ -41,7 +41,7 @@ http_send_request(struct context *ctx) {
     
     if (!string_empty(&u->uname)) {
         /* autentication required */
-        const char key3[] = "Proxy-Authenticate";
+        const char key3[] = "Proxy-Authorization";
         char val3[HTTP_HEADER_MAX_VALUE_LENGTH];   
         int v3len;
         

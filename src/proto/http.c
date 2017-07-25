@@ -1089,7 +1089,8 @@ http_basic_auth_gen(const char *uname, const char *passwd, char *output) {
     length = 0;
     base64_init_encodestate(&bstate);
 
-    length = base64_encode_block(input, strlen(input), output, &bstate);
+    length = snprintf(output, HTTP_HEADER_MAX_VALUE_LENGTH, "Basic ");
+    length += base64_encode_block(input, strlen(input), &output[length], &bstate);
     length += base64_encode_blockend(&output[length], &bstate);
 
     ASSERT (length > 1);
@@ -1164,9 +1165,16 @@ http_request_message(char *message, struct http_request *req) {
     len = 0;
     size = HTTP_MESSAGE_MAX_LENGTH;
 
-    len += snprintf(message, size, "%s %s:%d %s\r\n", 
-            http_method_str(req->method), req->host.data, 
-            req->port, req->version.data);
+    if (req->method == http_connect) {
+        len += snprintf(message, size, "%s %s:%d %s\r\n", 
+                http_method_str(req->method), req->host.data, 
+                req->port, req->version.data);
+    } else {
+        len += snprintf(message, size, "%s %s %s\r\n",
+                http_method_str(req->method), req->full_uri.data,
+                req->version.data);
+    }
+
 
     for (i = 0; i < req->headers.size; i++) {
         header = req->headers.buckets[i];

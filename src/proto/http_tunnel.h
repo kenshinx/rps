@@ -28,7 +28,7 @@
  *              |                        |                       |              |
  *Handshake_resp|  HTTP 407 Auth Require |                       |              |
  * +-----------+| <--------------------  |                       |              |
- *              |                        |                       |              |
+ *              | Porxy_Authenticate     |                       |              |
  *              |                        |                       |              |
  * Authenticate |  HTTP Connect          |                       |              |
  * +-----------+| ---------------------> |                       |              |
