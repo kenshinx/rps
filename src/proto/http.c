@@ -6,6 +6,7 @@
 
 
 #include <uv.h>
+#include <ctype.h>
 
 
 void
@@ -706,7 +707,7 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
     skey[key_size] = '\0';
     svalue[value_size] = '\0';
 
-    log_verb("\t%s: %s", skey, svalue);
+    log_verb("\t%c%s: %s", toupper(skey[0]), skey + 1, svalue);
 }
 
 void
@@ -1116,7 +1117,7 @@ http_header_message(char *message, int size, struct hashmap_entry *header) {
     skey[key_size] = '\0';
     sval[val_size] = '\0';
 
-    len = snprintf(message, size, "%s: %s\r\n", skey, sval);
+    len = snprintf(message, size, "%c%s: %s\r\n", toupper(skey[0]), skey+1, sval);
     return len;
 }
 
@@ -1277,6 +1278,64 @@ next:
     }
 
     //http_request_deinit(ctx->req);
+    return result;
+}
+
+int
+http_response_verify(struct context *ctx) {
+    uint8_t *data;
+    ssize_t size;
+    rps_status_t status;
+    struct http_response resp;
+    int result;
+    char remoteip[MAX_INET_ADDRSTRLEN];
+
+    data = (uint8_t *)ctx->rbuf;
+    size = (size_t)ctx->nread;
+
+    http_response_init(&resp);
+
+    status = http_response_parse(&resp, data, size);
+    if (status != RPS_OK) {
+        log_debug("http upstream %s return invalid response", ctx->peername);
+        return http_verify_error;
+    }
+
+    rps_unresolve_addr(&ctx->sess->remote, remoteip);
+
+    /* convert http response code to rps unified reply code */
+    ctx->reply_code = http_reply_code_lookup(resp.code);
+
+    switch (resp.code) {
+    case http_ok:
+        result = http_verify_success;
+#ifdef RPS_DEBUG_OPEN
+        log_verb("http upstream %s connect remote %s success", 
+                ctx->peername, remoteip);
+#endif
+        break;
+
+    case http_proxy_auth_required:
+        log_debug("http upstream %s 407 authentication failed", 
+                ctx->peername);
+        result = http_verify_fail;
+        break;
+
+    case http_forbidden:
+    case http_not_found:
+    case http_server_error:
+    case http_bad_gateway:
+        log_debug("http upstream %s error, %d %s", ctx->peername, 
+                resp.code, resp.status.data);
+        result = http_verify_error;
+        break;
+
+    default:
+        log_debug("http upstream %s return undefined status code, %s", 
+                ctx->peername, resp.status.data);
+        result = http_verify_error;
+    }
+
     return result;
 }
 
