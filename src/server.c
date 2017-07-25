@@ -367,7 +367,7 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
     if (nread <0 ) {
         
-        if (ctx->state == c_established) {
+        if (ctx->state & (c_established | c_pipelined)) {
             // May be read error or EOF
             server_do_next(ctx);
             return;
@@ -842,6 +842,14 @@ server_establish(rps_sess_t *sess) {
             remoteip, rps_unresolve_port(&sess->remote));
 }
 
+/* 
+ * In tunnel(established) mode, Duplex data forwarding be established.
+ * Client <--> RPS <--> Upstream <--> Remote
+ *
+ * By Contrast, The pipeline mode work in simplex data forwarding
+ * Remote ---> Upstream ---> RPS --> Client
+ *      forward       request
+ */
 static void
 server_cycle(rps_ctx_t *ctx) {
     uint8_t    *data;
@@ -849,15 +857,15 @@ server_cycle(rps_ctx_t *ctx) {
     rps_sess_t  *sess;
     rps_ctx_t   *endpoint;
 
-    ASSERT(ctx->state & c_established);
-    ASSERT(ctx->connected && ctx->established);
-    
     data = (uint8_t *)ctx->rbuf;
     size = (size_t)ctx->nread;
 
     sess = ctx->sess;
 
     endpoint = ctx->flag == c_request? sess->forward:sess->request;
+
+    ASSERT(ctx->state & (c_established | c_pipelined));
+    ASSERT(ctx->connected && endpoint->connected);
 
     if ((ssize_t)size < 0) {
 
@@ -896,6 +904,36 @@ server_cycle(rps_ctx_t *ctx) {
 #endif
 
 }
+
+
+// /* 
+//  */
+// static void
+// server_pipeline(rps_ctx_t *ctx) {
+//     uint8_t    *data;
+//     size_t     size;
+//     rps_ctx_t   *request, *forward;
+
+//     forward = ctx;
+
+//     ASSERT(ctx->flag == c_forward);
+//     ASSERT(forward->state == c_pipelined);
+//     ASSERT(request->connected && forward->connected);
+
+//     data = (uint8_t *)forward->rbuf;
+//     size = (size_t)forwad->nread;
+
+
+//     if ((size_t)size < 0) {
+//         if ((size_t)size == UV_EOF) {
+//             log_verb("pipeline %s -> rps -> %s finished", forward->peername, request->peername);       
+//             server_ctx_close(forward);
+//             server_ctx_close(pipeline);
+//         }
+//     }
+
+    
+// }
 
 static void
 server_on_forward_close(uv_handle_t* handle) {
@@ -981,6 +1019,9 @@ server_do_next(rps_ctx_t *ctx) {
             server_finish(ctx->sess);
             break;
         case c_established:
+            server_cycle(ctx);
+            break;
+        case c_pipelined:
             server_cycle(ctx);
             break;
         case c_kill:
