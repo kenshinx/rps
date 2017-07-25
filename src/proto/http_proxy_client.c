@@ -50,6 +50,11 @@ http_proxy_send_request(struct context *ctx) {
             (void *)HTTP_DEFAULT_PROXY_CONNECTION, strlen(HTTP_DEFAULT_PROXY_CONNECTION));
 #endif
 
+    const char key3[] = "Connection";
+    const char val3[] = "close";
+    hashmap_set(&req->headers, (void *)key3, strlen(key3), 
+            (void *)val3, strlen(val3));
+
     len = http_request_message(message, req);
 
     ASSERT(len > 0);

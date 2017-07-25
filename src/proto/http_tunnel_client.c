@@ -58,6 +58,10 @@ http_send_request(struct context *ctx) {
     
 #endif
 
+    const char key5[] = "Connection";
+    const char val5[] = "close";
+    hashmap_set(&req.headers, (void *)key5, strlen(key5), 
+            (void *)val5, strlen(val5));
 
     len = http_request_message(message, &req);
 
