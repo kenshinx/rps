@@ -68,7 +68,6 @@ http_proxy_do_reply(struct context *ctx) {
 
     http_send_response(ctx, code);
     ctx->state = c_kill;
-    server_do_next(ctx);
 }
 
 
