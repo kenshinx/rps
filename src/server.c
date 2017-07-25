@@ -704,7 +704,7 @@ server_switch(rps_sess_t *sess) {
      *  conext switch from reuqest to forward 
      */
     forward->state = c_conn;
-    server_do_next(forward);
+    server_do_next(forward); 
 }
 
 static void
@@ -802,10 +802,10 @@ server_finish(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> upstream -> %s:%d failed.",
-            request->peername, rps_unresolve_port(&request->peer), 
-            rps_proto_str(request->proto), rps_proto_str(forward->proto), 
-            remoteip, rps_unresolve_port(&sess->remote));
+    // log_info("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> upstream -> %s:%d failed.",
+    //         request->peername, rps_unresolve_port(&request->peer), 
+    //         rps_proto_str(request->proto), rps_proto_str(forward->proto), 
+    //         remoteip, rps_unresolve_port(&sess->remote));
 
     forward->state = c_kill;
     server_do_next(forward);
@@ -844,14 +844,7 @@ server_establish(rps_sess_t *sess) {
             remoteip, rps_unresolve_port(&sess->remote));
 }
 
-/* 
- * In tunnel(established) mode, Duplex data forwarding be established.
- * Client <--> RPS <--> Upstream <--> Remote
- *
- * By Contrast, The pipeline mode work in simplex data forwarding
- * Remote ---> Upstream ---> RPS --> Client
- *      forward       request
- */
+
 static void
 server_cycle(rps_ctx_t *ctx) {
     uint8_t    *data;
@@ -907,35 +900,24 @@ server_cycle(rps_ctx_t *ctx) {
 
 }
 
+/* 
+ * In tunnel(established) mode, Duplex data forwarding be established.
+ * Client <--> RPS <--> Upstream <--> Remote
+ */
+static void
+server_tunnel(rps_ctx_t *ctx) {
+    server_cycle(ctx);
+}
 
-// /* 
-//  */
-// static void
-// server_pipeline(rps_ctx_t *ctx) {
-//     uint8_t    *data;
-//     size_t     size;
-//     rps_ctx_t   *request, *forward;
-
-//     forward = ctx;
-
-//     ASSERT(ctx->flag == c_forward);
-//     ASSERT(forward->state == c_pipelined);
-//     ASSERT(request->connected && forward->connected);
-
-//     data = (uint8_t *)forward->rbuf;
-//     size = (size_t)forwad->nread;
-
-
-//     if ((size_t)size < 0) {
-//         if ((size_t)size == UV_EOF) {
-//             log_verb("pipeline %s -> rps -> %s finished", forward->peername, request->peername);       
-//             server_ctx_close(forward);
-//             server_ctx_close(pipeline);
-//         }
-//     }
-
-    
-// }
+/*
+ * The pipeline mode work in simplex data forwarding
+ * Remote ---> Upstream ---> RPS --> Client
+ *      forward       request
+ */
+static void
+server_pipeline(rps_ctx_t *ctx) {
+    server_cycle(ctx);
+}
 
 static void
 server_on_forward_close(uv_handle_t* handle) {
@@ -1021,10 +1003,10 @@ server_do_next(rps_ctx_t *ctx) {
             server_finish(ctx->sess);
             break;
         case c_established:
-            server_cycle(ctx);
+            server_tunnel(ctx);
             break;
         case c_pipelined:
-            server_cycle(ctx);
+            server_pipeline(ctx);
             break;
         case c_kill:
             server_close(ctx->sess);

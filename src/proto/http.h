@@ -28,6 +28,7 @@ static const char HTTP_DEFAULT_PROXY_CONNECTION[] = "Keep-Alive";
 #define HTTP_RESP_MAP(V)                                                \
     V(0,   http_undefine, "Undefine")                                   \
     V(200, http_ok, "OK")                                               \
+    V(400, http_bad_request, "Bad Request")                             \
     V(403, http_forbidden, "Forbidden")                                 \
     V(404, http_not_found, "Not Found")                                 \
     V(407, http_proxy_auth_required, "Proxy Authentication Required")   \
