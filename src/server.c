@@ -745,7 +745,9 @@ server_forward_connect(rps_sess_t *sess) {
 
         if (forward->reconn >= s->upstreams->maxreconn) {
             log_error("Connect upstream failed after %d reconn.", forward->reconn);
-            goto kill;
+            forward->state = c_retry;
+            server_do_next(forward);
+            return;
         }
 
     }
