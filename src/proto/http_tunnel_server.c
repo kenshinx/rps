@@ -150,6 +150,8 @@ http_tunnel_server_do_next(struct context *ctx) {
     case c_reply:
         http_tunnel_do_reply(ctx);
         break;
+    case c_closing:
+        break;
     default:
         NOT_REACHED();
     }

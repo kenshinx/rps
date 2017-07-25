@@ -171,6 +171,8 @@ http_tunnel_client_do_next(struct context *ctx) {
     case c_auth_resp:
         http_tunnel_do_auth_resp(ctx);
         break;
+    case c_closing:
+        break;
     default:
         NOT_REACHED();
     }

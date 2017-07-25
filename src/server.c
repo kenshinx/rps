@@ -251,7 +251,10 @@ server_ctx_close(rps_ctx_t *ctx) {
         return;
     }
 
+    //The last chance for context to recycle the allocated resources.
     ctx->state = c_closing;
+    server_do_next(ctx);
+
     uv_read_stop(&ctx->handle.stream);
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
 }
@@ -788,7 +791,7 @@ server_finish(rps_sess_t *sess) {
     /* After retry, still failed*/
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
-    char remoteip[MAX_INET_ADDRSTRLEN];
+    // char remoteip[MAX_INET_ADDRSTRLEN];
 
     request = sess->request;
     forward = sess->forward;
@@ -800,7 +803,7 @@ server_finish(rps_sess_t *sess) {
     request->reply_code = forward->reply_code;
     server_do_next(request);
 
-    rps_unresolve_addr(&sess->remote, remoteip);
+    // rps_unresolve_addr(&sess->remote, remoteip);
 
     // log_info("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> upstream -> %s:%d failed.",
     //         request->peername, rps_unresolve_port(&request->peer), 
@@ -1011,8 +1014,8 @@ server_do_next(rps_ctx_t *ctx) {
         case c_kill:
             server_close(ctx->sess);
             break;
-        case c_closing:
-            break;
+        // case c_closing:
+        //     break;
         case c_closed:
             server_sess_free(ctx->sess);
             break;

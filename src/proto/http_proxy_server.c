@@ -36,9 +36,6 @@ http_proxy_parse_request(struct context *ctx) {
         return;
     }
 
-    http_request_deinit(ctx->req);
-    rps_free(ctx->req);
-    ctx->req = NULL;
     server_do_next(ctx);
 }
 
@@ -71,6 +68,16 @@ http_proxy_do_reply(struct context *ctx) {
 }
 
 
+static void
+http_proxy_do_close(struct context *ctx) {
+    if (ctx->req != NULL) {
+        http_request_deinit(ctx->req);
+        rps_free(ctx->req);
+        ctx->req = NULL;    
+    }
+}
+
+
 void
 http_proxy_server_do_next(struct context *ctx) {
     switch (ctx->state) {
@@ -83,6 +90,9 @@ http_proxy_server_do_next(struct context *ctx) {
         break;
     case c_reply:
         http_proxy_do_reply(ctx);
+        break;
+    case c_closing:
+        http_proxy_do_close(ctx);
         break;
     default:
         NOT_REACHED();

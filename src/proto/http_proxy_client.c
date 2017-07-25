@@ -66,12 +66,6 @@ http_proxy_send_request(struct context *ctx) {
     } 
     
     ctx->state = c_reply;
-
-    /*
-    http_request_deinit(req);
-    rps_free(ctx->sess->request->req);
-    ctx->sess->request->req = NULL;
-    */
 }
 
 static void
@@ -115,6 +109,8 @@ http_proxy_client_do_next(struct context *ctx) {
         break;
     case c_reply:
         http_proxy_parse_response(ctx);
+        break;
+    case c_closing:
         break;
     default:
         NOT_REACHED();
