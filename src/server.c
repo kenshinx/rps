@@ -326,8 +326,8 @@ server_on_timer_expire(uv_timer_t *handle) {
         ctx->state = c_kill;
         log_debug("Request from %s timeout", ctx->peername);
     } else {
-        /* bidirectional handshake has been established retry dosen’t make sense */
-        if (ctx->established) {
+        /* tunnel or pipeline has been established retry dosen’t make sense */
+        if (ctx->state & (c_established | c_pipelined)) {
             ctx->state = c_kill;
         } else {
             ctx->state = c_retry;
