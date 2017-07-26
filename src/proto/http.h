@@ -18,6 +18,16 @@
 #define HTTP_MIN_STATUS_CODE    100
 #define HTTP_MAX_STATUS_CODE    599
 
+static const char* BYPASS_PROXY_HEADER[] = {
+    "proxy-authorization",
+    "proxy-connection",
+    "transfer-encoding",
+    "connection",
+    "upgrade"
+};
+
+#define BYPASS_PROXY_HEADER_LEN  (sizeof(BYPASS_PROXY_HEADER)/sizeof(BYPASS_PROXY_HEADER[0]))
+
 static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";
 static const char HTTP_DEFAULT_REALM[] = "rps";
@@ -190,5 +200,6 @@ int http_response_message(char *message, struct http_response *resp);
 int http_request_verify(struct context *ctx);
 int http_response_verify(struct context *ctx);
 rps_status_t http_send_response(struct context *ctx, uint16_t code);
+rps_status_t http_send_request(struct context *ctx);
 
 #endif

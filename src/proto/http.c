@@ -1347,6 +1347,65 @@ http_response_verify(struct context *ctx) {
     return result;
 }
 
+
+rps_status_t
+http_send_request(struct context *ctx) {
+    struct http_request *req;
+    struct upstream *u;
+    size_t i;
+    char message[HTTP_MESSAGE_MAX_LENGTH];
+    int len;
+
+    req = ctx->sess->request->req;
+
+    ASSERT(req != NULL);
+    
+    for (i = 0; i < BYPASS_PROXY_HEADER_LEN; i++) {
+        hashmap_remove(&req->headers, (void *)BYPASS_PROXY_HEADER[i], 
+                strlen(BYPASS_PROXY_HEADER[i]));
+    } 
+
+    u = &ctx->sess->upstream;
+    
+    if (!string_empty(&u->uname)) {
+        /* autentication required */
+        const char key[] = "Proxy-Authorization";
+        char val[HTTP_HEADER_MAX_VALUE_LENGTH];   
+        int vlen;
+        
+        vlen = http_basic_auth_gen((const char *)u->uname.data, 
+                (const char *)u->passwd.data, val);
+        hashmap_set(&req->headers, (void *)key, strlen(key), (void *)val, vlen);
+    }
+        
+#ifdef HTTP_PROXY_CONNECTION
+    /* set proxy-connection header*/
+    const char key2[] = "Porxy-Connection";
+    hashmap_set(&req->headers, (void *)key2, strlen(key2), 
+            (void *)HTTP_DEFAULT_PROXY_CONNECTION, strlen(HTTP_DEFAULT_PROXY_CONNECTION));
+#endif
+
+#ifdef HTTP_PROXY_AGENT
+    const char key3[] = "Proxy-Agent";
+    hashmap_set(&req.headers, (void *)key3, strlen(key3), 
+            (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
+#endif
+
+    if (ctx->proto == HTTP) {
+        const char key4[] = "Connection";
+        const char val4[] = "close";
+        hashmap_set(&req->headers, (void *)key4, strlen(key4), 
+            (void *)val4, strlen(val4));    
+    }
+    
+    len = http_request_message(message, req);
+
+    ASSERT(len > 0);
+
+    return server_write(ctx, message, len);
+
+}
+
 rps_status_t
 http_send_response(struct context *ctx, uint16_t code) {
     struct http_response resp;
