@@ -35,10 +35,6 @@ http_tunnel_do_handshake(struct context *ctx) {
         break;
     }
 
-
-    http_request_deinit(ctx->req);
-    rps_free(ctx->req);
-    ctx->req = NULL;
     server_do_next(ctx);
 }
 
@@ -56,6 +52,12 @@ static void
 http_tunnel_do_auth(struct context *ctx) {
     int http_verify_result;
     struct http_request *req;
+
+    if (ctx->req != NULL) {
+        http_request_deinit(ctx->req);
+        rps_free(ctx->req);
+        ctx->req = NULL;    
+    }
 
     http_verify_result = http_request_verify(ctx);
 
@@ -84,10 +86,6 @@ http_tunnel_do_auth(struct context *ctx) {
                     http_method_str(req->method), req->full_uri.data);
         break;
     }
-
-    http_request_deinit(ctx->req);
-    rps_free(ctx->req);
-    ctx->req = NULL;
 
     server_do_next(ctx);
 }
@@ -130,6 +128,15 @@ http_tunnel_do_reply(struct context *ctx) {
 
 }
 
+static void
+http_tunnel_do_close(struct context *ctx) {
+    if (ctx->req != NULL) {
+        http_request_deinit(ctx->req);
+        rps_free(ctx->req);
+        ctx->req = NULL;    
+    }
+}
+
 
 void
 http_tunnel_server_do_next(struct context *ctx) {
@@ -151,6 +158,7 @@ http_tunnel_server_do_next(struct context *ctx) {
         http_tunnel_do_reply(ctx);
         break;
     case c_closing:
+        http_tunnel_do_close(ctx);
         break;
     default:
         NOT_REACHED();

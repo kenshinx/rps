@@ -6,6 +6,12 @@ http_proxy_parse_request(struct context *ctx) {
     int http_verify_result;
     struct http_request *req;
 
+    if (ctx->req != NULL) {
+        http_request_deinit(ctx->req);
+        rps_free(ctx->req);
+        ctx->req = NULL;    
+    }
+
     http_verify_result = http_request_verify(ctx);
 
     if (ctx->req == NULL) {
@@ -20,18 +26,18 @@ http_proxy_parse_request(struct context *ctx) {
     switch (http_verify_result) {
     case http_verify_error:
         ctx->state = c_kill;
-        log_verb("http proxy client %s %s error", 
-                http_method_str(req->method), req->full_uri.data);
+        log_verb("http proxy client %s %s:%d error", 
+                http_method_str(req->method), req->host.data, req->port);
         break;
     case http_verify_fail:
         ctx->state = c_auth_resp;
-        log_verb("http proxy client %s %s need authentication", 
-                http_method_str(req->method), req->full_uri.data);
+        log_verb("http proxy client %s %s:%d need authentication", 
+                http_method_str(req->method), req->host.data, req->port);
         break;
     case http_verify_success:
         ctx->state = c_exchange;
-        log_verb("http proxy client %s %s success", 
-                http_method_str(req->method), req->full_uri.data);
+        log_verb("http proxy client %s %s:%d success", 
+                http_method_str(req->method), req->host.data, req->port);
         server_do_next(ctx);
         return;
     }
