@@ -105,7 +105,7 @@ http_tunnel_do_reply(struct context *ctx) {
     code = http_reply_code_reverse(ctx->reply_code);
 
     if (code == http_undefine) {
-        code = http_server_error;
+        code = http_bad_request;
     }
 
     if (http_send_response(ctx, code) != RPS_OK) {
