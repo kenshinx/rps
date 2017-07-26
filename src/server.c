@@ -120,6 +120,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout
     }
 
     ctx->req = NULL;
+    ctx->do_next = NULL;
 
     return RPS_OK;
 }
@@ -190,6 +191,8 @@ server_ctx_deinit(rps_ctx_t *ctx) {
     if (ctx->req != NULL) {
         rps_free(ctx->req);
     }
+
+    ctx->do_next = NULL;
 }
 
 
@@ -251,9 +254,12 @@ server_ctx_close(rps_ctx_t *ctx) {
         return;
     }
 
-    //The last chance for context to recycle the allocated resources.
-    ctx->state = c_closing;
-    server_do_next(ctx);
+    // Recycle the allocated resources.
+    // Only context that has been connected need close action
+    if (ctx->connected) {
+        ctx->state = c_closing;
+        server_do_next(ctx);    
+    }
 
     uv_read_stop(&ctx->handle.stream);
     uv_close(&ctx->handle.handle, (uv_close_cb)server_on_ctx_close);
@@ -327,7 +333,8 @@ server_on_timer_expire(uv_timer_t *handle) {
         log_debug("Request from %s timeout", ctx->peername);
     } else {
         /* tunnel or pipeline has been established retry dosen’t make sense */
-        if (ctx->state & (c_established | c_pipelined)) {
+        // if (ctx->state & (c_established | c_pipelined)) {
+        if (ctx->established) {
             ctx->state = c_kill;
         } else {
             ctx->state = c_retry;
@@ -748,9 +755,7 @@ server_forward_connect(rps_sess_t *sess) {
 
         if (forward->reconn >= s->upstreams->maxreconn) {
             log_error("Connect upstream failed after %d reconn.", forward->reconn);
-            forward->state = c_retry;
-            server_do_next(forward);
-            return;
+            goto kill;
         }
 
     }
@@ -862,6 +867,14 @@ server_cycle(rps_ctx_t *ctx) {
 
     endpoint = ctx->flag == c_request? sess->forward:sess->request;
 
+    /* Endpoint maybe has been closed and memory has been freed, 
+    * however current context still on shutdown state and hasn't been closed right now.
+    * Drop the data directly in this approach and watting for current context be closed.
+    */
+    if (server_ctx_dead(endpoint)) {
+        return;
+    }
+
     ASSERT(ctx->state & (c_established | c_pipelined));
     ASSERT(ctx->connected && endpoint->connected);
 
@@ -882,12 +895,6 @@ server_cycle(rps_ctx_t *ctx) {
             server_ctx_close(endpoint);
         } 
 
-        return;
-    }
-
-        
-
-    if (server_ctx_dead(endpoint)) {
         return;
     }
     
@@ -1020,7 +1027,10 @@ server_do_next(rps_ctx_t *ctx) {
             server_sess_free(ctx->sess);
             break;
         default:
-            ctx->do_next(ctx);
+            // ctx->do_next may be null while server_ctx_set_proto hasn't been called.
+            if (ctx->do_next != NULL) {
+                ctx->do_next(ctx);    
+            }
             break;
     }
 }
