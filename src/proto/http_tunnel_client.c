@@ -2,7 +2,7 @@
 #include "http_tunnel.h"
 
 static int
-http_tunnel_send_proxy(struct context *ctx) {
+http_tunnel_send_request(struct context *ctx) {
     struct http_request req;
     struct upstream *u;
     rps_addr_t  *remote;
@@ -58,10 +58,12 @@ http_tunnel_send_proxy(struct context *ctx) {
     
 #endif
 
+#ifdef HTTP_CONNECTION
     const char key5[] = "Connection";
-    const char val5[] = "close";
     hashmap_set(&req.headers, (void *)key5, strlen(key5), 
-            (void *)val5, strlen(val5));
+            (void *)HTTP_DEFAULT_CONNECTION, strlen(HTTP_DEFAULT_CONNECTION));
+
+#endif
 
     len = http_request_message(message, &req);
 
@@ -74,7 +76,7 @@ http_tunnel_send_proxy(struct context *ctx) {
 
 static void
 http_tunnel_do_handshake(struct context *ctx) {
-    if (http_tunnel_send_proxy(ctx) != RPS_OK) {
+    if (http_tunnel_send_request(ctx) != RPS_OK) {
         ctx->state = c_retry;
         server_do_next(ctx);
     } else {
@@ -120,7 +122,7 @@ http_tunnel_do_auth(struct context *ctx) {
         goto retry;
     }
 
-    if (http_tunnel_send_proxy(ctx) != RPS_OK) {
+    if (http_tunnel_send_request(ctx) != RPS_OK) {
         goto retry;
     }
 

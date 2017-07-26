@@ -23,6 +23,7 @@ static const char HTTP_DEFAULT_AUTH[] = "Basic";
 static const char HTTP_DEFAULT_REALM[] = "rps";
 static const char HTTP_DEFAULT_PROXY_AGENT[] = "RPS/1.0";
 static const char HTTP_DEFAULT_PROXY_CONNECTION[] = "Keep-Alive";
+static const char HTTP_DEFAULT_CONNECTION[] = "close";
 
 
 #define HTTP_RESP_MAP(V)                                                \
