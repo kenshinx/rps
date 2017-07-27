@@ -1389,7 +1389,7 @@ http_send_request(struct context *ctx) {
 
 #ifdef HTTP_PROXY_AGENT
     const char key3[] = "Proxy-Agent";
-    hashmap_set(&req.headers, (void *)key3, strlen(key3), 
+    hashmap_set(&req->headers, (void *)key3, strlen(key3), 
             (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
 #endif
 
