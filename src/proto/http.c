@@ -721,19 +721,21 @@ http_request_dump(struct http_request *req, uint8_t rs) {
         log_verb("[http send request]");
     }
 
-    if (!string_empty(&req->full_uri)) {
-        len = snprintf(uri, 60, "%s", req->full_uri.data);
-        if (len > 60) {
-            /* uri length larger than 60 bytes, 
-             * show 55 character and four dots and one \0 */
-            snprintf(&uri[55], 5, ".....");
-        }
 
-        log_verb("\t%s %s %s", http_method_str(req->method), uri, 
-                req->version.data);
+    if (req->method == http_connect) {
+        len = snprintf(uri, 60, "%s:%d", req->host.data, req->port);
+    } else {
+        if (!string_empty(&req->full_uri)) {
+            len = snprintf(uri, 60, "%s", req->full_uri.data);
+            if (len > 60) {
+                /* uri length larger than 60 bytes, 
+                 * show 55 character and four dots and one \0 */
+                snprintf(&uri[55], 5, ".....");
+            }
+        }
     }
 
-
+    log_verb("\t%s %s %s", http_method_str(req->method), uri, req->version.data);
     hashmap_iter(&req->headers, http_header_dump);
 }
 
