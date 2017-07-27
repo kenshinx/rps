@@ -1316,6 +1316,8 @@ http_response_verify(struct context *ctx) {
 
     switch (resp.code) {
     case http_ok:
+    case http_moved_permanently:
+    case http_found:
         result = http_verify_success;
 #ifdef RPS_DEBUG_OPEN
         log_verb("http upstream %s connect remote %s success", 
