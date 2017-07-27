@@ -452,7 +452,17 @@ upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
     up = NULL;
 
     if (us->hybrid) {
-        up = array_random(&us->pools);
+        if (proto == HTTP_TUNNEL || proto == SOCKS5) {
+            // http_tunnel, socks5 can only forward via http_tunnel or socks5   
+            for (; ;) {
+                up = array_random(&us->pools);
+                if (up->proto == HTTP_TUNNEL || up->proto == SOCKS5) {
+                    break;
+                }
+            }
+        } else {
+            up = array_random(&us->pools);
+        }
     } else {
         len = array_n(&us->pools);
         for (i=0; i<len; i++) {
