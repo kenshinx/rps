@@ -101,8 +101,9 @@ typedef enum context_state {
     c_established = (1 << 11),
     c_pipelined = (1 << 12),
     c_kill = (1 << 13),
-    c_closing = (1 << 14),
-    c_closed = (1 << 15)
+    c_will_kill = (1 << 14),
+    c_closing = (1 << 15),
+    c_closed = (1 << 16)
 } ctx_state_t;
 
 

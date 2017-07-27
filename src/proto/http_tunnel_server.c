@@ -16,6 +16,16 @@ http_tunnel_do_handshake(struct context *ctx) {
         server_do_next(ctx);
         return;
     }
+    
+    //HTTP tunnel proxy only support connect method.
+    if (req->method != http_connect) {
+        log_verb("http tunnel client handshake error, invalid http method: %s",
+                http_method_str(req->method));
+        http_send_response(ctx, http_method_not_allowed);
+        ctx->state = c_will_kill;
+        server_do_next(ctx);
+        return;
+    }
 
     switch (http_verify_result) {
     case http_verify_error:
@@ -63,8 +73,17 @@ http_tunnel_do_auth(struct context *ctx) {
 
     req = (struct http_request *)ctx->req;
     if (req == NULL) {
-        log_verb("http  tunnel client authentication error");
+        log_verb("http tunnel client authentication error");
         ctx->state = c_kill;
+        server_do_next(ctx);
+        return;
+    }
+
+    if (req->method != http_connect) {
+        log_verb("http tunnel client authenticate error, invalid http method: %s",
+                http_method_str(req->method));
+        http_send_response(ctx, http_method_not_allowed);
+        ctx->state = c_will_kill;
         server_do_next(ctx);
         return;
     }

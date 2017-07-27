@@ -1018,6 +1018,9 @@ server_do_next(rps_ctx_t *ctx) {
         case c_pipelined:
             server_pipeline(ctx);
             break;
+        case c_will_kill:
+            server_ctx_shutdown(ctx);
+            break;
         case c_kill:
             server_close(ctx->sess);
             break;

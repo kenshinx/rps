@@ -44,6 +44,7 @@ static const char HTTP_DEFAULT_CONNECTION[] = "close";
     V(400, http_bad_request, "Bad Request")                             \
     V(403, http_forbidden, "Forbidden")                                 \
     V(404, http_not_found, "Not Found")                                 \
+    V(405, http_method_not_allowed, "Method Not Allowed")               \
     V(407, http_proxy_auth_required, "Proxy Authentication Required")   \
     V(500, http_server_error, "Internal Server Error")                  \
     V(502, http_bad_gateway, "Bad Gateway")                             \
