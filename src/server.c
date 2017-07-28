@@ -887,7 +887,7 @@ server_establish_pipeline(rps_sess_t *sess) {
 
     forward->state = c_established;
     request->state = c_established;
-    server_do_next(request);
+    server_do_next(forward);
 }
 
 /*
