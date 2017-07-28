@@ -1,9 +1,79 @@
 #include "http.h"
 #include "http_tunnel.h"
 
+
+static rps_status_t
+http_tunnel_send_request(struct context *ctx) {
+    struct http_request *req, nreq;
+    struct upstream *u;
+    size_t i;
+    char message[HTTP_MESSAGE_MAX_LENGTH];
+    int len;
+
+    req = ctx->sess->request->req;
+
+    ASSERT(req != NULL);
+
+    http_request_init(&nreq);
+    nreq.method = http_connect;
+    nreq.port = req->port;
+    string_copy(&nreq.host, &req->host);
+    string_copy(&nreq.version, &req->version);
+    string_copy(&nreq.full_uri, &req->full_uri);
+
+    for (i = 0; i < BYPASS_PROXY_HEADER_LEN; i++) {
+        hashmap_remove(&req->headers, (void *)BYPASS_PROXY_HEADER[i], 
+                strlen(BYPASS_PROXY_HEADER[i]));
+    } 
+
+#ifdef HTTP_PROXY_REDINE_HOST_HEADER
+    const char key1[] = "host";
+    char val1[HTTP_HEADER_MAX_VALUE_LENGTH];
+    int v1len;
+    v1len = snprintf(val1, HTTP_HEADER_MAX_VALUE_LENGTH, "%s:%d", req->host.data, req->port);
+    hashmap_set(&req->headers, (void *)key1, strlen(key1), (void *)val1, v1len);
+#endif
+
+    u = &ctx->sess->upstream;
+    
+    if (!string_empty(&u->uname)) {
+        /* autentication required */
+        const char key2[] = "Proxy-Authorization";
+        char val2[HTTP_HEADER_MAX_VALUE_LENGTH];   
+        int vlen2;
+        
+        vlen2 = http_basic_auth_gen((const char *)u->uname.data, 
+                (const char *)u->passwd.data, val2);
+        hashmap_set(&req->headers, (void *)key2, strlen(key2), (void *)val2, vlen2);
+    }
+        
+#ifdef HTTP_PROXY_CONNECTION
+    /* set proxy-connection header*/
+    const char key3[] = "Porxy-Connection";
+    hashmap_set(&req->headers, (void *)key3, strlen(key3), 
+            (void *)HTTP_DEFAULT_PROXY_CONNECTION, strlen(HTTP_DEFAULT_PROXY_CONNECTION));
+#endif
+
+#ifdef HTTP_PROXY_AGENT
+    const char key4[] = "Proxy-Agent";
+    hashmap_set(&req->headers, (void *)key4, strlen(key4), 
+            (void *)HTTP_DEFAULT_PROXY_AGENT, strlen(HTTP_DEFAULT_PROXY_AGENT));
+#endif
+    
+    
+    // pointer reference is fine at here.
+    nreq.headers = req->headers;
+
+    len = http_request_message(message, &nreq);
+
+    ASSERT(len > 0);
+
+    return server_write(ctx, message, len);
+}
+
 static void
 http_tunnel_do_handshake(struct context *ctx) {
-    if (http_send_request(ctx) != RPS_OK) {
+    if (http_tunnel_send_request(ctx) != RPS_OK) {
         ctx->state = c_retry;
         server_do_next(ctx);
     } else {
@@ -49,7 +119,7 @@ http_tunnel_do_auth(struct context *ctx) {
         goto retry;
     }
 
-    if (http_send_request(ctx) != RPS_OK) {
+    if (http_tunnel_send_request(ctx) != RPS_OK) {
         goto retry;
     }
 

@@ -832,16 +832,22 @@ server_establish(rps_sess_t *sess) {
     ASSERT(forward->established);
     ASSERT(forward->reply_code == rps_rep_ok);
 
-    request->state = c_reply;
-    request->reply_code = forward->reply_code;
-    server_do_next(request);
-    
-    ASSERT(request->rstat == c_stop);
-    /* reuqest start read data again */
-    server_read_start(request);
-
-
     forward->state = c_established;
+
+    if (request->proto == HTTP) {
+        request->state = c_pipelined;
+        server_do_next(request);
+    } else {
+        request->state = c_reply;
+        request->reply_code = forward->reply_code;
+        server_do_next(request);
+        
+        ASSERT(request->rstat == c_stop);
+        /* reuqest start read data again */
+        server_read_start(request);
+    }
+
+
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
