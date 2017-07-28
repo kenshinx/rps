@@ -86,6 +86,11 @@ typedef enum context_flag {
     c_forward
 } ctx_flag_t;
 
+typedef enum context_stream {
+    c_tunnel,
+    c_pipeline
+} ctx_stream_t;
+
 typedef enum context_state {
     c_init = (1 << 0),
     c_conn = (1 << 1),
@@ -98,8 +103,8 @@ typedef enum context_state {
     c_reply = (1 << 8),
     c_retry = (1 << 9),
     c_failed = (1 << 10),
-    c_established = (1 << 11),
-    c_pipelined = (1 << 12),
+    c_establish = (1 << 11),
+    c_established = (1 << 12),
     c_kill = (1 << 13),
     c_will_kill = (1 << 14),
     c_closing = (1 << 15),
@@ -152,6 +157,7 @@ struct context {
     char                peername[MAX_INET_ADDRSTRLEN];
 
     ctx_flag_t          flag;
+    ctx_stream_t        stream;
     ctx_state_t         state;
 
 

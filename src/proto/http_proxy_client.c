@@ -17,25 +17,11 @@ http_proxy_do_request(struct context *ctx) {
 static void
 http_proxy_do_response(struct context *ctx) {
     int http_verify_result;
-    struct context *request, *forward;
-    struct session *sess;
-    char remoteip[MAX_INET_ADDRSTRLEN];
-
-    sess = ctx->sess;
-    request = sess->request;
-    forward = sess->forward;
-
-    rps_unresolve_addr(&sess->remote, remoteip);
 
     http_verify_result = http_response_verify(ctx);
     switch (http_verify_result) {
     case http_verify_success:
-        ctx->state = c_pipelined;
-        log_info("Establish pipeline %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
-            request->peername, rps_unresolve_port(&request->peer), 
-            rps_proto_str(request->proto), rps_proto_str(forward->proto), 
-            forward->peername, rps_unresolve_port(&forward->peer), 
-            remoteip, rps_unresolve_port(&sess->remote));
+        ctx->state = c_establish;
         break;
     case http_verify_fail:
     case http_verify_error:

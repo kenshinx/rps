@@ -91,6 +91,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout
     ctx->sess = sess;
     ctx->flag = flag;
     ctx->state = c_init;
+    ctx->stream = -1;
     ctx->nread = 0;
     ctx->nwrite = 0;
     ctx->nwrite2 = 0;
@@ -131,37 +132,40 @@ server_ctx_set_proto(rps_ctx_t *ctx, rps_proto_t proto) {
     ctx->proto = proto;
 
     if (ctx->proto == SOCKS5) {
+        ctx->stream = c_tunnel;
         switch (ctx->flag) {
-            case c_request:
-                ctx->do_next = s5_server_do_next;
-                break;
-            case c_forward:
-                ctx->do_next = s5_client_do_next;
-                break;
-            default:
-                NOT_REACHED();
+        case c_request:
+            ctx->do_next = s5_server_do_next;
+            break;
+        case c_forward:
+            ctx->do_next = s5_client_do_next;
+            break;
+        default:
+            NOT_REACHED();
         }
     } else if (ctx->proto == HTTP) {
+        ctx->stream = c_pipeline;
         switch (ctx->flag) {
-            case c_request:
-                ctx->do_next = http_proxy_server_do_next;
-                break;
-            case c_forward:
-                ctx->do_next = http_proxy_client_do_next;
-                break;
-            default:
-                NOT_REACHED();
+        case c_request:
+            ctx->do_next = http_proxy_server_do_next;
+            break;
+        case c_forward:
+            ctx->do_next = http_proxy_client_do_next;
+            break;
+        default:
+            NOT_REACHED();
         }
     } else if (ctx->proto == HTTP_TUNNEL) {
+        ctx->stream = c_tunnel;
         switch (ctx->flag) {
-            case c_request:
-                ctx->do_next = http_tunnel_server_do_next;
-                break;
-            case c_forward:
-                ctx->do_next = http_tunnel_client_do_next;
-                break;
-            default:
-                NOT_REACHED();
+        case c_request:
+            ctx->do_next = http_tunnel_server_do_next;
+            break;
+        case c_forward:
+            ctx->do_next = http_tunnel_client_do_next;
+            break;
+        default:
+            NOT_REACHED();
         }
     } else {
         NOT_REACHED();
@@ -333,8 +337,7 @@ server_on_timer_expire(uv_timer_t *handle) {
         log_debug("Request from %s timeout", ctx->peername);
     } else {
         /* tunnel or pipeline has been established retry dosen’t make sense */
-        // if (ctx->state & (c_established | c_pipelined)) {
-        if (ctx->established) {
+        if (ctx->state & c_established) {
             ctx->state = c_kill;
         } else {
             ctx->state = c_retry;
@@ -377,7 +380,7 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 
     if (nread <0 ) {
         
-        if (ctx->state & (c_established | c_pipelined)) {
+        if (ctx->state & c_established) {
             // May be read error or EOF
             server_do_next(ctx);
             return;
@@ -819,12 +822,19 @@ server_finish(rps_sess_t *sess) {
     server_do_next(forward);
 }
 
+
+/* 
+ * In tunnel(established) mode, Duplex data forwarding be established.
+ *
+ *          tunnel             tunnel
+ * Remote <--------> Upstream <-------> RPS --> Client
+ *         request              forward 
+ */
 static void
-server_establish(rps_sess_t *sess) {
+server_establish_tunnel(rps_sess_t *sess) {
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
     char remoteip[MAX_INET_ADDRSTRLEN];
-
 
     request = sess->request;
     forward = sess->forward;
@@ -834,20 +844,13 @@ server_establish(rps_sess_t *sess) {
 
     forward->state = c_established;
 
-    if (request->proto == HTTP) {
-        request->state = c_pipelined;
-        server_do_next(request);
-    } else {
-        request->state = c_reply;
-        request->reply_code = forward->reply_code;
-        server_do_next(request);
-        
-        ASSERT(request->rstat == c_stop);
-        /* reuqest start read data again */
-        server_read_start(request);
-    }
-
-
+    request->state = c_reply;
+    request->reply_code = forward->reply_code;
+    server_do_next(request);
+    
+    ASSERT(request->rstat == c_stop);
+    /* reuqest start read data again */
+    server_read_start(request);
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
@@ -858,6 +861,91 @@ server_establish(rps_sess_t *sess) {
             remoteip, rps_unresolve_port(&sess->remote));
 }
 
+/*
+ * The pipeline mode work in simplex data forwarding
+ *
+ *        pipeline            pipeline
+ * Remote --------> Upstream -------> RPS --> Client
+ *        request             forward 
+ */
+static void
+server_establish_pipeline(rps_sess_t *sess) {
+    struct context *request, *forward;
+    char remoteip[MAX_INET_ADDRSTRLEN];
+    
+
+    request = sess->request;
+    forward = sess->forward;
+
+    rps_unresolve_addr(&sess->remote, remoteip);
+
+    log_info("Establish pipeline %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
+            request->peername, rps_unresolve_port(&request->peer), 
+            rps_proto_str(request->proto), rps_proto_str(forward->proto), 
+            forward->peername, rps_unresolve_port(&forward->peer), 
+            remoteip, rps_unresolve_port(&sess->remote));
+
+    forward->state = c_established;
+    request->state = c_established;
+    server_do_next(request);
+}
+
+/*
+ * The pipeline_tunnel mode kickoff while meet the next three conditions
+ * 1. Hybrid enabled 
+ * 2. The client request via HTTP proxy
+ * 3. Upstream are http_tunnel or socks5 proxy
+ *
+ *        pipeline             tunnel
+ * Remote --------> Upstream <-------> RPS --> Client
+ *        request              forward 
+ */
+static void
+server_establish_pipeline_tunnel(rps_sess_t *sess) {
+    struct context *request, *forward;
+    char remoteip[MAX_INET_ADDRSTRLEN];
+    
+
+    request = sess->request;
+    forward = sess->forward;
+
+    ASSERT(forward->established);
+    ASSERT(forward->reply_code == rps_rep_ok);
+
+    forward->state = c_established;
+
+    rps_unresolve_addr(&sess->remote, remoteip);
+
+    log_info("Establish hybrid pipeline_tunnel %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
+            request->peername, rps_unresolve_port(&request->peer), 
+            rps_proto_str(request->proto), rps_proto_str(forward->proto), 
+            forward->peername, rps_unresolve_port(&forward->peer), 
+            remoteip, rps_unresolve_port(&sess->remote));
+
+    request->state = c_established;
+    server_do_next(request);
+
+}
+
+static void
+server_establish(rps_sess_t *sess) {
+    switch (sess->request->stream) {
+    case c_tunnel:
+        server_establish_tunnel(sess);
+        break;
+    case c_pipeline:
+        if (sess->forward->stream == c_pipeline) {
+            server_establish_pipeline(sess);
+        } else if (sess->forward->stream == c_tunnel) {
+            server_establish_pipeline_tunnel(sess);
+        } else{
+            NOT_REACHED();
+        }
+        break;
+    default:
+        NOT_REACHED();
+    }    
+}
 
 static void
 server_cycle(rps_ctx_t *ctx) {
@@ -881,7 +969,7 @@ server_cycle(rps_ctx_t *ctx) {
         return;
     }
 
-    ASSERT(ctx->state & (c_established | c_pipelined));
+    ASSERT(ctx->state & c_established);
     ASSERT(ctx->connected && endpoint->connected);
 
     if ((ssize_t)size < 0) {
@@ -916,24 +1004,7 @@ server_cycle(rps_ctx_t *ctx) {
 
 }
 
-/* 
- * In tunnel(established) mode, Duplex data forwarding be established.
- * Client <--> RPS <--> Upstream <--> Remote
- */
-static void
-server_tunnel(rps_ctx_t *ctx) {
-    server_cycle(ctx);
-}
 
-/*
- * The pipeline mode work in simplex data forwarding
- * Remote ---> Upstream ---> RPS --> Client
- *      forward       request
- */
-static void
-server_pipeline(rps_ctx_t *ctx) {
-    server_cycle(ctx);
-}
 
 static void
 server_on_forward_close(uv_handle_t* handle) {
@@ -1001,13 +1072,7 @@ server_do_next(rps_ctx_t *ctx) {
 
     switch (ctx->state) {
         case c_exchange:
-            if (ctx->flag == c_request) {
-                /* switch context from request to forward and request stop read */
-                server_switch(ctx->sess);
-            } else {
-                /* finish dural context handshake, tunnel established */
-                server_establish(ctx->sess);
-            }
+            server_switch(ctx->sess);
             break;
         case c_conn:
             server_forward_connect(ctx->sess);
@@ -1018,11 +1083,11 @@ server_do_next(rps_ctx_t *ctx) {
         case c_failed:
             server_finish(ctx->sess);
             break;
-        case c_established:
-            server_tunnel(ctx);
+        case c_establish:
+            server_establish(ctx->sess);
             break;
-        case c_pipelined:
-            server_pipeline(ctx);
+        case c_established:
+            server_cycle(ctx);
             break;
         case c_will_kill:
             server_ctx_shutdown(ctx);

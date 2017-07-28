@@ -241,7 +241,7 @@ s5_do_reply(struct context *ctx) {
         log_verb("s5 upstream %s connect remote %s success.", ctx->peername, remoteip);
     #endif
         ctx->established = 1;
-        ctx->state = c_exchange;
+        ctx->state = c_establish;
     }
 
     server_do_next(ctx);

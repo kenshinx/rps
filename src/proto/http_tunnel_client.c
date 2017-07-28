@@ -90,7 +90,7 @@ http_tunnel_do_handshake_resp(struct context *ctx) {
     switch (http_verify_result) {
     case http_verify_success:
         ctx->established = 1;
-        ctx->state = c_exchange;
+        ctx->state = c_establish;
         break;
     case http_verify_fail:
 #ifdef RPS_HTTP_CLIENT_REAUTH
@@ -140,7 +140,7 @@ http_tunnel_do_auth_resp(struct context *ctx) {
     switch (http_verify_result) {
     case http_verify_success:
         ctx->established = 1;
-        ctx->state = c_exchange;
+        ctx->state = c_establish;
         break;
     case http_verify_fail:
     case http_verify_error:
