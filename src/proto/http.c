@@ -426,6 +426,14 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
         log_error("http parse request line error, '%s' : parse failed", line->data);
         return RPS_ERROR;
     }
+
+    if (req->port == 0) {
+        if (rps_strcmp(&req->schema, "https") == 0) {
+            req->port = 443;
+        } else {
+            req->port = 80;       
+        }
+    }
     
     return RPS_OK;
 }
