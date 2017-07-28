@@ -695,7 +695,7 @@ server_switch(rps_sess_t *sess) {
     s = sess->server;
     request = sess->request;
     /* request stop read, wait for upstream establishment finished */
-    server_read_stop(request);
+    // server_read_stop(request);
 
     forward = (struct context *)rps_alloc(sizeof(struct context));
     if (forward == NULL) {
@@ -848,9 +848,6 @@ server_establish_tunnel(rps_sess_t *sess) {
     request->reply_code = forward->reply_code;
     server_do_next(request);
     
-    ASSERT(request->rstat == c_stop);
-    /* reuqest start read data again */
-    server_read_start(request);
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
