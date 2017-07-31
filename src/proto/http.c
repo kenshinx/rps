@@ -710,7 +710,9 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
     char svalue[value_size + 1];
 
     memcpy(skey, key, key_size);
-    memcpy(svalue, value, value_size);
+    if (value_size > 0) {
+        memcpy(svalue, value, value_size);
+    }
     
     skey[key_size] = '\0';
     svalue[value_size] = '\0';

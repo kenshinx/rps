@@ -13,7 +13,7 @@ hashmap_entry_create(void *key, size_t key_size, void *value, size_t value_size)
     struct hashmap_entry *entry;
 
     ASSERT(key_size > 0);
-    ASSERT(value_size > 0);
+    ASSERT(value_size >= 0);
 
     entry = rps_alloc(sizeof(struct hashmap_entry));
     if (entry == NULL) {
@@ -28,15 +28,18 @@ hashmap_entry_create(void *key, size_t key_size, void *value, size_t value_size)
     entry->key_size = key_size;
     memcpy(entry->key, key, key_size);
 
-    entry->value = rps_alloc(value_size);
-    if (entry->value == NULL) {
-        rps_free(entry->key);
-        rps_free(entry);
-        return NULL;
+    if (value_size == 0) {
+        entry->value = NULL;
+    } else {
+        entry->value = rps_alloc(value_size);
+        if (entry->value == NULL) {
+            rps_free(entry->key);
+            rps_free(entry);
+            return NULL;
+        }
+        memcpy(entry->value, value, value_size);
     }
     entry->value_size = value_size;
-    memcpy(entry->value, value, value_size);
-
     entry->next = NULL;
 
     return entry;
