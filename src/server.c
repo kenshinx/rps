@@ -227,10 +227,12 @@ server_on_ctx_close(uv_handle_t* handle) {
 
     switch (ctx->flag) {
         case c_request:
-            log_debug("Request from %s be closed", ctx->peername);
+            log_debug("Request from %s:%d be closed", 
+                    ctx->peername, rps_unresolve_port(&ctx->peer));
             break;
         case c_forward:
-            log_debug("Forward to %s be closed.", ctx->peername);
+            log_debug("Forward to %s:%d be closed.", 
+                    ctx->peername, rps_unresolve_port(&ctx->peer));
             break;
         default:
             NOT_REACHED();
@@ -431,11 +433,13 @@ server_read_start(rps_ctx_t *ctx) {
     return RPS_OK;
 }
 
+/*
 static void
 server_read_stop(rps_ctx_t *ctx) {
     uv_read_stop(&ctx->handle.stream);
     ctx->rstat = c_stop;
 }
+*/
 
 static void
 server_on_write_done(uv_write_t *req, int err) {
@@ -996,7 +1000,8 @@ server_cycle(rps_ctx_t *ctx) {
     }
 
 #ifdef RPS_DEBUG_OPEN
-    log_verb("redirect %d bytes to %s", size, endpoint->peername);
+    log_verb("redirect %d bytes to %s:%d", 
+            size, endpoint->peername, rps_unresolve_port(&endpoint->peer));
 #endif
 
 }
