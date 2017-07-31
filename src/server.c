@@ -694,7 +694,12 @@ server_switch(rps_sess_t *sess) {
     rps_ctx_t *request;  /* client -> rps */
     rps_ctx_t *forward; /* rps -> upstream */
 
-    ASSERT(sess->forward == NULL);
+    //ASSERT(sess->forward == NULL);
+    // server_switch has been called, 
+    // however may double called due to request has invalid new data read.
+    if (sess->forward != NULL) {
+        return;
+    }
 
     s = sess->server;
     request = sess->request;
