@@ -56,7 +56,7 @@ _log_hex(log_level level, const char *file, int line, char *data, int n) {
 void
 _log(log_level level, const char *file, int line, const char *fmt, ...) {
     struct logger *l = &logger;
-    int len;
+    size_t len;
     size_t size;
     char buf[LOG_MAX_LEN];
     va_list args;
@@ -71,7 +71,8 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     }
 
     len = 0;
-    size = LOG_MAX_LEN;
+    // last slot for '\n'
+    size = LOG_MAX_LEN - 1 ;
 
     gettimeofday(&tv, NULL);
     buf[len++] = '[';
@@ -89,6 +90,8 @@ _log(log_level level, const char *file, int line, const char *fmt, ...) {
     va_start(args, fmt);
     len += vsnprintf(buf + len, size - len, fmt, args);
     va_end(args);
+
+    len = len <= (size - 1) ? len : size - 1;
 
     buf[len++] = '\n';
     write(l->fd, buf, len);
