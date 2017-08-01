@@ -540,7 +540,9 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
         }
     }
 
-    hashmap_set(headers, key, ki, value, vi);
+    if (ki != 0) {
+        hashmap_set(headers, key, ki, value, vi);
+    }
 
     return RPS_OK;
 }
@@ -987,7 +989,10 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
         if (len == CRLF_LEN || len == LF_LEN) {
             /* empty line, just contain /r/n/r/n or /r/n, mean body start */
             body_start = i;
-            continue;
+
+            //continue;
+            // ignore body
+            break;
         }
 
         if (len == 0) {
@@ -995,13 +1000,14 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
             break;
         }
 
+        /*
         if (body_start) {
-            /* free the has been read first line of body */
+            //free the has been read first line of body
             string_deinit(&line); 
 
             body_len = size - body_start;
             if (body_len >= HTTP_BODY_MAX_LENGTH) {
-                /* body too large, ignore*/
+                //body too large, ignore
                 break;
             }
 
@@ -1010,6 +1016,7 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
             i = i - len + body_len;
             break;
         }
+        */
 
 
         if (n == 1) {
@@ -1029,11 +1036,13 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
         string_deinit(&line);
     }
 
+    /*
     if (i < size - 3 * CRLF_LEN) {
         data[size] = '\0';
-        log_error("http response contain junk: %s", data);
+        log_error("http response contain junk: %s, i:%d, size:%d", data, i, size);
         return RPS_ERROR;
     }
+    */
 
     if (http_response_check(resp) != RPS_OK) {
         data[size] = '\0';
@@ -1125,7 +1134,9 @@ http_header_message(char *message, int size, struct hashmap_entry *header) {
     char sval[val_size + 1];
 
     memcpy(skey, header->key, key_size);
-    memcpy(sval, header->value, val_size);
+    if (val_size > 0) {
+        memcpy(sval, header->value, val_size);
+    }
     
     skey[key_size] = '\0';
     sval[val_size] = '\0';
