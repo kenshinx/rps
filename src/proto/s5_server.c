@@ -344,6 +344,8 @@ s5_server_do_next(struct context *ctx) {
         case c_reply:
             s5_do_reply(ctx, data, size);
             break;
+        case c_closing:
+            break;
         default:
             NOT_REACHED();
     }

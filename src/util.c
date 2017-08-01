@@ -198,11 +198,15 @@ rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint16_t port) {
     addr->addrlen = sizeof(addr->addr.name);
 }
 
+void
+rps_init_random() {
+    srand(time(NULL));
+}
+
 
 int 
 rps_random(int max) {
     ASSERT(max > 0);
-    srand(time(NULL));
     return rand() %max;
 }
 

@@ -5,76 +5,6 @@
 
 #include <uv.h>
 
-/*
- * Related RFC:
- *
- * Tunneling TCP based protocols through Web proxy servers
- * https://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01
- *
- * HTTP Authentication: Basic and Digest Access Authentication
- * https://tools.ietf.org/html/rfc2617
- * 
- *
- * RPS http proxy tunnel establishment procedure
- * 
- *             Client                   RPS                 Upstream        Remote
- *
- *              +                        
- *  HandShake   |  HTTP Connect          +                       +              +
- *  +--------+  | ------------------->   |                       |              |
- *              |  Host:                 |                       |              |
- *              |  Proxy_Authorization:  |                       |              |
- *              |  (Maybe)               |                       |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *Handshake_resp|  HTTP 407 Auth Require |                       |              |
- * +-----------+| <--------------------  |                       |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- * Authenticate |  HTTP Connect          |                       |              |
- * +-----------+| ---------------------> |                       |              |
- *              |  Host:                 |                       |              |
- *              |  Proxy_Authorization:  |                       |              |
- *              |                        |  TCP Connect          |              |
- *              |                        | ------------------>   |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *              |                        |  HTTP Connect         |              |
- *              |                        |  +---------------->   |              |
- *              |                        |  Host:                |              |
- *              |                        |  Proxy_Authorization: |              |
- *              |                        |  (Maybe)              |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *              |                        | HTTP 407 Auth Require |              |
- *              |                        | <-------------------- |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *              |                        |  HTTP Connect         |              |
- *              |                        |  -------------------> |              |
- *              |                        |  Host:                | TCP Connect  |
- *              |                        |  Proxy_Authorization: | +----------> |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *              |                        |   HTTP 200 OK         |              |
- *              |                        | <-----------------+   |              |
- *              |                        |                       |              |
- *  Established |    HTTP 200 OK                                 |              |
- * +----------+ | <--------------------+ |                       |              |
- *              |                        |                       |              |
- *              |                        |                       |              |
- *              |   TCP Payload          |    Traffic Forward    |  TCP Payload |
- *              |  +------------------>  |  +--------------->    | +----------> |
- *              |   HTTP(S),WHOIS,ETC    |                       |              |
- *              |                        |                       |              |
- *              |       Response         |     Response          |   Response   |
- *              |     <-------------+    |     <-----------+     |  <--------+  |
- *              |                        |                       |              |
- *              +                        +                       +              +
- */
-
 #define HTTP_HEADER_DEFAULT_COUNT   64
 #define HTTP_HEADER_REHASH_THRESHOLD   0.05
 
@@ -82,24 +12,40 @@
 #define HTTP_HEADER_MAX_VALUE_LENGTH   512
 
 #define HTTP_BODY_MAX_LENGTH    2048
-// 1k is big enough in our approach
-#define HTTP_MESSAGE_MAX_LENGTH    1024
+// 1M is big enough in our approach
+#define HTTP_MESSAGE_MAX_LENGTH    1024 * 1024
 
 #define HTTP_MIN_STATUS_CODE    100
 #define HTTP_MAX_STATUS_CODE    599
 
-static const char HTTP_DEFAULT_PROTOCOL[] = "HTTP/1.1";
+static const char* BYPASS_PROXY_HEADER[] = {
+    "proxy-authorization",
+    "proxy-connection",
+    "transfer-encoding",
+    "connection",
+    "upgrade"
+};
+
+#define BYPASS_PROXY_HEADER_LEN  (sizeof(BYPASS_PROXY_HEADER)/sizeof(BYPASS_PROXY_HEADER[0]))
+
+static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";
 static const char HTTP_DEFAULT_REALM[] = "rps";
 static const char HTTP_DEFAULT_PROXY_AGENT[] = "RPS/1.0";
 static const char HTTP_DEFAULT_PROXY_CONNECTION[] = "Keep-Alive";
+static const char HTTP_DEFAULT_CONNECTION[] = "close";
 
 
 #define HTTP_RESP_MAP(V)                                                \
     V(0,   http_undefine, "Undefine")                                   \
     V(200, http_ok, "OK")                                               \
+    V(301, http_moved_permanently, "Moved Permanently")                 \
+    V(302, http_found, "Moved Temporarily")                             \
+    V(304, http_not_modified, "Not Modified")                           \
+    V(400, http_bad_request, "Bad Request")                             \
     V(403, http_forbidden, "Forbidden")                                 \
     V(404, http_not_found, "Not Found")                                 \
+    V(405, http_method_not_allowed, "Method Not Allowed")               \
     V(407, http_proxy_auth_required, "Proxy Authentication Required")   \
     V(500, http_server_error, "Internal Server Error")                  \
     V(502, http_bad_gateway, "Bad Gateway")                             \
@@ -124,6 +70,9 @@ http_resp_code_str(uint16_t code) {
 
 #define HTTP_REPLY_CODE_MAP(V)                                      \
     V(http_ok,                  rps_rep_ok)                         \
+    V(http_moved_permanently,   rps_rep_moved_permanent)            \
+    V(http_found,               rps_rep_moved_temporary)            \
+    V(http_not_modified,        rps_rep_not_modified)               \
     V(http_forbidden,           rps_rep_forbidden)                  \
     V(http_not_found,           rps_rep_not_found)                  \
     V(http_proxy_auth_required, rps_rep_auth_require)               \
@@ -158,7 +107,9 @@ http_reply_code_reverse(int code) {
     V(0, http_emethod, "EMETHOD")           \
     V(1, http_get, "GET")                   \
     V(2, http_post, "POST")                 \
-    V(3, http_connect, "CONNECT")           \
+    V(3, http_put, "PUT")                   \
+    V(4, http_head, "HEAD")                 \
+    V(5, http_connect, "CONNECT")           \
 
 enum {
 #define HTTP_METHOD_GEN(code, name, _) name = code,
@@ -207,9 +158,13 @@ struct http_request_auth {
 
 struct http_request {
     uint8_t             method;
+    rps_str_t           full_uri;
+    rps_str_t           schema;
     rps_str_t           host;
     int                 port;
-    rps_str_t           protocol;
+    rps_str_t           path;
+    rps_str_t           params;
+    rps_str_t           version;
     rps_hashmap_t       headers;        
     
 };
@@ -217,14 +172,11 @@ struct http_request {
 struct http_response {
     uint16_t            code;
     rps_str_t           status;
-    rps_str_t           protocol;
+    rps_str_t           version;
     rps_str_t           body;
     rps_hashmap_t       headers;        
 };
 
-
-void http_server_do_next(struct context *ctx);
-void http_client_do_next(struct context *ctx);
 
 /* Only be used in http moudle internal */
 
@@ -251,5 +203,10 @@ void http_response_dump(struct http_response *resp, uint8_t rs);
 
 int http_request_message(char *message, struct http_request *req);
 int http_response_message(char *message, struct http_response *resp);
+
+int http_request_verify(struct context *ctx);
+int http_response_verify(struct context *ctx);
+rps_status_t http_send_response(struct context *ctx, uint16_t code);
+rps_status_t http_send_request(struct context *ctx);
 
 #endif

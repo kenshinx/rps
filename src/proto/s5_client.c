@@ -241,7 +241,7 @@ s5_do_reply(struct context *ctx) {
         log_verb("s5 upstream %s connect remote %s success.", ctx->peername, remoteip);
     #endif
         ctx->established = 1;
-        ctx->state = c_exchange;
+        ctx->state = c_establish;
     }
 
     server_do_next(ctx);
@@ -274,6 +274,8 @@ s5_client_do_next(struct context *ctx) {
             break;
         case c_reply:
             s5_do_reply(ctx);
+            break;
+        case c_closing:
             break;
         default:
             NOT_REACHED();

@@ -105,7 +105,7 @@ typedef struct sockinfo {
 
 static inline bool 
 rps_valid_port(int port) {
-    return (port > 1 && port < UINT16_MAX);  
+    return (port >= 0 && port < UINT16_MAX);  
 }
 
 static inline void
@@ -123,6 +123,7 @@ void rps_addr_in4(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
 void rps_addr_in6(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint8_t *port);
 void rps_addr_name(rps_addr_t *addr, uint8_t *_addr, uint8_t len, uint16_t port);
 
+void rps_init_random();
 int rps_random(int max);
 
 

@@ -65,6 +65,8 @@ rps_init(struct application *app) {
     app->daemon = 0;
     app->verbose = 0;
 
+    rps_init_random();
+    
     log_init(app->log_level, app->log_filename);
 	
 }

@@ -23,8 +23,9 @@ typedef int rps_status_t;
     V(-1, UNSUPPORT, "unsupport")             \
     V(1,  SOCKS5, "socks5")                   \
     V(2,  HTTP, "http")                       \
-    V(3,  SOCKS4, "socks4")                   \
-    V(4,  PRIVATE, "private")                 \
+    V(3,  HTTP_TUNNEL, "http_tunnel")         \
+    V(4,  SOCKS4, "socks4")                   \
+    V(5,  PRIVATE, "private")                 \
 
 typedef enum {
 #define RPS_PROTO_GEN(code, name, _) name = code,
@@ -55,6 +56,9 @@ rps_proto_int(const char *proto) {
 /* Unified reply code, will mapping with http and socks5 reponse code */
 typedef enum {
     rps_rep_ok,
+    rps_rep_moved_permanent,  //HTTP 301
+    rps_rep_moved_temporary,  //HTTP 302
+    rps_rep_not_modified,     //HTTP 304
     rps_rep_forbidden,
     rps_rep_auth_require,
     rps_rep_not_found,
@@ -83,6 +87,11 @@ typedef enum context_flag {
     c_forward
 } ctx_flag_t;
 
+typedef enum context_stream {
+    c_tunnel,
+    c_pipeline
+} ctx_stream_t;
+
 typedef enum context_state {
     c_init = (1 << 0),
     c_conn = (1 << 1),
@@ -95,10 +104,12 @@ typedef enum context_state {
     c_reply = (1 << 8),
     c_retry = (1 << 9),
     c_failed = (1 << 10),
-    c_established = (1 << 11),
-    c_kill = (1 << 12),
-    c_closing = (1 << 13),
-    c_closed = (1 << 14)
+    c_establish = (1 << 11),
+    c_established = (1 << 12),
+    c_kill = (1 << 13),
+    c_will_kill = (1 << 14),
+    c_closing = (1 << 15),
+    c_closed = (1 << 16)
 } ctx_state_t;
 
 
@@ -137,7 +148,8 @@ struct context {
     ssize_t             nwrite;
 
     /* The memory pointed to by the buffers must remain valid until the write callback gets called.
-     * So we use a buffer for write buffer ensure the wbuf is safe and won't be overwritten before write callback called.
+     * So we use a buffer for write buffer ensure the wbuf is safe 
+     * and won't be overwritten before write callback called.
      */
     char                *wbuf2;
     ssize_t             nwrite2;
@@ -146,7 +158,14 @@ struct context {
     char                peername[MAX_INET_ADDRSTRLEN];
 
     ctx_flag_t          flag;
+    ctx_stream_t        stream;
     ctx_state_t         state;
+
+
+    /* HTTP proxy and HTTP tunnel proxy need this pointer to transmit request params 
+     * from client to upstream (method, url, headers, e.g.) 
+     */
+    void                *req;
 
     /* reply code is protocol related
      * http tunnel may be http_ok or http_forbidden etc.. 
