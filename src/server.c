@@ -332,6 +332,10 @@ server_on_timer_expire(uv_timer_t *handle) {
     if (ctx == NULL) {
         return;
     }
+
+    if (ctx->state & (c_closing | c_closed)) {
+        return;
+    }
     
 
     if (ctx->flag == c_request) {
@@ -371,6 +375,10 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     ctx = stream->data;
 
     if (ctx == NULL) {
+        return;
+    }
+
+    if (ctx->state & (c_closing | c_closed)) {
         return;
     }
 
@@ -452,6 +460,10 @@ server_on_write_done(uv_write_t *req, int err) {
     ctx = req->data;
 
     if (ctx == NULL) {
+        return;
+    }
+
+    if (ctx->state & (c_closing | c_closed)) {
         return;
     }
 
@@ -542,6 +554,10 @@ server_on_connect_done(uv_connect_t *req, int err) {
     ctx = req->data;
 
     if (ctx == NULL) {
+        return;
+    }
+
+    if (ctx->state & (c_closing | c_closed)) {
         return;
     }
 
