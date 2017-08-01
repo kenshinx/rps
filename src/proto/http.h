@@ -12,8 +12,8 @@
 #define HTTP_HEADER_MAX_VALUE_LENGTH   512
 
 #define HTTP_BODY_MAX_LENGTH    2048
-// 1k is big enough in our approach
-#define HTTP_MESSAGE_MAX_LENGTH    1024
+// 1M is big enough in our approach
+#define HTTP_MESSAGE_MAX_LENGTH    1024 * 1024
 
 #define HTTP_MIN_STATUS_CODE    100
 #define HTTP_MAX_STATUS_CODE    599
