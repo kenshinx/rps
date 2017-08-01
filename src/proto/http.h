@@ -41,6 +41,7 @@ static const char HTTP_DEFAULT_CONNECTION[] = "close";
     V(200, http_ok, "OK")                                               \
     V(301, http_moved_permanently, "Moved Permanently")                 \
     V(302, http_found, "Moved Temporarily")                             \
+    V(304, http_not_modified, "Not Modified")                           \
     V(400, http_bad_request, "Bad Request")                             \
     V(403, http_forbidden, "Forbidden")                                 \
     V(404, http_not_found, "Not Found")                                 \
@@ -71,6 +72,7 @@ http_resp_code_str(uint16_t code) {
     V(http_ok,                  rps_rep_ok)                         \
     V(http_moved_permanently,   rps_rep_moved_permanent)            \
     V(http_found,               rps_rep_moved_temporary)            \
+    V(http_not_modified,        rps_rep_not_modified)               \
     V(http_forbidden,           rps_rep_forbidden)                  \
     V(http_not_found,           rps_rep_not_found)                  \
     V(http_proxy_auth_required, rps_rep_auth_require)               \

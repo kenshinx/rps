@@ -58,6 +58,7 @@ typedef enum {
     rps_rep_ok,
     rps_rep_moved_permanent,  //HTTP 301
     rps_rep_moved_temporary,  //HTTP 302
+    rps_rep_not_modified,     //HTTP 304
     rps_rep_forbidden,
     rps_rep_auth_require,
     rps_rep_not_found,
