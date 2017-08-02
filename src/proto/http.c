@@ -8,6 +8,14 @@
 #include <uv.h>
 #include <ctype.h>
 
+const char* BYPASS_PROXY_HEADER[5] = {
+    "proxy-authorization",
+    "proxy-connection",
+    "transfer-encoding",
+    "connection",
+    "upgrade"
+};
+
 
 void
 http_request_init(struct http_request *req) {
@@ -124,6 +132,8 @@ http_parse_request_line(rps_str_t *line, struct http_request *req) {
     state = sw_start;
     start = line->data;
     end = line->data;
+    uri_start = line->data;
+    uri_end = line->data;
 
     for (i = 0; i < line->len; i++) {
 

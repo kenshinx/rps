@@ -18,15 +18,8 @@
 #define HTTP_MIN_STATUS_CODE    100
 #define HTTP_MAX_STATUS_CODE    599
 
-static const char* BYPASS_PROXY_HEADER[] = {
-    "proxy-authorization",
-    "proxy-connection",
-    "transfer-encoding",
-    "connection",
-    "upgrade"
-};
-
-#define BYPASS_PROXY_HEADER_LEN  (sizeof(BYPASS_PROXY_HEADER)/sizeof(BYPASS_PROXY_HEADER[0]))
+#define BYPASS_PROXY_HEADER_LEN 5
+extern  const char* BYPASS_PROXY_HEADER[];
 
 static const char HTTP_DEFAULT_VERSION[] = "HTTP/1.1";
 static const char HTTP_DEFAULT_AUTH[] = "Basic";

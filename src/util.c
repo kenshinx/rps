@@ -3,6 +3,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <time.h>
+#include <stdarg.h>
 
 #include <uv.h>
 
@@ -298,6 +299,8 @@ _rps_safe_check_longlong(const char *fmt, int32_t * have_longlong)
 int
 _rps_safe_vsnprintf(char *to, size_t size, const char *format, va_list ap)
 {
+    int64_t ival = 0;
+    uint64_t uval = 0;
     char *start = to;
     char *end = start + size - 1;
     for (; *format; ++format) {
@@ -320,8 +323,6 @@ _rps_safe_vsnprintf(char *to, size_t size, const char *format, va_list ap)
         case 'x':
         case 'p':
             {
-                int64_t ival = 0;
-                uint64_t uval = 0;
                 if (*format == 'p')
                     have_longlong = (sizeof(void *) == sizeof(uint64_t));
                 if (have_longlong) {

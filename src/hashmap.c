@@ -13,7 +13,6 @@ hashmap_entry_create(void *key, size_t key_size, void *value, size_t value_size)
     struct hashmap_entry *entry;
 
     ASSERT(key_size > 0);
-    ASSERT(value_size >= 0);
 
     entry = rps_alloc(sizeof(struct hashmap_entry));
     if (entry == NULL) {
