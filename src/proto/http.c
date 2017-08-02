@@ -970,13 +970,9 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
     size_t i, len;
     int n;
     rps_str_t line;
-    int body_start;
-    int body_len;
 
     i = 0;
     n = 0;
-    body_start = 0;
-    body_len = 0;
 
     for (;;) {
         string_init(&line);
@@ -988,9 +984,6 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
 
         if (len == CRLF_LEN || len == LF_LEN) {
             /* empty line, just contain /r/n/r/n or /r/n, mean body start */
-            body_start = i;
-
-            //continue;
             // ignore body
             break;
         }
@@ -999,25 +992,6 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
             /* read end */
             break;
         }
-
-        /*
-        if (body_start) {
-            //free the has been read first line of body
-            string_deinit(&line); 
-
-            body_len = size - body_start;
-            if (body_len >= HTTP_BODY_MAX_LENGTH) {
-                //body too large, ignore
-                break;
-            }
-
-            string_duplicate(&resp->body, (const char *)&data[body_start], body_len);
-            
-            i = i - len + body_len;
-            break;
-        }
-        */
-
 
         if (n == 1) {
             if (http_parse_response_line(&line, resp) != RPS_OK) {
@@ -1035,14 +1009,6 @@ http_response_parse(struct http_response *resp, uint8_t *data, size_t size) {
 
         string_deinit(&line);
     }
-
-    /*
-    if (i < size - 3 * CRLF_LEN) {
-        data[size] = '\0';
-        log_error("http response contain junk: %s, i:%d, size:%d", data, i, size);
-        return RPS_ERROR;
-    }
-    */
 
     if (http_response_check(resp) != RPS_OK) {
         data[size] = '\0';
