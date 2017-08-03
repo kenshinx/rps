@@ -24,8 +24,8 @@ static inline void
 string_deinit(rps_str_t *str) {
     if (str->data != NULL) {
         rps_free(str->data);
-        string_init(str);
     }
+    string_init(str);
 }
 
 static inline bool
