@@ -260,10 +260,11 @@ server_ctx_close(rps_ctx_t *ctx) {
         return;
     }
 
+    ctx->state = c_closing;
+
     // Recycle the allocated resources.
     // Only context that has been connected need close action
     if (ctx->connected) {
-        ctx->state = c_closing;
         server_do_next(ctx);    
     }
 
