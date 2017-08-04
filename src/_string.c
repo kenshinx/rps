@@ -30,7 +30,7 @@ string_duplicate(rps_str_t *dst, const char *src, size_t len) {
     ASSERT(dst->data == NULL && dst->len == 0);
     ASSERT(src != NULL && len != 0 );
     
-    dst->data = (uint8_t *)strndup(src, len + 1);
+    dst->data = (uint8_t *)strndup(src, len);
     if (dst->data == NULL) {
         return RPS_ENOMEM;
     }
