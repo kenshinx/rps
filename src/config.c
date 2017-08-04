@@ -443,6 +443,9 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
 
     status = config_event_next(cfg);
     if(status != RPS_OK) {
+        if (section != NULL) {
+            string_free(section);
+        }
         return status;
     }
 
@@ -457,6 +460,9 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
 
         if (cfg->depth >= CONFIG_MIN_PATH && array_n(cfg->args)) {
             ASSERT(array_n(cfg->args) == 1);   
+            if (section != NULL) {
+                string_free(section);
+            }
             section = string_new();
             node = config_pop_scalar(cfg);
             status = string_copy(section, node);
@@ -531,11 +537,15 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
     if (status != RPS_OK) {
         if (section != NULL) {
             log_warn("config parse section %s error", section->data);
+            string_free(section);
         }
         return status;
     }
 
     if (done) {
+        if (section != NULL) {
+            string_free(section);
+        }
         return RPS_OK;
     }
 
@@ -544,6 +554,7 @@ config_parse_core(struct config *cfg, rps_str_t *section) {
         if (status != RPS_OK) {
             if (section != NULL) {
                 log_warn("config parse section %s error", section->data);
+                string_free(section);
             }
             return status;
         }
