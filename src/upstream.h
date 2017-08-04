@@ -10,7 +10,7 @@
 #include <uv.h>
 
 #define UPSTREAM_DEFAULT_WEIGHT 10
-#define UPSTREAM_DEFAULT_POOL_LENGTH 64
+#define UPSTREAM_DEFAULT_POOL_LENGTH 1000
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
 enum upstream_schedule {
