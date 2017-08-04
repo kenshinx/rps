@@ -104,7 +104,12 @@ noopt:
 	$(MAKE) OPTIMIZATION="-O0"
 
 debug:
-	$(MAKE) RPS_DEBUG_OPEN="-DRPS_DEBUG_OPEN"
+	$(MAKE) OPTIMIZATION="-O0" RPS_DEBUG_OPEN="-DRPS_DEBUG_OPEN"
+
+valgrind: debug
+	valgrind --tool=memcheck --leak-check=yes --log-file=valgrind.log ./rps
+	
+	
 	
 test:
 	@echo $(FINAL_CFLAGS)
