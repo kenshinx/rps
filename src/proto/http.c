@@ -656,7 +656,7 @@ http_request_auth_parse(struct http_request_auth *auth,
         return RPS_ERROR;
     }
 
-    string_duplicate(&auth->param, (const char *)start, end - start +1);
+    string_duplicate(&auth->param, (const char *)start, end - start + 1);
 
     return RPS_OK;
 }
