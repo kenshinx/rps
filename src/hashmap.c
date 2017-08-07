@@ -376,3 +376,24 @@ hashmap_iter(rps_hashmap_t *map, hashmap_iter_t func) {
         }
     }
 }
+
+
+void
+hashmap_deepcopy(rps_hashmap_t *dst, rps_hashmap_t *src) {
+    uint32_t i;
+    struct hashmap_entry *entry;
+
+    // hashmap_init has been called;
+    ASSERT(dst->buckets != NULL);
+    ASSERT(dst->count == 0);
+    
+    for (i = 0; i < src->size; i++) {
+        entry = src->buckets[i];
+
+        while (entry != NULL) {
+            hashmap_set(dst, entry->key, entry->key_size, 
+                    entry->value, entry->value_size);
+            entry = entry->next;
+        }
+    }
+}
