@@ -1304,6 +1304,7 @@ http_response_verify(struct context *ctx) {
 
     status = http_response_parse(&resp, data, size);
     if (status != RPS_OK) {
+        http_response_deinit(&resp);
         log_debug("http upstream %s return invalid response", ctx->peername);
         return http_verify_error;
     }
@@ -1346,6 +1347,7 @@ http_response_verify(struct context *ctx) {
         result = http_verify_error;
     }
 
+    http_response_deinit(&resp);
     return result;
 }
 
