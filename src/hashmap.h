@@ -57,6 +57,7 @@ int hashmap_remove(rps_hashmap_t *map, void *key, size_t key_size);
 uint32_t hashmap_n(rps_hashmap_t *map);
 
 void hashmap_iter(rps_hashmap_t *map, hashmap_iter_t func);
+void hashmap_deepcopy(rps_hashmap_t *dst, rps_hashmap_t *src);
 
 
 #endif

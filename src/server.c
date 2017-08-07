@@ -647,8 +647,8 @@ server_on_request_connect(uv_stream_t *us, int err) {
 
     server_ctx_set_proto(request, s->proto);
     
-    uv_tcp_init(us->loop, &request->handle.tcp);
-    uv_timer_init(us->loop, &request->timer);
+    uv_tcp_init(&s->loop, &request->handle.tcp);
+    uv_timer_init(&s->loop, &request->timer);
 
     err = uv_accept(us, &request->handle.stream);
     if (err) {
