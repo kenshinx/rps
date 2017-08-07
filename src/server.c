@@ -100,6 +100,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout
     ctx->connecting = 0;
     ctx->connected = 0;
     ctx->established = 0;
+    ctx->c_count = 0;
     ctx->reply_code = rps_rep_undefined;
     ctx->rstat = c_stop;
     ctx->wstat = c_stop;
@@ -182,6 +183,7 @@ server_ctx_deinit(rps_ctx_t *ctx) {
     ctx->connecting = 0;
     ctx->connected = 0;
     ctx->established = 0;
+    ctx->c_count = 0;
 
     ctx->handle.handle.data  = NULL;
     ctx->write_req.data = NULL;
@@ -222,6 +224,13 @@ server_on_ctx_close(uv_handle_t* handle) {
     rps_ctx_t *ctx;
 
     ctx = handle->data;
+
+    ctx->c_count += 1;
+
+    if (ctx->c_count < 2) {
+        //waitting for both timer and handler closed.
+        return; 
+    }
     
     server_ctx_deinit(ctx);
 
@@ -251,12 +260,12 @@ server_ctx_close(rps_ctx_t *ctx) {
     }
 
     uv_timer_stop(&ctx->timer);
+    uv_close(&ctx->timer, (uv_close_cb)server_on_ctx_close);
 
     if (!ctx->connecting && !ctx->connected) {
-        // we still need free context and session 
+        // we still need guarantee free the memory of context and session 
         // even if connect didn't established 
-        server_ctx_deinit(ctx);
-        server_do_next(ctx);
+        ctx->c_count += 1;
         return;
     }
 
@@ -274,7 +283,6 @@ server_ctx_close(rps_ctx_t *ctx) {
 
 static void
 server_close(rps_sess_t *sess) {
-
     server_ctx_close(sess->request);
     server_ctx_close(sess->forward);
 }
@@ -647,8 +655,8 @@ server_on_request_connect(uv_stream_t *us, int err) {
 
     server_ctx_set_proto(request, s->proto);
     
-    uv_tcp_init(us->loop, &request->handle.tcp);
-    uv_timer_init(us->loop, &request->timer);
+    uv_tcp_init(&s->loop, &request->handle.tcp);
+    uv_timer_init(&s->loop, &request->timer);
 
     err = uv_accept(us, &request->handle.stream);
     if (err) {

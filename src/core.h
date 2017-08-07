@@ -177,6 +177,11 @@ struct context {
     uint16_t            reconn;
     uint16_t            retry;
 
+    /* closing count, free context memory while counter value be 2
+     * 2 means both timer and connect have been closed.
+     * */
+    uint8_t             c_count;
+
     uint8_t             rstat;
     uint8_t             wstat;
 
