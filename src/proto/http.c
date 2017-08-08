@@ -33,13 +33,13 @@ http_request_init(struct http_request *req) {
 
 void
 http_request_deinit(struct http_request *req) {
+    hashmap_deinit(&req->headers);
     string_deinit(&req->full_uri);
     string_deinit(&req->schema);
     string_deinit(&req->host);
     string_deinit(&req->path);
     string_deinit(&req->params);
     string_deinit(&req->version);
-    hashmap_deinit(&req->headers);
 }
 
 void
