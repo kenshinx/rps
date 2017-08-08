@@ -655,6 +655,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
         goto error;
     }
 
+    request->connecting = 1;
     request->connected = 1;
 
     #ifdef REQUEST_TCP_KEEPALIVE
