@@ -770,15 +770,12 @@ server_forward_reconn(rps_ctx_t *forward) {
 
     s = forward->sess->server;
 
-    ASSERT(forward->connecting);
-    
-    if (forward->reconn >= s->upstreams->maxreconn) {
+    forward->reconn += 1;
+
+    if (forward->reconn > s->upstreams->maxreconn) {
         log_error("Connect upstream failed after %d reconn.", forward->reconn);
         goto kill;
     }
-
-
-    forward->reconn += 1;
 
     upstream_deinit(&forward->sess->upstream);
 
@@ -1089,17 +1086,17 @@ server_forward_retry(rps_ctx_t *forward) {
 
     rps_unresolve_addr(&forward->sess->remote, remoteip);
 
+    forward->retry++;
 
     log_debug("Upstream tunnel  %s -> %s failed, retry: %d", 
             forward->peername, remoteip, forward->retry);
 
-    if (forward->retry >= s->upstreams->maxretry) {
+    if (forward->retry > s->upstreams->maxretry) {
         forward->state = c_failed;
         server_do_next(forward);
         return;
     }
 
-    forward->retry++;
 
     /*
     if (!forward->connected && !forward->connecting) {
