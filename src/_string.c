@@ -41,6 +41,24 @@ string_duplicate(rps_str_t *dst, const char *src, size_t len) {
     return RPS_OK;
 }
 
+int
+string_duplicate2(rps_str_t *dst, const char *src, size_t len) {
+    ASSERT(dst->data == NULL && dst->len == 0);
+    ASSERT(src != NULL && len != 0 );
+    
+    dst->data = (uint8_t *) rps_alloc(len + 1);
+    if (dst->data == NULL) {
+        return RPS_ENOMEM;
+    }
+    
+    memcpy(dst->data, src, len);
+
+    dst->len = len;
+    dst->data[len] = '\0';
+    
+    return RPS_OK;
+}
+
 
 int
 string_copy(rps_str_t *dst, const rps_str_t *src) {
@@ -58,3 +76,4 @@ string_copy(rps_str_t *dst, const rps_str_t *src) {
     
     return RPS_OK;
 }
+

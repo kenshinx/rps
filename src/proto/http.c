@@ -27,6 +27,7 @@ http_request_init(struct http_request *req) {
     string_init(&req->path);
     string_init(&req->params);
     string_init(&req->version);
+    string_init(&req->body);
     hashmap_init(&req->headers, 
             HTTP_HEADER_DEFAULT_COUNT, HTTP_HEADER_REHASH_THRESHOLD);
 }
@@ -40,6 +41,7 @@ http_request_deinit(struct http_request *req) {
     string_deinit(&req->path);
     string_deinit(&req->params);
     string_deinit(&req->version);
+    string_deinit(&req->body);
 }
 
 void
@@ -739,7 +741,8 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
 void
 http_request_dump(struct http_request *req, uint8_t rs) {
     size_t len;
-    char uri[60];
+    char uri[200];
+    char body[300];
 
     if (rs == http_recv) {
         log_verb("[http recv request]");
@@ -749,26 +752,33 @@ http_request_dump(struct http_request *req, uint8_t rs) {
 
 
     if (req->method == http_connect) {
-        len = snprintf(uri, 60, "%s:%d", req->host.data, req->port);
+        snprintf(uri, 200, "%s:%d", req->host.data, req->port);
     } else {
         if (!string_empty(&req->full_uri)) {
-            len = snprintf(uri, 60, "%s", req->full_uri.data);
-            if (len > 60) {
-                /* uri length larger than 60 bytes, 
-                 * show 55 character and four dots and one \0 */
-                snprintf(&uri[55], 5, ".....");
-            }
+            snprintf(uri, 200, "%s", req->full_uri.data);
         }
     }
 
     log_verb("\t%s %s %s", http_method_str(req->method), uri, req->version.data);
     hashmap_iter(&req->headers, http_header_dump);
+
+    if (!string_empty(&req->body)) {
+        log_verb("");
+        len = snprintf(body, 300, "%s", req->body.data);
+        if (len > 300) {
+            /* body length larger than 300 bytes, 
+             * show 295 character and four dots and one \0 */
+            snprintf(&body[295], 5, ".....");
+        }
+        log_verb("\t%s", body);
+    }
+
 }
 
 void 
 http_response_dump(struct http_response *resp, uint8_t rs) {
     size_t len;
-    char body[80];
+    char body[300];
 
     if (rs == http_recv) {
         log_verb("[http recv response]");
@@ -782,11 +792,11 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
 
     if (!string_empty(&resp->body)) {
         log_verb("");
-        len = snprintf(body, 80, "%s", resp->body.data);
-        if (len > 80) {
-            /* body length larger than 80 bytes, 
-             * show 75 character and four dots and one \0 */
-            snprintf(&body[75], 5, ".....");
+        len = snprintf(body, 300, "%s", resp->body.data);
+        if (len > 300) {
+            /* body length larger than 300 bytes, 
+             * show 295 character and four dots and one \0 */
+            snprintf(&body[295], 5, ".....");
         }
         log_verb("\t%s", body);
     }
@@ -799,23 +809,40 @@ http_request_parse(struct http_request *req, uint8_t *data, size_t size) {
     size_t i, len;
     int n;
     rps_str_t line;
+    int body_len;
 
     i = 0;
     n = 0;
+    body_len = 0;
 
     for (;;) {
         string_init(&line);
 
         len = http_read_line(data, i, size, &line);
-        if (len <= CRLF_LEN) {
-            string_deinit(&line);
-            /* read empty line, only contain /r/n */
-            break;
-        }
-
 
         i += len;
         n++;
+
+
+        if (len == CRLF_LEN || len == LF_LEN) {
+            /* empty line, just contain /r/n/r/n or /r/n, mean body start */
+
+            body_len = size - i;
+            if (body_len == 0) {
+                break;
+            }
+            if (body_len >= HTTP_BODY_MAX_LENGTH) {
+                break;
+            }
+            string_duplicate2(&req->body, (const char *)&data[i], body_len);
+            i = i + body_len;
+            break;
+        }
+
+        if (len == 0) {
+            /* read end */
+            break;
+        }
 
         if (n == 1) {
             if (http_parse_request_line(&line, req) != RPS_OK) {
@@ -1189,6 +1216,10 @@ http_request_message(char *message, struct http_request *req) {
     }
 
     len += snprintf(message + len, size - len, "\r\n");
+
+    if (!string_empty(&req->body)) {
+        len += snprintf(message + len, size - len, "%s", req->body.data);
+    }
 
 #ifdef RPS_DEBUG_OPEN
     http_request_dump(req, http_send);

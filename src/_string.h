@@ -36,6 +36,7 @@ string_empty(rps_str_t *str) {
 rps_str_t *string_new();
 void string_free(rps_str_t *str);
 int string_duplicate(rps_str_t *dst, const char *src, size_t len);
+int string_duplicate2(rps_str_t *dst, const char *src, size_t len);
 int string_copy(rps_str_t *dst, const rps_str_t *src);
 
 

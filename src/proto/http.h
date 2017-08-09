@@ -158,6 +158,7 @@ struct http_request {
     rps_str_t           path;
     rps_str_t           params;
     rps_str_t           version;
+    rps_str_t           body;
     rps_hashmap_t       headers;        
     
 };
