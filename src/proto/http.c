@@ -740,9 +740,7 @@ http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
 
 void
 http_request_dump(struct http_request *req, uint8_t rs) {
-    size_t len;
     char uri[200];
-    char body[300];
 
     if (rs == http_recv) {
         log_verb("[http recv request]");
@@ -764,13 +762,7 @@ http_request_dump(struct http_request *req, uint8_t rs) {
 
     if (!string_empty(&req->body)) {
         log_verb("");
-        len = snprintf(body, 300, "%s", req->body.data);
-        if (len > 300) {
-            /* body length larger than 300 bytes, 
-             * show 295 character and four dots and one \0 */
-            snprintf(&body[295], 5, ".....");
-        }
-        log_verb("\t%s", body);
+        log_verb("\tbody %zd bytes...", req->body.len);
     }
 
 }
@@ -778,7 +770,7 @@ http_request_dump(struct http_request *req, uint8_t rs) {
 void 
 http_response_dump(struct http_response *resp, uint8_t rs) {
     size_t len;
-    char body[300];
+    char body[200];
 
     if (rs == http_recv) {
         log_verb("[http recv response]");
@@ -792,11 +784,11 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
 
     if (!string_empty(&resp->body)) {
         log_verb("");
-        len = snprintf(body, 300, "%s", resp->body.data);
-        if (len > 300) {
-            /* body length larger than 300 bytes, 
-             * show 295 character and four dots and one \0 */
-            snprintf(&body[295], 5, ".....");
+        len = snprintf(body, 200, "%s", resp->body.data);
+        if (len > 200) {
+            /* body length larger than 200 bytes, 
+             * show 195 character and four dots and one \0 */
+            snprintf(&body[195], 5, ".....");
         }
         log_verb("\t%s", body);
     }
