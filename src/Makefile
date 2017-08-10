@@ -1,12 +1,13 @@
 
 OS := $(shell sh -c 'uname -s 2>/dev/null || echo unknow')
-
+ROOT := $(shell sh -c 'cd .. ; pwd')
 OPTIMIZATION?=-O2
 
 
 RM=rm -rf
 PREFIX?=/usr/local
-INSTALL_BIN=$(PREFIX)/bin
+#INSTALL_BIN=$(PREFIX)/bin
+INSTALL_BIN=$(ROOT)/bin
 INSTALL=install
 
 STD=-std=c99 -pedantic
