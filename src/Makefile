@@ -18,10 +18,9 @@ DYNAMIC=-rdynamic
 RPS_DEBUG = $(RPS_DEBUG_OPEN)
 GNU_SOURCE=-D_GNU_SOURCE #libuv need this declaration in linux platform.
 
-DEPENDENCY_TARGETS=yaml libuv hiredis jansson
+DEPENDENCY_TARGETS=yaml libuv jansson
 LIBYAML=yaml-0.1.5
 LIBUV=libuv-v1.9.1
-HIREDIS=hiredis-0.13.3
 JANSSON=jansson-2.9
 
 
@@ -32,11 +31,11 @@ FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG) $(DYNAMIC)
 
 ifeq ($(OS), Linux)
 	FINAL_CFLAGS+=$(GNU_SOURCE) 
-	FINAL_LIBS+= -lm -lrt -lpthread
+	FINAL_LIBS+= -lm -lrt -lpthread -lcurl
 else
 ifeq ($(OS), Darwin)
 	FINAL_CFLAGS+=$(STD) 
-	FINAL_LIBS+= -lm
+	FINAL_LIBS+= -lm -lcurl
 endif
 endif
 
@@ -50,7 +49,6 @@ FINAL_CFLAGS+= -I../contrib/$(JANSSON)/src
 FINAL_LIBS+= ./proto/proto.a
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
 FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
-FINAL_LIBS+= ../contrib/$(HIREDIS)/libhiredis.a
 FINAL_LIBS+= ../contrib/$(JANSSON)/src/.libs/libjansson.a
 
 
