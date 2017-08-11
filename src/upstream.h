@@ -11,6 +11,7 @@
 
 #define UPSTREAM_DEFAULT_WEIGHT 10
 #define UPSTREAM_DEFAULT_POOL_LENGTH 1000
+#define UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH 1000
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
 enum upstream_schedule {
@@ -28,8 +29,18 @@ struct upstream  {
     rps_proto_t proto;
     rps_str_t   uname;
     rps_str_t   passwd;
+    rps_str_t   source;
+
     uint16_t    weight;
-    uint32_t    count;
+    uint32_t    success;
+    uint32_t    failure;
+
+    rps_ts_t    insert_date;
+
+    /* the time wheel which be used to control the QPS */
+    rps_array_t timewheel;
+    
+    uint8_t     enable:1;
 };
 
 struct upstream_pool {
@@ -52,7 +63,7 @@ struct upstreams {
     uint8_t                 once:1;
 };
 
-void upstream_init(struct upstream *u);
+rps_status_t upstream_init(struct upstream *u);
 void upstream_deinit(struct upstream *u);
 
 rps_status_t upstreams_init(struct upstreams *us, 

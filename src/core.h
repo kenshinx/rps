@@ -21,6 +21,8 @@
 
 typedef int rps_status_t;
 
+typedef uint64_t rps_ts_t;
+
 #define RPS_PROTO_MAP(V)                      \
     V(-1, UNSUPPORT, "unsupport")             \
     V(1,  SOCKS5, "socks5")                   \

@@ -13,27 +13,42 @@ struct curl_buf {
     size_t  len;
 };
 
-void
+rps_status_t
 upstream_init(struct upstream *u) {
     string_init(&u->uname);   
     string_init(&u->passwd);   
+    string_init(&u->source);
     u->weight = UPSTREAM_DEFAULT_WEIGHT;
-    u->count = 0;
+    u->proto = UNSUPPORT;
+    u->success = 0;
+    u->failure = 0;
+    u->insert_date = 0;
+    u->enable = 0;
 
+    if (array_init(&u->timewheel, UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH, 
+                sizeof(rps_ts_t)) != RPS_OK) {
+        return RPS_ERROR;
+    }
+    
+    return RPS_OK;
 }
 
 void
 upstream_deinit(struct upstream *u) {
     string_deinit(&u->uname);
     string_deinit(&u->passwd);
-    u->count = 0;
+    string_deinit(&u->source);
+    u->success = 0;
+    u->failure = 0;
+    u->insert_date = 0;
+
+    array_deinit(&u->timewheel);
 }
 
 static void
 upstream_copy(struct upstream *dst, struct upstream *src) {
     dst->proto = src->proto;
     dst->weight = src->weight;
-    dst->count = src->count;
 
     memcpy(&dst->server, &src->server, sizeof(src->server));
     if (!string_empty(&src->uname)) {
@@ -53,8 +68,8 @@ upstream_str(void *data) {
     u = (struct upstream *)data;
 
     rps_unresolve_addr(&u->server, name);
-    log_verb("\t%s://%s:%s@%s:%d #%d", rps_proto_str(u->proto), u->uname.data, 
-            u->passwd.data, name, rps_unresolve_port(&u->server), u->count);
+    log_verb("\t%s://%s:%s@%s:%d", rps_proto_str(u->proto), u->uname.data, 
+            u->passwd.data, name, rps_unresolve_port(&u->server));
 }
 #endif
 
@@ -195,6 +210,8 @@ upstreams_deinit(struct upstreams *us) {
         upstream_pool_deinit((struct upstream_pool *)array_pop(&us->pools));
     }
 
+    array_deinit(&us->pools);
+
     uv_mutex_destroy(&us->mutex);
     uv_cond_destroy(&us->ready);
     curl_global_cleanup();
@@ -208,16 +225,15 @@ upstream_json_parse(struct upstream *u, json_t *element) {
     void *kv;
     rps_status_t status;
 
-    if json_typeof(element != JSON_OBJECT) {
+    if (json_typeof(element) != JSON_OBJECT) {
         return RPS_ERROR;
     }
 
     port = 0;
-
+    status = RPS_OK;
     string_init(&host);
     
     for (kv = json_object_iter(element); kv; kv = json_object_iter_next(element, kv)) {
-        status = RPS_OK;
         json_t *tmp = json_object_iter_value(kv);
         if (strcmp(json_object_iter_key(kv), "host") == 0 && 
                 json_typeof(tmp) == JSON_STRING) {
@@ -241,8 +257,21 @@ upstream_json_parse(struct upstream *u, json_t *element) {
             if (json_typeof(tmp) == JSON_STRING) {
                 status = string_duplicate(&u->passwd, json_string_value(tmp), json_string_length(tmp));
             }
+        } else if (strcmp(json_object_iter_key(kv), "source") == 0) {
+            /* Ignore source is null */
+            if (json_typeof(tmp) == JSON_STRING) {
+                status = string_duplicate(&u->source, json_string_value(tmp), json_string_length(tmp));
+            }
         } else if (strcmp(json_object_iter_key(kv), "weight") == 0) {
             u->weight = (uint16_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "success") == 0) {
+            u->success = (uint32_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "failure") == 0) {
+            u->failure = (uint32_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "insert_date") == 0) {
+            u->insert_date = (rps_ts_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "enable") == 0) {
+            u->enable = (uint8_t)json_integer_value(tmp);
         } else {
             status = RPS_ERROR;
         }
@@ -257,12 +286,10 @@ upstream_json_parse(struct upstream *u, json_t *element) {
     status = rps_resolve_inet((const char *)host.data, port, &u->server);
     if (status != RPS_OK) {
         log_error("jason parse error, invalid upstream address, %s:%d", host.data, port);
-        string_deinit(&host);
-        return status;
     }
 
     string_deinit(&host);
-    return RPS_OK;
+    return status;
 
 }
 
@@ -534,7 +561,6 @@ upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
         return RPS_EUPSTREAM;
     }
 
-    upstream->count++;
 
     upstream_copy(u, upstream);
 
