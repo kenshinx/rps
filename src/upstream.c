@@ -8,6 +8,10 @@
 #include <jansson.h>
 #include <curl/curl.h>
 
+struct curl_buf {
+    uint8_t *buf;
+    size_t  len;
+};
 
 void
 upstream_init(struct upstream *u) {
@@ -169,6 +173,8 @@ upstreams_init(struct upstreams *us, struct config_api *capi,
     if (uv_cond_init(&us->ready) < 0) {
         goto error;     
     }
+
+    curl_global_init(CURL_GLOBAL_ALL);
     
     us->once = 0;
 
@@ -191,28 +197,26 @@ upstreams_deinit(struct upstreams *us) {
 
     uv_mutex_destroy(&us->mutex);
     uv_cond_destroy(&us->ready);
+    curl_global_cleanup();
 }
 
 static rps_status_t
-upstream_json_parse(const char *str, struct upstream *u) {
-    json_t *root;
+upstream_json_parse(struct upstream *u, json_t *element) {
     json_error_t error;
     rps_str_t host;
     uint16_t port;
     void *kv;
     rps_status_t status;
 
+    if json_typeof(element != JSON_OBJECT) {
+        return RPS_ERROR;
+    }
+
     port = 0;
 
     string_init(&host);
-
-    root = json_loads(str, 0, &error);
-    if (!root) {
-        log_error("json decode '%s' error: %s", str, error.text);
-        return RPS_ERROR;
-    }
     
-    for (kv = json_object_iter(root); kv; kv = json_object_iter_next(root, kv)) {
+    for (kv = json_object_iter(element); kv; kv = json_object_iter_next(element, kv)) {
         status = RPS_OK;
         json_t *tmp = json_object_iter_value(kv);
         if (strcmp(json_object_iter_key(kv), "host") == 0 && 
@@ -246,7 +250,6 @@ upstream_json_parse(const char *str, struct upstream *u) {
         if (status != RPS_OK) {
             log_error("json parse '%s:%s' error", json_object_iter_key(kv), json_string_value(tmp));
             string_deinit(&host);
-            json_decref(root);
             return status;
         }
     }
@@ -255,20 +258,110 @@ upstream_json_parse(const char *str, struct upstream *u) {
     if (status != RPS_OK) {
         log_error("jason parse error, invalid upstream address, %s:%d", host.data, port);
         string_deinit(&host);
-        json_decref(root);
         return status;
     }
 
     string_deinit(&host);
-    json_decref(root);
     return RPS_OK;
 
 }
 
 static rps_status_t
-upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
+upstream_pool_json_parse(rps_array_t *pool, struct curl_buf *resp) {
+    json_t *root;
+    json_t *element;
+    json_error_t error;
+    struct upstream *upstream;
+    size_t  len;
+    void *kv;
+    size_t i;
 
-    return RPS_OK;
+    i = 0;
+    len = 0;
+
+    root = json_loads((const char *)resp->buf, 0, &error);
+    if (!root) {
+        log_error("json decode upstream pool error: %s", error.text);
+        return RPS_ERROR;
+    }
+
+    if (json_typeof(root) != JSON_ARRAY) {
+        log_error("json invalid records,  response should be array");
+        json_decref(root);
+        return RPS_ERROR;
+    }
+
+    len = json_array_size(root);
+    for (i = 0; i < len; i++) {
+        element = json_array_get(root, i);
+        upstream = (struct upstream *)array_push(pool);
+        upstream_init(upstream);
+        if (upstream_json_parse(upstream, element) != RPS_OK) {
+            array_pop(pool);
+            upstream_deinit(upstream);
+        }
+    }
+
+    
+    json_decref(root);
+    
+
+}
+
+static size_t
+upstream_pool_load_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize;
+    struct curl_buf *resp;
+        
+    realsize = size * nmemb;
+
+    resp = (struct curl_buf *)userp;
+    resp->buf = rps_realloc(resp->buf, resp->len + realsize + 1);
+    if (resp->buf == NULL) {
+        log_error("fetech upstreams error, not enough memory");
+        return 0;
+    }
+
+    memcpy(&resp->buf[resp->len], contents, realsize); 
+    resp->len += realsize;
+    resp->buf[resp->len] = '\0';
+    
+    return realsize;
+}
+
+static rps_status_t
+upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
+    CURL *curl_handle;
+    CURLcode res;
+    struct curl_buf resp;
+    rps_status_t status;
+
+    resp.buf = rps_alloc(1);
+    resp.len = 0;
+
+    curl_handle = curl_easy_init();
+    curl_easy_setopt(curl_handle, CURLOPT_URL, api->data);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, upstream_pool_load_callback);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&resp);
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "rps/curl");
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
+    res = curl_easy_perform(curl_handle);
+
+    if(res != CURLE_OK) {
+        log_error("fetch upstreams from '%s' trigger error. %s", 
+                api->data,  curl_easy_strerror(res));
+        status = RPS_ERROR;
+    } else {
+        log_verb("fetch upstreams from '%s' success, %zu bytes", api->data, resp.len);
+        status = RPS_OK;
+    }
+    
+    upstream_pool_json_parse(pool, &resp);
+    
+    curl_easy_cleanup(curl_handle);
+    rps_free(resp.buf);
+
+    return status;
 }
 
 static rps_status_t
