@@ -17,6 +17,8 @@
 
 #define UNDEFINED_REPLY_CODE -1
 
+#define MAX_API_LENGTH  100
+
 typedef int rps_status_t;
 
 #define RPS_PROTO_MAP(V)                      \

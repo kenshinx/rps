@@ -5,8 +5,8 @@
 #include "_string.h"
 
 #include <uv.h>
-#include <hiredis.h>
 #include <jansson.h>
+#include <curl/curl.h>
 
 
 void
@@ -56,10 +56,12 @@ upstream_str(void *data) {
 
 static rps_status_t
 upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu, 
-        struct config_redis *cr) {
+        struct config_api *capi) {
+    char api[MAX_API_LENGTH];
+
     up->index = 0;
-    up->cr = cr;
     up->pool = NULL;
+    up->timeout = capi->timeout;
     uv_rwlock_init(&up->rwlock);
 
     up->proto = rps_proto_int((const char *)cu->proto.data);
@@ -68,8 +70,21 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
         return RPS_ERROR;
     }
     
-    string_init(&up->rediskey);
-    if (string_copy(&up->rediskey, &cu->rediskey) != RPS_OK) {
+    string_init(&up->api);
+    switch (up->proto) {
+    case SOCKS5:
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5", capi->url.data);
+        break;
+    case HTTP:
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/http", capi->url.data);
+        break;
+    case HTTP_TUNNEL:
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel", capi->url.data);
+        break;
+    default:
+        NOT_REACHED();
+    }
+    if (string_duplicate(&up->api, api, strlen(api)) != RPS_OK) {
         return RPS_ERROR;
     }
 
@@ -91,8 +106,9 @@ upstream_pool_deinit(struct upstream_pool *up) {
         array_destroy(up->pool);
     }
     up->pool = NULL;
+    string_deinit(&up->api);
+    up->timeout = 0;
     up->index = 0;
-    up->cr = NULL;
     uv_rwlock_destroy(&up->rwlock);
 } 
 
@@ -105,7 +121,7 @@ upstream_pool_dump(struct upstream_pool *up) {
 #endif
 
 rps_status_t 
-upstreams_init(struct upstreams *us, struct config_redis *cr, 
+upstreams_init(struct upstreams *us, struct config_api *capi, 
         struct config_upstreams *cus) {
 
     rps_status_t status;
@@ -141,7 +157,7 @@ upstreams_init(struct upstreams *us, struct config_redis *cr,
         up = (struct upstream_pool *)array_push(&us->pools);
         cu = (struct config_upstream *)array_get(cus->pools, i);
         
-        if (upstream_pool_init(up, cu, cr) != RPS_OK) {
+        if (upstream_pool_init(up, cu, capi) != RPS_OK) {
             goto error;
         }
     }
@@ -175,49 +191,6 @@ upstreams_deinit(struct upstreams *us) {
 
     uv_mutex_destroy(&us->mutex);
     uv_cond_destroy(&us->ready);
-}
-
-static redisContext *
-upstream_redis_connect(struct config_redis *cfg) {
-    redisContext *c;
-    redisReply  *reply;
-    
-    struct timeval timeout = {cfg->timeout, 0};
-
-    c = redisConnectWithTimeout((const char *)cfg->host.data, (int)cfg->port, timeout);
-
-    if (c == NULL || c->err) { 
-        if (c) {
-            log_error("connect redis %s:%d failed: %s\n", cfg->host.data, cfg->port, c->errstr);
-            redisFree(c);
-        } else {
-            log_error("connect redis %s:%d failed, can't allocate redis context",
-                    cfg->host.data, cfg->port);
-        }
-
-        return NULL;
-    }
-
-    if (string_empty(&cfg->password)) {
-        log_debug("connect redis %s:%d success", cfg->host.data, cfg->port);
-        return c;
-    }
-    
-    reply= redisCommand(c, "AUTH %s", cfg->password.data);
-    if (reply == NULL || reply->type == REDIS_REPLY_ERROR) {
-        if (reply) {
-            freeReplyObject(reply);
-        }
-        log_error("redis authentication failed.");
-		redisFree(c);
-        return NULL;
-    }
-
-    freeReplyObject(reply);
- 
-    log_debug("connect redis %s:%d success", cfg->host.data, cfg->port);
-
-    return c;
 }
 
 static rps_status_t
@@ -293,39 +266,7 @@ upstream_json_parse(const char *str, struct upstream *u) {
 }
 
 static rps_status_t
-upstream_pool_load(rps_array_t *pool, struct config_redis *cr, rps_str_t *rediskey) {
-    redisContext *c;
-    redisReply  *reply;
-    struct upstream *upstream;
-    size_t i;
-
-    c =  upstream_redis_connect(cr);
-    if (c == NULL) {
-        return RPS_ERROR;
-    }
-
-    reply = redisCommand(c, "SMEMBERS %s", rediskey->data);
-    if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
-        if (reply) {
-            freeReplyObject(reply);
-        }
-        log_error("redis get upstreams failed.");	
-		redisFree(c);
-        return RPS_ERROR;
-    }
-
-	redisFree(c);
-
-    for (i = 0; i < reply->elements; i++) {
-        upstream = (struct upstream *)array_push(pool);
-        upstream_init(upstream);
-        if (upstream_json_parse(reply->element[i]->str, upstream) != RPS_OK) {
-            array_pop(pool);
-            upstream_deinit(upstream);
-        }
-    }
-
-    freeReplyObject(reply);
+upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
 
     return RPS_OK;
 }
@@ -343,7 +284,7 @@ upstream_pool_refresh(struct upstream_pool *up) {
     }
 
 
-    if (upstream_pool_load(new_pool, up->cr, &up->rediskey) != RPS_OK) {
+    if (upstream_pool_load(new_pool, &up->api, up->timeout) != RPS_OK) {
         while(array_n(new_pool)) {
             upstream_deinit((struct upstream *)array_pop(new_pool));
         }

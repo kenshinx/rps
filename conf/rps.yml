@@ -56,20 +56,14 @@ upstreams:
 
     pools:
         - proto: socks5
-          rediskey: rps:upstream:socks5
 
         - proto: http
-          rediskey: rps:upstream:http
 
         - proto: http_tunnel
-          rediskey: rps:upstream:http_tunnel
 
-redis:
-    host: dev1
-    port: 6379
-    db: 0
-    password: tfqmcA0JvG04EHKDj
-    timeout: 5
+api:
+    url: http://localhost:9898/api
+    timeout: 30
 
 log:
     file: ../logs/rps.log

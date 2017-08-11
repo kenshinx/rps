@@ -30,7 +30,6 @@ struct config_server {
 
 struct config_upstream {
     rps_str_t       proto;
-    rps_str_t       rediskey;
 };
 
 struct config_upstreams {
@@ -42,12 +41,9 @@ struct config_upstreams {
     rps_array_t     *pools;
 };
 
-struct config_redis {
-    rps_str_t   host;
-    uint16_t    port;
-    uint16_t    db;
-    rps_str_t   password;
-    uint32_t    timeout;
+struct config_api {
+    rps_str_t       url;
+    uint32_t        timeout;
 };
 
 struct config_log {
@@ -64,7 +60,7 @@ struct config {
     unsigned                daemon:1;
     struct config_servers   servers;
     struct config_upstreams upstreams;
-    struct config_redis     redis;
+    struct config_api       api;
     struct config_log       log;
     rps_array_t             *args;
     uint32_t                depth;

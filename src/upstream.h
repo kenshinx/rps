@@ -35,8 +35,8 @@ struct upstream  {
 struct upstream_pool {
     rps_array_t             *pool;
     rps_proto_t             proto;
-    rps_str_t               rediskey;
-    struct config_redis     *cr;
+    rps_str_t               api;
+    uint32_t                timeout; //api request max timeout
     uint32_t                index;
     uv_rwlock_t             rwlock;
 };
@@ -56,7 +56,7 @@ void upstream_init(struct upstream *u);
 void upstream_deinit(struct upstream *u);
 
 rps_status_t upstreams_init(struct upstreams *us, 
-        struct config_redis *cr, struct config_upstreams *cu);
+        struct config_api *api, struct config_upstreams *cu);
 rps_status_t upstreams_get(struct upstreams *us, rps_proto_t proto, 
         struct upstream *u);
 void upstreams_deinit(struct upstreams *us);
