@@ -54,6 +54,19 @@ upstreams:
     # Need re-connect, re-handshake, re-auth etc..
     maxretry: 3
 
+    #max reques in 1 minute, 0 means no limits
+    mr1m: 10
+
+    #max request in 1 hour, 0 means no limits
+    mr1h: 100
+
+    #max request in 1 day, 0 means no limits
+    mr1d: 1000
+
+    # The upstream's fail rate that higher than the setting value will be dropped.
+    # The bigger value means higher fail tolerance, 0 means ignore this options.
+    max_fail_rate: 0.6
+
     pools:
         - proto: socks5
 

@@ -135,6 +135,11 @@ config_upstreams_init(struct config_upstreams *upstreams) {
     upstreams->maxretry = UPSTREAM_DEFAULT_MAXRETRY;
     string_init(&upstreams->schedule);
     upstreams->hybrid = UPSTREAM_DEFAULT_BYBRID;
+    upstreams->mr1m = UPSTREAM_DEFAULT_MR1M;
+    upstreams->mr1h = UPSTREAM_DEFAULT_MR1H;
+    upstreams->mr1d = UPSTREAM_DEFAULT_MR1D;
+    upstreams->max_fail_rate = UPSTREAM_DEFAULT_MAX_FIAL_RATE;
+
 #ifdef SOCKS4_PROXY_SUPPORT
     upstreams->pools = array_create(2, sizeof(struct config_upstream));
 #else
@@ -256,6 +261,14 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
             cfg->upstreams.maxreconn = atoi((char *)val->data);
         } else if (rps_strcmp(key, "maxretry") == 0) { 
             cfg->upstreams.maxretry = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "mr1m") == 0) { 
+            cfg->upstreams.mr1m = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "mr1h") == 0) { 
+            cfg->upstreams.mr1h = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "mr1d") == 0) { 
+            cfg->upstreams.mr1d = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "max_fail_rate") == 0) { 
+            cfg->upstreams.max_fail_rate = atof((char *)val->data);
         } else {
             status = RPS_ERROR;
         }
@@ -645,6 +658,10 @@ config_dump(struct config *cfg) {
     log_debug("\t hybrid: %d", cfg->upstreams.hybrid);
     log_debug("\t maxreconn: %d", cfg->upstreams.maxreconn);
     log_debug("\t maxretry: %d", cfg->upstreams.maxretry);
+    log_debug("\t mr1m: %d", cfg->upstreams.mr1m);
+    log_debug("\t mr1h: %d", cfg->upstreams.mr1h);
+    log_debug("\t mr1d: %d", cfg->upstreams.mr1d);
+    log_debug("\t max_fail_rate: %.2f", cfg->upstreams.max_fail_rate);
     log_debug("");
     array_foreach(cfg->upstreams.pools, config_dump_upstream);
 

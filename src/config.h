@@ -13,6 +13,10 @@
 #define UPSTREAM_DEFAULT_BYBRID     0
 #define UPSTREAM_DEFAULT_MAXRECONN   3
 #define UPSTREAM_DEFAULT_MAXRETRY   3
+#define UPSTREAM_DEFAULT_MR1M   0
+#define UPSTREAM_DEFAULT_MR1H   0
+#define UPSTREAM_DEFAULT_MR1D   0
+#define UPSTREAM_DEFAULT_MAX_FIAL_RATE  0.0
 
 struct config_servers {
     rps_array_t     *ss;
@@ -38,6 +42,10 @@ struct config_upstreams {
     unsigned        hybrid:1;
     uint32_t        maxreconn;
     uint32_t        maxretry;
+    uint32_t        mr1m;
+    uint32_t        mr1h;
+    uint32_t        mr1d;
+    float           max_fail_rate;
     rps_array_t     *pools;
 };
 
