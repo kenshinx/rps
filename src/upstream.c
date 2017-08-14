@@ -581,6 +581,11 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     } 
 #endif
     
+    if (upstream != NULL) {
+        upstream->count += 1;    
+    }
+    
+    
     uv_rwlock_rdunlock(&up->rwlock);
     return upstream;
 }

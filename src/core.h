@@ -5,6 +5,7 @@
 #include <uv.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #define RPS_OK      0
 #define RPS_ERROR   -1
@@ -195,12 +196,15 @@ struct context {
 };
 
 struct session {
-    struct server  *server;
+    struct server   *server;
 
-    struct context *request;
-    struct context *forward;
+    struct context  *request;
+    struct context  *forward;
 
-    struct upstream  *upstream;
+    struct upstream *upstream;
+
+    struct timeval  start;
+    struct timeval  end; 
 
     rps_addr_t remote;
 };

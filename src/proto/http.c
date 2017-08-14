@@ -1315,7 +1315,7 @@ next:
     if (result == http_verify_success) {
         remote = &ctx->sess->remote;
         rps_addr_name(remote, req->host.data, req->host.len, req->port);
-        log_debug("http client handshake success");
+        log_verb("http client handshake success");
         log_debug("remote: %s:%d", req->host.data, req->port);
     }
 

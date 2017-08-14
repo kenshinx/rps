@@ -64,7 +64,77 @@ server_sess_init(rps_sess_t *sess, struct server *s) {
     sess->request = NULL;
     sess->forward = NULL;
     sess->upstream = NULL;
+    gettimeofday(&sess->start, NULL);
 }
+
+static void
+server_sess_upstream_mark_fail(rps_sess_t *sess) {
+    rps_ctx_t *request, *forward;
+    char remoteip[MAX_INET_ADDRSTRLEN];
+
+    if (sess->upstream == NULL) {
+        return;
+    }
+
+    sess->upstream->failure += 1;
+
+    request = sess->request;
+    forward = sess->forward;
+    
+    rps_unresolve_addr(&sess->remote, remoteip);    
+
+    log_debug("%s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d failed, retry: %d, recon: %d",
+            request->peername, rps_unresolve_port(&request->peer), 
+            rps_proto_str(request->proto), rps_proto_str(forward->proto), 
+            forward->peername, rps_unresolve_port(&forward->peer), 
+            remoteip, rps_unresolve_port(&sess->remote), forward->retry, forward->reconn);
+}
+
+static void
+server_sess_mark_fail(rps_sess_t *sess) {
+    float elapsed;
+    rps_ctx_t *request;
+    char remoteip[MAX_INET_ADDRSTRLEN];
+
+    server_sess_upstream_mark_fail(sess);
+
+    request = sess->request;
+
+    gettimeofday (&sess->end, NULL);
+    elapsed = (sess->end.tv_sec - sess->start.tv_sec) + 
+        ((sess->end.tv_usec - sess->start.tv_usec)/1000000.0);
+
+    rps_unresolve_addr(&sess->remote, remoteip);        
+    
+    log_info("%s:%d -> rps -> upstream -> %s:%d failed, used %.2f s'",
+            request->peername, rps_unresolve_port(&request->peer), 
+            remoteip, rps_unresolve_port(&sess->remote), elapsed);
+
+}
+
+static void
+server_sess_mark_success(rps_sess_t *sess) {
+    float elapsed;
+    rps_ctx_t *request, *forward;
+    char remoteip[MAX_INET_ADDRSTRLEN];
+
+    request = sess->request;
+    forward = sess->forward;
+
+    sess->upstream->success += 1;
+
+    gettimeofday (&sess->end, NULL);
+    elapsed = (sess->end.tv_sec - sess->start.tv_sec) + 
+        ((sess->end.tv_usec - sess->start.tv_usec)/1000000.0);
+
+    rps_unresolve_addr(&sess->remote, remoteip);    
+
+    log_info("%s:%d -> rps -> %s:%d -> %s:%d success, used %.2f s'",
+            request->peername, rps_unresolve_port(&request->peer), 
+            forward->peername, rps_unresolve_port(&forward->peer), 
+            remoteip, rps_unresolve_port(&sess->remote), elapsed);
+}
+
 
 static void
 server_sess_free(rps_sess_t *sess) {
@@ -233,20 +303,22 @@ server_on_ctx_close(uv_handle_t* handle) {
         return; 
     }
     
-    server_ctx_deinit(ctx);
-
     switch (ctx->flag) {
         case c_request:
             log_debug("Request from %s:%d be closed", 
                     ctx->peername, rps_unresolve_port(&ctx->peer));
             break;
         case c_forward:
-            log_debug("Forward to %s:%d be closed.", 
-                    ctx->peername, rps_unresolve_port(&ctx->peer));
+            if (ctx->sess->upstream != NULL) {
+                log_debug("Forward to %s:%d be closed.", 
+                    ctx->peername, rps_unresolve_port(&ctx->peer));    
+            }
             break;
         default:
             NOT_REACHED();
     }
+
+    server_ctx_deinit(ctx);
 
     server_do_next(ctx);
 }
@@ -286,6 +358,7 @@ static void
 server_close(rps_sess_t *sess) {
     server_ctx_close(sess->request);
     server_ctx_close(sess->forward);
+    server_sess_mark_fail(sess);
 }
 
 static void
@@ -756,8 +829,7 @@ server_on_forward_close(uv_handle_t* handle) {
     forward->connected = 0;
     forward->established = 0;
 
-    log_debug("Forward to %s:%d be closed, reconn: %d", forward->peername, 
-            rps_unresolve_port(&forward->peer), forward->reconn);
+    server_sess_upstream_mark_fail(forward->sess);
 
     forward->state = c_conn;
     server_do_next(forward);
@@ -771,9 +843,8 @@ server_forward_reconn(rps_ctx_t *forward) {
     s = forward->sess->server;
 
     forward->reconn += 1;
-
+    
     if (forward->reconn > s->upstreams->maxreconn) {
-        log_error("Connect upstream failed after %d reconn.", forward->reconn);
         goto kill;
     }
 
@@ -864,7 +935,6 @@ server_finish(rps_sess_t *sess) {
     /* After retry, still failed*/
     rps_ctx_t   *request;
     rps_ctx_t   *forward;
-    // char remoteip[MAX_INET_ADDRSTRLEN];
 
     request = sess->request;
     forward = sess->forward;
@@ -875,13 +945,6 @@ server_finish(rps_sess_t *sess) {
     request->state = c_reply;
     request->reply_code = forward->reply_code;
     server_do_next(request);
-
-    // rps_unresolve_addr(&sess->remote, remoteip);
-
-    // log_info("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> upstream -> %s:%d failed.",
-    //         request->peername, rps_unresolve_port(&request->peer), 
-    //         rps_proto_str(request->proto), rps_proto_str(forward->proto), 
-    //         remoteip, rps_unresolve_port(&sess->remote));
 
     forward->state = c_kill;
     server_do_next(forward);
@@ -916,7 +979,7 @@ server_establish_tunnel(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
+    log_debug("Establish tunnel %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
             request->peername, rps_unresolve_port(&request->peer), 
             rps_proto_str(request->proto), rps_proto_str(forward->proto), 
             forward->peername, rps_unresolve_port(&forward->peer), 
@@ -941,7 +1004,7 @@ server_establish_pipeline(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Establish pipeline %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
+    log_debug("Establish pipeline %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
             request->peername, rps_unresolve_port(&request->peer), 
             rps_proto_str(request->proto), rps_proto_str(forward->proto), 
             forward->peername, rps_unresolve_port(&forward->peer), 
@@ -978,7 +1041,7 @@ server_establish_pipeline_tunnel(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);
 
-    log_info("Establish hybrid pipeline_tunnel %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
+    log_debug("Establish hybrid pipeline_tunnel %s:%d -> (%s) -> rps -> (%s) -> %s:%d -> %s:%d.",
             request->peername, rps_unresolve_port(&request->peer), 
             rps_proto_str(request->proto), rps_proto_str(forward->proto), 
             forward->peername, rps_unresolve_port(&forward->peer), 
@@ -1037,20 +1100,13 @@ server_cycle(rps_ctx_t *ctx) {
     if ((ssize_t)size < 0) {
 
         if ((ssize_t)size == UV_EOF) {
-    #ifdef RPS_DEBUG_OPEN
-            if (ctx->flag == c_request) {
-                log_verb("Client %s finished", sess->request->peername);
-            } else {
-                log_verb("Upstream %s finished", sess->forward->peername);
-            }
-    #endif
             server_ctx_close(ctx);
             server_ctx_shutdown(endpoint);
+            server_sess_mark_success(sess);
         } else {
-            server_ctx_close(ctx);
-            server_ctx_close(endpoint);
+            ctx->state = c_kill;
+            server_do_next(ctx);
         } 
-
         return;
     }
     
@@ -1067,9 +1123,6 @@ server_cycle(rps_ctx_t *ctx) {
 
 }
 
-
-
-
 static void
 server_forward_retry(rps_ctx_t *forward) {
     struct server *s;
@@ -1085,27 +1138,12 @@ server_forward_retry(rps_ctx_t *forward) {
 
     forward->retry++;
 
-    log_debug("Upstream tunnel  %s -> %s failed, retry: %d", 
-            forward->peername, remoteip, forward->retry);
-
     if (forward->retry > s->upstreams->maxretry) {
         forward->state = c_failed;
         server_do_next(forward);
         return;
     }
 
-
-    /*
-    if (!forward->connected && !forward->connecting) {
-        forward->reconn = 0;
-        forward->connecting = 0;
-        forward->connected = 0;
-        forward->established = 0;
-        forward->state = c_conn;
-        server_do_next(forward);
-        return;
-    }
-    */
 
     forward->reconn = 0;
     server_forward_reconn(forward);
