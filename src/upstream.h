@@ -34,6 +34,7 @@ struct upstream  {
     uint16_t    weight;
     uint32_t    success;
     uint32_t    failure;
+    uint32_t    count;
 
     rps_ts_t    insert_date;
 
@@ -68,8 +69,7 @@ void upstream_deinit(struct upstream *u);
 
 rps_status_t upstreams_init(struct upstreams *us, 
         struct config_api *api, struct config_upstreams *cu);
-rps_status_t upstreams_get(struct upstreams *us, rps_proto_t proto, 
-        struct upstream *u);
+struct upstream  *upstreams_get(struct upstreams *us, rps_proto_t proto);
 void upstreams_deinit(struct upstreams *us);
 void upstreams_refresh(uv_timer_t *handle);
 

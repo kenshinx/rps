@@ -16,7 +16,7 @@ s5_do_handshake(struct context *ctx) {
     sess = ctx->sess;
 
     req.ver = SOCKS5_VERSION;
-    if (string_empty(&sess->upstream.uname)) {
+    if (string_empty(&sess->upstream->uname)) {
         req.nmethods = 1;
         req.methods[0] = 0x00;
         status = server_write(ctx, &req, 3);
@@ -94,7 +94,7 @@ s5_do_auth(struct context *ctx) {
     int len;
 
     len = 0;
-    u = &ctx->sess->upstream;
+    u = ctx->sess->upstream;
 
     req[len++] = SOCKS5_AUTH_PASSWD_VERSION;
     req[len++] = u->uname.len;

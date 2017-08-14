@@ -1404,7 +1404,7 @@ http_send_request(struct context *ctx) {
                 strlen(BYPASS_PROXY_HEADER[i]));
     } 
 
-    u = &ctx->sess->upstream;
+    u = ctx->sess->upstream;
     
     if (!string_empty(&u->uname)) {
         /* autentication required */

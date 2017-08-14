@@ -8,6 +8,8 @@
 #include <jansson.h>
 #include <curl/curl.h>
 
+typedef struct upstream * (*upstream_pool_get_algorithm)(struct upstream_pool *);
+
 struct curl_buf {
     uint8_t *buf;
     size_t  len;
@@ -22,6 +24,7 @@ upstream_init(struct upstream *u) {
     u->proto = UNSUPPORT;
     u->success = 0;
     u->failure = 0;
+    u->count = 0;
     u->insert_date = 0;
     u->enable = 0;
 
@@ -40,11 +43,13 @@ upstream_deinit(struct upstream *u) {
     string_deinit(&u->source);
     u->success = 0;
     u->failure = 0;
+    u->count = 0;
     u->insert_date = 0;
 
     array_deinit(&u->timewheel);
 }
 
+/*
 static void
 upstream_copy(struct upstream *dst, struct upstream *src) {
     dst->proto = src->proto;
@@ -58,6 +63,7 @@ upstream_copy(struct upstream *dst, struct upstream *src) {
         string_copy(&dst->passwd, &src->passwd);
     }
 }
+*/
 
 #ifdef RPS_DEBUG_OPEN
 static void
@@ -219,7 +225,6 @@ upstreams_deinit(struct upstreams *us) {
 
 static rps_status_t
 upstream_json_parse(struct upstream *u, json_t *element) {
-    json_error_t error;
     rps_str_t host;
     uint16_t port;
     void *kv;
@@ -300,7 +305,6 @@ upstream_pool_json_parse(rps_array_t *pool, struct curl_buf *resp) {
     json_error_t error;
     struct upstream *upstream;
     size_t  len;
-    void *kv;
     size_t i;
 
     i = 0;
@@ -329,10 +333,9 @@ upstream_pool_json_parse(rps_array_t *pool, struct curl_buf *resp) {
         }
     }
 
-    
     json_decref(root);
-    
 
+    return RPS_OK;
 }
 
 static size_t
@@ -383,7 +386,9 @@ upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
         status = RPS_OK;
     }
     
-    upstream_pool_json_parse(pool, &resp);
+    if (status == RPS_OK) {
+        upstream_pool_json_parse(pool, &resp);
+    }
     
     curl_easy_cleanup(curl_handle);
     rps_free(resp.buf);
@@ -452,13 +457,11 @@ upstreams_refresh(uv_timer_t *handle) {
 
         if (upstream_pool_refresh(up) != RPS_OK) { 
             log_error("update %s upstream proxy pool failed", proto) ;
-    log_debug("");
             return;
         } else {
             log_debug("refresh %s upstream pool, get <%d> proxys", proto, array_n(up->pool));
         }
     }
-
     
     //run only once
     if (us->once == 0) {
@@ -511,14 +514,16 @@ upstream_pool_get_random(struct upstream_pool *up) {
     
 }
 
-rps_status_t
-upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
+struct upstream *
+upstreams_get(struct upstreams *us, rps_proto_t proto) {
     struct upstream *upstream;
     struct upstream_pool *up;
     int i, len;
+    upstream_pool_get_algorithm get_func;
 
     upstream = NULL;
     up = NULL;
+    get_func = NULL;
 
     if (us->hybrid) {
         if (proto == HTTP_TUNNEL || proto == SOCKS5) {
@@ -542,33 +547,40 @@ upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
         }
     }
 
-    uv_rwlock_rdlock(&up->rwlock);
-
     switch (us->schedule) {
         case up_rr:
-            upstream = upstream_pool_get_rr(up);
+            get_func = upstream_pool_get_rr;
             break;
         case up_random:
-            upstream = upstream_pool_get_random(up);       
+            get_func = upstream_pool_get_random;
             break;
         case up_wrr:
         default:
             NOT_REACHED();
     }   
 
-    if (upstream == NULL) {
-        uv_rwlock_rdunlock(&up->rwlock);
-        return RPS_EUPSTREAM;
+    uv_rwlock_rdlock(&up->rwlock);
+
+    for ( ; ; ) {
+        upstream = get_func(up);
+
+        if (upstream == NULL) {
+            break;
+        }
+
+        if (!upstream->enable) {
+            continue;
+        }
+
+        break;
     }
 
-
-    upstream_copy(u, upstream);
-
 #if RPS_DEBUG_OPEN
-    upstream_str(upstream);
+    if (upstream != NULL) {
+        upstream_str(upstream);
+    } 
 #endif
     
     uv_rwlock_rdunlock(&up->rwlock);
-
-    return RPS_OK;
+    return upstream;
 }

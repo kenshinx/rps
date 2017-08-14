@@ -63,7 +63,7 @@ server_sess_init(rps_sess_t *sess, struct server *s) {
     sess->server = s;
     sess->request = NULL;
     sess->forward = NULL;
-    upstream_init(&sess->upstream);
+    sess->upstream = NULL;
 }
 
 static void
@@ -82,7 +82,7 @@ server_sess_free(rps_sess_t *sess) {
         return;
     }
 
-    upstream_deinit(&sess->upstream);
+    sess->upstream = NULL;
     rps_free(sess);
 }
 
@@ -777,8 +777,6 @@ server_forward_reconn(rps_ctx_t *forward) {
         goto kill;
     }
 
-    upstream_deinit(&forward->sess->upstream);
-
     if (!forward->connecting) {
         //reconnect directly
         forward->state = c_conn;
@@ -812,7 +810,7 @@ server_forward_connect(rps_ctx_t *forward) {
     if (forward->connecting) {
 
         if (forward->connected) {
-            server_ctx_set_proto(forward, sess->upstream.proto);
+            server_ctx_set_proto(forward, sess->upstream->proto);
 
             /* Connect success */
             log_debug("Connect upstream %s://%s:%d success", rps_proto_str(forward->proto), forward->peername, 
@@ -832,16 +830,15 @@ server_forward_connect(rps_ctx_t *forward) {
         goto reconn;
     }
 
-
-    if (upstreams_get(s->upstreams, sess->request->proto, &sess->upstream) != RPS_OK) {
+    sess->upstream = upstreams_get(s->upstreams, sess->request->proto);
+    if (sess->upstream == NULL) {
         log_error("no available %s upstream proxy.", rps_proto_str(sess->request->proto));
         forward->state = c_kill;
         server_do_next(forward);
         return;
     }
 
-
-    memcpy(&forward->peer, &sess->upstream.server, sizeof(sess->upstream.server));
+    memcpy(&forward->peer, &sess->upstream->server, sizeof(sess->upstream->server));
 
     if (rps_unresolve_addr(&forward->peer, forward->peername) != RPS_OK) {
         goto reconn;

@@ -200,7 +200,7 @@ struct session {
     struct context *request;
     struct context *forward;
 
-    struct upstream  upstream;
+    struct upstream  *upstream;
 
     rps_addr_t remote;
 };
