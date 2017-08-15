@@ -541,11 +541,13 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     struct upstream *upstream;
     struct upstream_pool *up;
     int i, len;
+    int count;
     upstream_pool_get_algorithm get_func;
 
     upstream = NULL;
     up = NULL;
     get_func = NULL;
+    count = 0;
 
     if (us->hybrid) {
         if (proto == HTTP_TUNNEL || proto == SOCKS5) {
@@ -584,7 +586,13 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     uv_rwlock_rdlock(&up->rwlock);
 
     for ( ; ; ) {
+        if (count >= UPSTREAM_MAX_LOOP) {
+            break;
+        }
+
         upstream = get_func(up);
+
+        count += 1;
 
         if (upstream == NULL) {
             break;
@@ -598,9 +606,6 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
             upstream->enable = 0;
             continue;
         }
-
-        
-        
 
         break;
     }

@@ -15,6 +15,7 @@
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
 #define UPSTREAM_MIN_FAILURE   10
+#define UPSTREAM_MAX_LOOP      5
 
 enum upstream_schedule {
     up_rr,         /* round-robin */
