@@ -65,7 +65,7 @@ upstreams:
 
     # The upstream's fail rate that higher than the setting value will be dropped.
     # The bigger value means higher fail tolerance, 0 means ignore this options.
-    max_fail_rate: 0.6
+    max_fail_rate: 0.7
 
     pools:
         - proto: socks5

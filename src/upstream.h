@@ -14,6 +14,8 @@
 #define UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH 1000
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
+#define UPSTREAM_MIN_FAILURE   10
+
 enum upstream_schedule {
     up_rr,         /* round-robin */
     up_wrr,        /* weighted round-robin*/
@@ -58,6 +60,10 @@ struct upstreams {
     bool                    hybrid;
     uint16_t                maxreconn;
     uint16_t                maxretry;
+    uint32_t                mr1m;
+    uint32_t                mr1h;
+    uint32_t                mr1d;
+    float                   max_fail_rate;
     rps_array_t             pools;
     uv_cond_t               ready;
     uv_mutex_t              mutex;

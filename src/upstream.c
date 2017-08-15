@@ -74,10 +74,23 @@ upstream_str(void *data) {
     u = (struct upstream *)data;
 
     rps_unresolve_addr(&u->server, name);
-    log_verb("\t%s://%s:%s@%s:%d", rps_proto_str(u->proto), u->uname.data, 
-            u->passwd.data, name, rps_unresolve_port(&u->server));
+    log_verb("\t%s://%s:%s@%s:%d (%d/%d/%d)", rps_proto_str(u->proto), u->uname.data, 
+            u->passwd.data, name, rps_unresolve_port(&u->server), u->success, u->failure, u->count);
 }
 #endif
+
+static bool
+upstream_poor_quality(struct upstream *u, float max_fail_rate) {
+    float fail_rate;
+
+    if (u->failure <= UPSTREAM_MIN_FAILURE) {
+        return false;
+    }
+
+    fail_rate = (u->failure/(float)(u->failure + u->success));
+
+    return fail_rate > max_fail_rate;
+}
 
 static rps_status_t
 upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu, 
@@ -158,6 +171,10 @@ upstreams_init(struct upstreams *us, struct config_api *capi,
     us->hybrid = cus->hybrid;   
     us->maxreconn = cus->maxreconn;
     us->maxretry = cus->maxretry;
+    us->mr1m = cus->mr1m;
+    us->mr1h = cus->mr1h;
+    us->mr1d = cus->mr1d;
+    us->max_fail_rate = cus->max_fail_rate;
 
     schedule = &cus->schedule;
     if (rps_strcmp(schedule, "rr") == 0) {
@@ -571,6 +588,13 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
         if (!upstream->enable) {
             continue;
         }
+
+        if (upstream_poor_quality(upstream, us->max_fail_rate)) {
+            upstream->enable = 0;
+            continue;
+        }
+
+        
 
         break;
     }
