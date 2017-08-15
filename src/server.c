@@ -64,6 +64,7 @@ server_sess_init(rps_sess_t *sess, struct server *s) {
     sess->request = NULL;
     sess->forward = NULL;
     sess->upstream = NULL;
+    rps_addr_init(&sess->remote);
     gettimeofday(&sess->start, NULL);
 }
 
@@ -104,12 +105,18 @@ server_sess_mark_fail(rps_sess_t *sess) {
     elapsed = (sess->end.tv_sec - sess->start.tv_sec) + 
         ((sess->end.tv_usec - sess->start.tv_usec)/1000000.0);
 
-    rps_unresolve_addr(&sess->remote, remoteip);        
-    
-    log_info("%s:%d -> rps -> upstream -> %s:%d failed, used %.2f s'",
-            request->peername, rps_unresolve_port(&request->peer), 
-            remoteip, rps_unresolve_port(&sess->remote), elapsed);
-
+    if (rps_addr_uninit(&sess->remote)) {
+        log_info("%s:%d -> rps:%d failed, used %.2f s'",
+                request->peername, rps_unresolve_port(&request->peer), 
+                rps_unresolve_port(&sess->server->listen), elapsed);
+    } else {
+        rps_unresolve_addr(&sess->remote, remoteip);        
+        
+        log_info("%s:%d -> rps:%d -> upstream -> %s:%d failed, used %.2f s'",
+                request->peername, rps_unresolve_port(&request->peer), 
+                rps_unresolve_port(&sess->server->listen), 
+                remoteip, rps_unresolve_port(&sess->remote), elapsed);
+    }
 }
 
 static void
@@ -129,8 +136,9 @@ server_sess_mark_success(rps_sess_t *sess) {
 
     rps_unresolve_addr(&sess->remote, remoteip);    
 
-    log_info("%s:%d -> rps -> %s:%d -> %s:%d success, used %.2f s'",
-            request->peername, rps_unresolve_port(&request->peer), 
+    log_info("%s:%d -> rps:%d -> %s:%d -> %s:%d success, used %.2f s'",
+            request->peername, rps_unresolve_port(&request->peer),
+            rps_unresolve_port(&sess->server->listen), 
             forward->peername, rps_unresolve_port(&forward->peer), 
             remoteip, rps_unresolve_port(&sess->remote), elapsed);
 }
@@ -968,7 +976,8 @@ server_establish_tunnel(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->established);
-    ASSERT(forward->reply_code == rps_rep_ok);
+    // ASSERT(forward->reply_code == rps_rep_ok);
+
 
     forward->state = c_established;
 
@@ -1035,7 +1044,7 @@ server_establish_pipeline_tunnel(rps_sess_t *sess) {
     forward = sess->forward;
 
     ASSERT(forward->established);
-    ASSERT(forward->reply_code == rps_rep_ok);
+    // ASSERT(forward->reply_code == rps_rep_ok);
 
     forward->state = c_established;
 
