@@ -87,6 +87,11 @@ upstream_poor_quality(struct upstream *u, float max_fail_rate) {
         return false;
     }
 
+    if (max_fail_rate == 0.0) {
+        //ignore max_fail_rate if be setted to 0
+        return false;
+    }
+
     fail_rate = (u->failure/(float)(u->failure + u->success));
 
     return fail_rate > max_fail_rate;
@@ -594,6 +599,7 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
             continue;
         }
 
+        
         
 
         break;
