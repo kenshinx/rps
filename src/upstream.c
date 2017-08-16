@@ -707,7 +707,9 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     
     if (upstream != NULL) {
         upstream->count += 1;    
-        upstream_timewheel_add(upstream);
+        if (u->mr1m > 0 || u->mr1h > 0 || u->mr1d >0) {
+            upstream_timewheel_add(upstream);
+        }
     }
     
     uv_rwlock_rdunlock(&up->rwlock);
