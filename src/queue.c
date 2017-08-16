@@ -30,7 +30,7 @@ queue_deinit(rps_queue_t *q) {
 
 int
 queue_en(rps_queue_t *q, void *e) {   
-    if (queue_full(q)) {
+    if (queue_is_full(q)) {
         log_warn("queue overflow.");
         return RPS_EQUEUE;
     }
@@ -46,7 +46,7 @@ void *
 queue_de(rps_queue_t *q) {
     void *e;
 
-    if (queue_empty(q)) {
+    if (queue_is_empty(q)) {
         return NULL;
     }
 

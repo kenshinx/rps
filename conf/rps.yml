@@ -55,13 +55,13 @@ upstreams:
     maxretry: 3
 
     #max reques in 1 minute, 0 means no limits
-    mr1m: 10
+    mr1m: 100
 
     #max request in 1 hour, 0 means no limits
-    mr1h: 100
+    mr1h: 1000
 
     #max request in 1 day, 0 means no limits
-    mr1d: 1000
+    mr1d: 0
 
     # The upstream's fail rate that higher than the setting value will be dropped.
     # The bigger value means higher fail tolerance, 0 means ignore this options.

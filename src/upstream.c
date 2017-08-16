@@ -15,7 +15,7 @@ struct curl_buf {
     size_t  len;
 };
 
-rps_status_t
+void
 upstream_init(struct upstream *u) {
     string_init(&u->uname);   
     string_init(&u->passwd);   
@@ -28,11 +28,7 @@ upstream_init(struct upstream *u) {
     u->insert_date = 0;
     u->enable = 0;
 
-    if (queue_init(&u->timewheel, UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH) != RPS_OK) {
-        return RPS_ERROR;
-    }
-    
-    return RPS_OK;
+    queue_null(&u->timewheel);
 }
 
 void
@@ -45,8 +41,24 @@ upstream_deinit(struct upstream *u) {
     u->count = 0;
     u->insert_date = 0;
 
-    queue_deinit(&u->timewheel);
+    if (!queue_is_null(&u->timewheel)) {
+        queue_deinit(&u->timewheel);
+    }
 }
+
+static rps_status_t
+upstream_init_timewheel(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uint32_t mr1d) {
+    uint32_t n;
+
+    n = MAX(MAX(mr1m, mr1h), mr1d);
+    
+    n = n > 0 ? n : UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH;
+
+    printf("n: %d\n", n);
+
+    return queue_init(&u->timewheel, n);
+}
+
 
 /*
 static void
@@ -73,10 +85,16 @@ upstream_str(void *data) {
     u = (struct upstream *)data;
 
     rps_unresolve_addr(&u->server, name);
-    log_verb("\t%s://%s:%s@%s:%d (%d/%d/%d)", rps_proto_str(u->proto), u->uname.data, 
-            u->passwd.data, name, rps_unresolve_port(&u->server), u->success, u->failure, u->count);
+    log_verb("\t%s://%s:%s@%s:%d (s:%d, f:%d, c:%d, d:%d)", rps_proto_str(u->proto), 
+            u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server), 
+            u->success, u->failure, u->count, queue_n(&u->timewheel));
 }
 #endif
+
+static bool
+upstream_fresh(struct upstream *u) {
+    return queue_is_null(&u->timewheel);
+}
 
 static bool
 upstream_poor_quality(struct upstream *u, float max_fail_rate) {
@@ -94,6 +112,68 @@ upstream_poor_quality(struct upstream *u, float max_fail_rate) {
     fail_rate = (u->failure/(float)(u->failure + u->success));
 
     return fail_rate > max_fail_rate;
+}
+
+
+static bool
+upstream_request_too_often(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uint32_t mr1d) {
+    uint32_t m, h, d;   
+    uint32_t i, j, n;
+    rps_ts_t now, m_ago, h_ago, d_ago;
+    rps_ts_t ts;
+    rps_queue_t *timewheel;
+
+    m = 0;
+    h = 0;
+    d = 0;
+
+    now = time(NULL);
+    m_ago = now - 60;
+    h_ago = now - 60 * 60;
+    d_ago = now - 60 * 60 * 24;
+
+    timewheel = &u->timewheel;
+
+    i = timewheel->head;
+    n = queue_n(timewheel);
+    
+    for (j = 0; j < n; j++) {
+        ts = (rps_ts_t)timewheel->elts[i];
+        i = (i + 1) % timewheel->nelts;
+
+        //remove the ts older than 1 day ago.
+        if (ts < d_ago) {
+            queue_de(timewheel);
+            continue;   
+        }
+
+        if (ts > m_ago) {
+            m += 1;
+            h += 1;
+            continue;
+        }
+
+        if (ts > h_ago) {
+            h += 1;
+        }
+    }
+
+    d = queue_n(timewheel); 
+
+    printf("m:%d, h:%d, d:%d\n", m, h, d);
+
+    return ((mr1m != 0 && m >= mr1m) || 
+            (mr1h != 0 && h >= mr1h) || 
+            (mr1d != 0 && d >= mr1d));
+}
+
+static void
+upstream_timewheel_add(struct upstream *u) {
+    rps_ts_t now;
+    
+    now = time(NULL);
+
+    queue_en(&u->timewheel, (void *)now);
 }
 
 static rps_status_t
@@ -606,6 +686,16 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
             continue;
         }
 
+        if (upstream_fresh(upstream)) {
+            upstream_init_timewheel(upstream, us->mr1m, us->mr1h, us->mr1d);
+            break;
+        }
+
+        if (upstream_request_too_often(upstream, us->mr1m, us->mr1h, us->mr1d)) {
+            upstream = NULL;
+            continue;
+        }
+
         break;
     }
 
@@ -617,6 +707,7 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     
     if (upstream != NULL) {
         upstream->count += 1;    
+        upstream_timewheel_add(upstream);
     }
     
     uv_rwlock_rdunlock(&up->rwlock);

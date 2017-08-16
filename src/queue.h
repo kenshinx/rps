@@ -23,13 +23,25 @@ struct rps_queue_s {
 
 typedef struct rps_queue_s rps_queue_t;
 
-#define queue_n(_q)                             \
+static inline void
+queue_null(rps_queue_t *q) {
+    q->elts = NULL;
+    q->head = 0;
+    q->tail = 0;
+    q->nelts = 0;
+    q->nalloc = 0;
+}
+
+#define queue_n(_q)                                     \
     ((_q)->nalloc)
 
-#define queue_empty(_q)                         \
+#define queue_is_empty(_q)                              \
     ((_q)->nalloc <= 0)
 
-#define queue_full(_q)                          \
+#define queue_is_null(_q)                               \
+    (((_q)->nalloc <= 0) && ((_q)->elts == NULL))
+
+#define queue_is_full(_q)                               \
     ((_q)->nalloc >= (_q)->nelts)
 
 int queue_init(rps_queue_t *q, uint32_t n);

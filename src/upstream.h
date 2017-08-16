@@ -12,7 +12,7 @@
 
 #define UPSTREAM_DEFAULT_WEIGHT 10
 #define UPSTREAM_DEFAULT_POOL_LENGTH 1000
-#define UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH 1000
+#define UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH 10000
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
 #define UPSTREAM_MIN_FAILURE   10
@@ -75,7 +75,7 @@ struct upstreams {
     uint8_t                 once:1;
 };
 
-rps_status_t upstream_init(struct upstream *u);
+void upstream_init(struct upstream *u);
 void upstream_deinit(struct upstream *u);
 
 rps_status_t upstreams_init(struct upstreams *us, 
