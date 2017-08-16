@@ -4,6 +4,7 @@
 #include "core.h"
 #include "util.h"
 #include "array.h"
+#include "queue.h"
 #include "_string.h"
 #include "config.h"
 
@@ -15,7 +16,7 @@
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
 #define UPSTREAM_MIN_FAILURE   10
-#define UPSTREAM_MAX_LOOP      5
+#define UPSTREAM_MAX_LOOP      10
 
 enum upstream_schedule {
     up_rr,         /* round-robin */
@@ -41,8 +42,11 @@ struct upstream  {
 
     rps_ts_t    insert_date;
 
-    /* the time wheel which be used to control the QPS */
-    rps_array_t timewheel;
+    /* The time wheel which be used to control the QPS
+     * The element storaged in queue are long int expressed timestamp, 
+     * 4 bytes in 32bit platform, 8 bytes in 64 bits which exactly the pointer length on various platform.
+     */
+    rps_queue_t timewheel;
     
     uint8_t     enable:1;
 };

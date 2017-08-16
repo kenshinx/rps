@@ -11,6 +11,7 @@
 #define RPS_ERROR   -1
 #define RPS_ENOMEM  -2
 #define RPS_EUPSTREAM   -3
+#define RPS_EQUEUE   -4
 
 #define READ_BUF_SIZE 2048 //2k
 #define WRITE_BUF_SIZE 65536 //64k
@@ -22,7 +23,8 @@
 
 typedef int rps_status_t;
 
-typedef uint64_t rps_ts_t;
+//In the GNU C Library, time_t is equivalent to long int. 
+typedef long int rps_ts_t;
 
 #define RPS_PROTO_MAP(V)                      \
     V(-1, UNSUPPORT, "unsupport")             \

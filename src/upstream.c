@@ -28,8 +28,7 @@ upstream_init(struct upstream *u) {
     u->insert_date = 0;
     u->enable = 0;
 
-    if (array_init(&u->timewheel, UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH, 
-                sizeof(rps_ts_t)) != RPS_OK) {
+    if (queue_init(&u->timewheel, UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH) != RPS_OK) {
         return RPS_ERROR;
     }
     
@@ -46,7 +45,7 @@ upstream_deinit(struct upstream *u) {
     u->count = 0;
     u->insert_date = 0;
 
-    array_deinit(&u->timewheel);
+    queue_deinit(&u->timewheel);
 }
 
 /*
@@ -619,7 +618,6 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     if (upstream != NULL) {
         upstream->count += 1;    
     }
-    
     
     uv_rwlock_rdunlock(&up->rwlock);
     return upstream;
