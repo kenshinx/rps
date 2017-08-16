@@ -121,6 +121,7 @@ upstream_request_too_often(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uin
     uint32_t i, j, n;
     rps_ts_t now, m_ago, h_ago, d_ago;
     rps_ts_t ts;
+    rps_ts_t deadline;
     rps_queue_t *timewheel;
 
     m = 0;
@@ -137,12 +138,22 @@ upstream_request_too_often(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uin
     i = timewheel->head;
     n = queue_n(timewheel);
     
+    if (mr1d > 0) {
+        deadline = d_ago;
+    } else if (mr1h > 0) {
+        deadline = h_ago;
+    } else if (mr1m > 0) {
+        deadline = m_ago;
+    } else {
+        deadline = now;
+    }
+    
     for (j = 0; j < n; j++) {
         ts = (rps_ts_t)timewheel->elts[i];
         i = (i + 1) % timewheel->nelts;
 
-        //remove the ts older than 1 day ago.
-        if (ts < d_ago) {
+        //remove the ts older than deadline.
+        if (ts < deadline) {
             queue_de(timewheel);
             continue;   
         }
@@ -707,7 +718,7 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
     
     if (upstream != NULL) {
         upstream->count += 1;    
-        if (u->mr1m > 0 || u->mr1h > 0 || u->mr1d >0) {
+        if (us->mr1m > 0 || us->mr1h > 0 || us->mr1d >0) {
             upstream_timewheel_add(upstream);
         }
     }
