@@ -54,8 +54,6 @@ upstream_init_timewheel(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uint32
     
     n = n > 0 ? n : UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH;
 
-    printf("n: %d\n", n);
-
     return queue_init(&u->timewheel, n);
 }
 
@@ -92,7 +90,7 @@ upstream_str(void *data) {
 #endif
 
 static bool
-upstream_fresh(struct upstream *u) {
+upstream_freshly(struct upstream *u) {
     return queue_is_null(&u->timewheel);
 }
 
@@ -206,13 +204,13 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
     string_init(&up->api);
     switch (up->proto) {
     case SOCKS5:
-        snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5", capi->url.data);
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5/", capi->url.data);
         break;
     case HTTP:
-        snprintf(api, MAX_API_LENGTH, "%s/proxy/http", capi->url.data);
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/http/", capi->url.data);
         break;
     case HTTP_TUNNEL:
-        snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel", capi->url.data);
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel/", capi->url.data);
         break;
     default:
         NOT_REACHED();
@@ -697,7 +695,7 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
             continue;
         }
 
-        if (upstream_fresh(upstream)) {
+        if (upstream_freshly(upstream)) {
             upstream_init_timewheel(upstream, us->mr1m, us->mr1h, us->mr1d);
             break;
         }
