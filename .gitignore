@@ -27,3 +27,4 @@ src/b64/*.o
 /api/logs/rps_api.log
 bin
 logs
+*.pyc
