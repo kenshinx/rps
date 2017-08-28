@@ -169,8 +169,6 @@ upstream_request_too_often(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uin
 
     d = queue_n(timewheel); 
 
-    printf("m:%d, h:%d, d:%d\n", m, h, d);
-
     return ((mr1m != 0 && m >= mr1m) || 
             (mr1h != 0 && h >= mr1h) || 
             (mr1d != 0 && d >= mr1d));
