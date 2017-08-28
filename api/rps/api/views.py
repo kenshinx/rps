@@ -74,6 +74,28 @@ def proxy(tag, proto):
         records.append(r)
     return jsonify(records)
 
+@api.route("/<tag>/stats/<any('socks5', 'http', 'http_tunnel'):proto>/", methods=["POST"])
+def stats(tag, proto):
+    collection = mongo.db.u_stats
+    form = request.form
+
+    filter = {"tag":tag, "proto":proto, "host": form.get("ip", None), "port":form.get("port", None)}
+    set = {
+        "uname": form.get("uname", None),
+        "passwd": form.get("passwd", None),
+        "enable": form.get("enable", None),
+        "success": form.get("success", None),
+        "failure": form.get("failure", None),
+        "count": form.get("count", None),
+        "timewheel": form.get("timewheel", None),
+        "insert_date": form.get("insert_date", None),
+        "source": form.get("source", None),
+    }
+
+    collection.update(filter, {"$set":set}, upsert=True)
+
+    return jsonify(status="ok")
+
 
 
 @api.route("/proxy/<any('ban', 'unban'):action>/<host>", methods=["POST"])

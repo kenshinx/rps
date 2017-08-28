@@ -19,7 +19,9 @@
 
 #define UNDEFINED_REPLY_CODE -1
 
-#define MAX_API_LENGTH  100
+#define MAX_API_LENGTH  256
+
+#define RPS_CURL_UA "rps/curl"
 
 typedef int rps_status_t;
 

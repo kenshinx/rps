@@ -18,7 +18,8 @@
 #define UPSTREAM_MIN_FAILURE   10
 #define UPSTREAM_MAX_LOOP      10
 
-#define UPSTREAM_KEY_MAX_LENGTH 256
+#define UPSTREAM_KEY_MAX_LENGTH 128
+#define UPSTREAM_PAYLOAD_MAX_LENGTH 512
 
 enum upstream_schedule {
     up_rr,         /* round-robin */
@@ -57,6 +58,7 @@ struct upstream_pool {
     rps_array_t             *pool;
     rps_proto_t             proto;
     rps_str_t               api;
+    rps_str_t               stats_api;
     uint32_t                timeout; //api request max timeout
     uint32_t                index;
     uv_rwlock_t             rwlock;

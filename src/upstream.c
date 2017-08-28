@@ -70,6 +70,9 @@ upstream_copy(struct upstream *dst, struct upstream *src) {
     if (!string_empty(&src->passwd)) {
         string_copy(&dst->passwd, &src->passwd);
     }
+    if (!string_empty(&src->source)) {
+        string_copy(&dst->source, &src->source);
+    }
 
     dst->insert_date = src->insert_date;
     dst->enable = src->enable;
@@ -198,6 +201,7 @@ static rps_status_t
 upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu, 
         struct config_api *capi) {
     char api[MAX_API_LENGTH];
+    char stats_api[MAX_API_LENGTH];
 
     up->index = 0;
     up->pool = NULL;
@@ -214,17 +218,23 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
     switch (up->proto) {
     case SOCKS5:
         snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5/", capi->url.data);
+        snprintf(stats_api, MAX_API_LENGTH, "%s/stats/socks5/", capi->url.data);
         break;
     case HTTP:
         snprintf(api, MAX_API_LENGTH, "%s/proxy/http/", capi->url.data);
+        snprintf(stats_api, MAX_API_LENGTH, "%s/stats/http/", capi->url.data);
         break;
     case HTTP_TUNNEL:
         snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel/", capi->url.data);
+        snprintf(stats_api, MAX_API_LENGTH, "%s/stats/http_tunnel/", capi->url.data);
         break;
     default:
         NOT_REACHED();
     }
     if (string_duplicate(&up->api, api, strlen(api)) != RPS_OK) {
+        return RPS_ERROR;
+    }
+    if (string_duplicate(&up->stats_api, stats_api, strlen(stats_api)) != RPS_OK) {
         return RPS_ERROR;
     }
 
@@ -247,6 +257,7 @@ upstream_pool_deinit(struct upstream_pool *up) {
     }
     up->pool = NULL;
     string_deinit(&up->api);
+    string_deinit(&up->stats_api);
     up->timeout = 0;
     up->index = 0;
     uv_rwlock_destroy(&up->rwlock);
@@ -492,7 +503,7 @@ upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
     curl_easy_setopt(curl_handle, CURLOPT_URL, api->data);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, upstream_pool_load_callback);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&resp);
-    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "rps/curl");
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, RPS_CURL_UA);
     curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
     res = curl_easy_perform(curl_handle);
 
@@ -570,6 +581,56 @@ upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
 }
 
 static rps_status_t
+upstream_stats_commit(struct upstream *u, rps_str_t *api, uint32_t timeout) {
+    CURL *curl_handle;
+    CURLcode res;
+    char name[MAX_HOSTNAME_LEN];
+    char payload[UPSTREAM_PAYLOAD_MAX_LENGTH];
+    rps_status_t status;
+
+    rps_unresolve_addr(&u->server, name);   
+    //avoid flush the output to stdout
+    FILE *devnull = fopen("/dev/null", "w+");
+
+    snprintf(payload, UPSTREAM_PAYLOAD_MAX_LENGTH, 
+        "ip=%s&port=%d&uname=%s&passwd=%s&source=%s&success=%d&failure=%d&count=%d&insert_date=%ld&enable=%d&timewheel=%d",
+        name, rps_unresolve_port(&u->server), u->uname.data, u->passwd.data, u->source.data, u->success,
+        u->failure, u->count,(long int)u->insert_date, u->enable, queue_n(&u->timewheel));
+
+    curl_handle = curl_easy_init();
+    curl_easy_setopt(curl_handle, CURLOPT_URL, api->data);
+    curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, payload);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, devnull);
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, RPS_CURL_UA);
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
+    res = curl_easy_perform(curl_handle);
+
+    if(res != CURLE_OK) {
+        log_error("post upstream (%s:%d) statistic to '%s' trigger error. %s", 
+                name, rps_unresolve_port(&u->server), api->data,  curl_easy_strerror(res));
+        status = RPS_ERROR;
+    } else {
+        //log_verb("post upstream (%s:%d) statistic success", name, rps_unresolve_port(&u->server));
+        status = RPS_OK;
+    }
+    
+    curl_easy_cleanup(curl_handle);
+    fclose(devnull);
+    return status;
+}
+
+static void
+upstream_pool_stats(struct upstream_pool *up) {
+    struct upstream *u;
+    uint32_t i;
+
+    for (i = 0; i < array_n(up->pool); i++) {
+        u = array_get(up->pool, i);
+        upstream_stats_commit(u, &up->stats_api, up->timeout);
+    }
+}
+
+static rps_status_t
 upstream_pool_refresh(struct upstream_pool *up) {
 
     rps_array_t *new_pool;
@@ -606,6 +667,8 @@ upstream_pool_refresh(struct upstream_pool *up) {
     #ifdef RPS_DEBUG_OPEN
         upstream_pool_dump(up);
     #endif
+
+    upstream_pool_stats(up);
 
     return RPS_OK;
 }
