@@ -58,7 +58,6 @@ upstream_init_timewheel(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uint32
 }
 
 
-/*
 static void
 upstream_copy(struct upstream *dst, struct upstream *src) {
     dst->proto = src->proto;
@@ -71,8 +70,20 @@ upstream_copy(struct upstream *dst, struct upstream *src) {
     if (!string_empty(&src->passwd)) {
         string_copy(&dst->passwd, &src->passwd);
     }
+
+    dst->insert_date = src->insert_date;
+    dst->enable = src->enable;
 }
-*/
+
+static int 
+upstream_key(struct upstream *u, char *key, size_t max_size) {
+    char name[MAX_HOSTNAME_LEN];
+
+    rps_unresolve_addr(&u->server, name);   
+
+    return snprintf(key, max_size, "%s://%s:%d", rps_proto_str(u->proto), name, 
+            rps_unresolve_port(&u->server));
+}
 
 #ifdef RPS_DEBUG_OPEN
 static void
@@ -503,6 +514,60 @@ upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
 
     return status;
 }
+static rps_status_t
+upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
+    rps_hashmap_t map;
+    struct upstream *u, *nu, *ou;
+    struct upstream **pu;
+    char u_key[UPSTREAM_KEY_MAX_LENGTH];
+    uint32_t i;
+    size_t key_size;
+    size_t val_size;
+
+    u = NULL;
+    ou = NULL;
+    nu = NULL;
+    pu = NULL;
+
+    hashmap_init(&map, 2 * array_n(n_pool), 0.05);
+    
+    for (i = 0; i < array_n(o_pool); i++) {
+        u = array_get(o_pool, i);   
+        key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
+        hashmap_set(&map, u_key, key_size, &u, sizeof(u));
+    }
+
+    for (i = 0; i < array_n(n_pool); i++) {
+        u = array_get(n_pool, i);
+        key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
+        pu = hashmap_get(&map, u_key, key_size, &val_size);
+        if (pu == NULL) { 
+            /* insert new upstream proxy */
+            if (!u->enable) {
+                continue;
+            }
+            nu = array_push(o_pool);
+            upstream_init(nu);
+            upstream_copy(nu, u);
+
+            hashmap_set(&map, u_key, key_size, &nu, sizeof(nu));
+            
+        } else {
+            /* update existence proxy*/
+            ou = *pu;
+            if (!u->enable && ou->enable) {
+                ou->enable = 0;
+            } else if (u->enable && !ou->enable) {
+                ou->enable = 1;
+                ou->failure /= 2; /* shrink the fail rate */
+            }
+        }
+    }
+
+    hashmap_deinit(&map);
+
+    return RPS_OK;
+}
 
 static rps_status_t
 upstream_pool_refresh(struct upstream_pool *up) {
@@ -527,7 +592,7 @@ upstream_pool_refresh(struct upstream_pool *up) {
     }
 
     uv_rwlock_wrlock(&up->rwlock);
-    array_swap(&up->pool, &new_pool);
+    upstream_pool_merge(up->pool, new_pool);
     uv_rwlock_wrunlock(&up->rwlock);
     
     if (new_pool != NULL) {

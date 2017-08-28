@@ -18,6 +18,8 @@
 #define UPSTREAM_MIN_FAILURE   10
 #define UPSTREAM_MAX_LOOP      10
 
+#define UPSTREAM_KEY_MAX_LENGTH 256
+
 enum upstream_schedule {
     up_rr,         /* round-robin */
     up_wrr,        /* weighted round-robin*/
