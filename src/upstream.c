@@ -633,8 +633,9 @@ upstream_pool_stats(struct upstream_pool *up) {
 
 static rps_status_t
 upstream_pool_refresh(struct upstream_pool *up) {
-
     rps_array_t *new_pool;
+
+    upstream_pool_stats(up);
 
     /* Free current upstream pool only when new pool load successful */
 
@@ -668,8 +669,6 @@ upstream_pool_refresh(struct upstream_pool *up) {
     #ifdef RPS_DEBUG_OPEN
         upstream_pool_dump(up);
     #endif
-
-    upstream_pool_stats(up);
 
     return RPS_OK;
 }
