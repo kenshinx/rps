@@ -518,7 +518,7 @@ upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
     }
     
     if (status == RPS_OK) {
-        upstream_pool_json_parse(pool, &resp);
+        status = upstream_pool_json_parse(pool, &resp);
     }
     
     curl_easy_cleanup(curl_handle);
@@ -650,7 +650,7 @@ upstream_pool_refresh(struct upstream_pool *up) {
             upstream_deinit((struct upstream *)array_pop(new_pool));
         }
         array_destroy(new_pool);
-        log_error("load %s upstreams from redis failed.", rps_proto_str(up->proto));
+        log_error("load %s upstreams from webapi failed.", rps_proto_str(up->proto));
         return RPS_ERROR;
     }
 

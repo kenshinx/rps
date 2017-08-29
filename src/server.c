@@ -179,6 +179,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout
     ctx->connected = 0;
     ctx->established = 0;
     ctx->c_count = 0;
+    ctx->proto = UNSET;
     ctx->reply_code = rps_rep_undefined;
     ctx->rstat = c_stop;
     ctx->wstat = c_stop;

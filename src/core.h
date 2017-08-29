@@ -30,6 +30,7 @@ typedef long int rps_ts_t;
 
 #define RPS_PROTO_MAP(V)                      \
     V(-1, UNSUPPORT, "unsupport")             \
+    V(0,  UNSET, "unset")                     \
     V(1,  SOCKS5, "socks5")                   \
     V(2,  HTTP, "http")                       \
     V(3,  HTTP_TUNNEL, "http_tunnel")         \
