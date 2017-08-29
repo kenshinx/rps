@@ -5,11 +5,13 @@
 #include <uv.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #define RPS_OK      0
 #define RPS_ERROR   -1
 #define RPS_ENOMEM  -2
 #define RPS_EUPSTREAM   -3
+#define RPS_EQUEUE   -4
 
 #define READ_BUF_SIZE 2048 //2k
 #define WRITE_BUF_SIZE 65536 //64k
@@ -17,7 +19,14 @@
 
 #define UNDEFINED_REPLY_CODE -1
 
+#define MAX_API_LENGTH  256
+
+#define RPS_CURL_UA "rps/curl"
+
 typedef int rps_status_t;
+
+//In the GNU C Library, time_t is equivalent to long int. 
+typedef long int rps_ts_t;
 
 #define RPS_PROTO_MAP(V)                      \
     V(-1, UNSUPPORT, "unsupport")             \
@@ -191,12 +200,15 @@ struct context {
 };
 
 struct session {
-    struct server  *server;
+    struct server   *server;
 
-    struct context *request;
-    struct context *forward;
+    struct context  *request;
+    struct context  *forward;
 
-    struct upstream  upstream;
+    struct upstream *upstream;
+
+    struct timeval  start;
+    struct timeval  end; 
 
     rps_addr_t remote;
 };

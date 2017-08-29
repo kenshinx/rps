@@ -10,7 +10,6 @@ OS := $(shell sh -c 'uname -s 2>/dev/null || echo unknow')
 ROOT := $(shell sh -c 'cd .. ; pwd')
 
 LIBYAML=yaml-0.1.5
-HIREDIS=hiredis-0.13.3
 JANSSON=jansson-2.9
 LIBUV=libuv-v1.9.1
 
@@ -18,7 +17,6 @@ LIBUV=libuv-v1.9.1
 
 distclean:
 	-(cd $(LIBYAML) && $(MAKE) clean) >/dev/null || true
-	-(cd $(HIREDIS) && $(MAKE) clean) >/dev/null || true
 	-(cd $(JANSSON) && $(MAKE) clean) >/dev/null || true
 	-(cd $(LIBUV) && $(MAKE) clean) >/dev/null || true
 
@@ -31,13 +29,6 @@ yaml:
 	cd $(LIBYAML) && autoreconf --force --install && ./configure && $(MAKE) 1>&2 
 
 .PHONY: yaml
-
-hiredis:
-	@printf '%b %b\n' $(MAKECOLOR)MAKE$(ENDCOLOR) $(BINCOLOR)$@$(ENDCOLOR)
-	cd $(HIREDIS) && $(MAKE) static 
-
-.PHONY: hiredis
-
 
 jansson:
 	@printf '%b %b\n' $(MAKECOLOR)MAKE$(ENDCOLOR) $(BINCOLOR)$@$(ENDCOLOR)

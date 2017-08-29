@@ -121,13 +121,11 @@ config_servers_deinit(struct config_servers *servers) {
 static void
 config_upstream_init(struct config_upstream *upstream) {
     string_init(&upstream->proto);
-    string_init(&upstream->rediskey);
 }
 
 static void
 config_upstream_deinit(struct config_upstream *upstream) {
     string_deinit(&upstream->proto);
-    string_deinit(&upstream->rediskey);
 }
 
 static rps_status_t
@@ -137,6 +135,11 @@ config_upstreams_init(struct config_upstreams *upstreams) {
     upstreams->maxretry = UPSTREAM_DEFAULT_MAXRETRY;
     string_init(&upstreams->schedule);
     upstreams->hybrid = UPSTREAM_DEFAULT_BYBRID;
+    upstreams->mr1m = UPSTREAM_DEFAULT_MR1M;
+    upstreams->mr1h = UPSTREAM_DEFAULT_MR1H;
+    upstreams->mr1d = UPSTREAM_DEFAULT_MR1D;
+    upstreams->max_fail_rate = UPSTREAM_DEFAULT_MAX_FIAL_RATE;
+
 #ifdef SOCKS4_PROXY_SUPPORT
     upstreams->pools = array_create(2, sizeof(struct config_upstream));
 #else
@@ -161,18 +164,14 @@ config_upstreams_deinit(struct config_upstreams *upstreams) {
 }
 
 static void 
-config_redis_init(struct config_redis *redis) {
-    string_init(&redis->host);
-    string_init(&redis->password);
-    redis->port = 0;
-    redis->db = 0;
-    redis->timeout = 0;
+config_api_init(struct config_api *api) {
+    string_init(&api->url);
+    api->timeout = 0;
 }
 
 static void
-config_redis_deinit(struct config_redis *redis) {
-    string_deinit(&redis->host);
-    string_deinit(&redis->password);
+config_api_deinit(struct config_api *api) {
+    string_deinit(&api->url);
 }
 
 static void
@@ -262,6 +261,14 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
             cfg->upstreams.maxreconn = atoi((char *)val->data);
         } else if (rps_strcmp(key, "maxretry") == 0) { 
             cfg->upstreams.maxretry = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "mr1m") == 0) { 
+            cfg->upstreams.mr1m = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "mr1h") == 0) { 
+            cfg->upstreams.mr1h = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "mr1d") == 0) { 
+            cfg->upstreams.mr1d = atoi((char *)val->data);
+        } else if (rps_strcmp(key, "max_fail_rate") == 0) { 
+            cfg->upstreams.max_fail_rate = atof((char *)val->data);
         } else {
             status = RPS_ERROR;
         }
@@ -269,22 +276,14 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
         upstream = (struct config_upstream *)array_head(cfg->upstreams.pools);
         if (rps_strcmp(key, "proto") == 0) {
             status = string_copy(&upstream->proto, val);
-        } else if (rps_strcmp(key, "rediskey") == 0) {
-            status = string_copy(&upstream->rediskey, val);
         } else {
             status = RPS_ERROR;
         }
-    } else if (rps_strcmp(section, "redis") == 0) {
-        if (rps_strcmp(key, "host") == 0) {
-            status = string_copy(&cfg->redis.host, val);
-        } else if (rps_strcmp(key, "port") == 0) {
-            cfg->redis.port = atoi((char *)val->data);
-        } else if (rps_strcmp(key, "db") == 0) {
-            cfg->redis.db = atoi((char *)val->data);
-        } else if (rps_strcmp(key, "password") == 0){
-            status = string_copy(&cfg->redis.password, val);
+    } else if (rps_strcmp(section, "api") == 0) {
+        if (rps_strcmp(key, "url") == 0) {
+            status = string_copy(&cfg->api.url, val);
         } else if (rps_strcmp(key, "timeout") == 0) {
-            cfg->redis.timeout = atoi((char *)val->data);
+            cfg->api.timeout = atoi((char *)val->data);
         } else {
             status = RPS_ERROR;
         }
@@ -347,7 +346,7 @@ config_load(char *filename, struct config *cfg) {
         goto error;
     }
 
-    config_redis_init(&cfg->redis);
+    config_api_init(&cfg->api);
 
     config_log_init(&cfg->log);
 
@@ -638,7 +637,6 @@ config_dump_upstream(void *data) {
     struct config_upstream *upstream = data;
 
     log_debug("\t - proto: %s", upstream->proto.data);
-    log_debug("\t   rediskey: %s", upstream->rediskey.data);
     log_debug("");
 }
 
@@ -660,16 +658,17 @@ config_dump(struct config *cfg) {
     log_debug("\t hybrid: %d", cfg->upstreams.hybrid);
     log_debug("\t maxreconn: %d", cfg->upstreams.maxreconn);
     log_debug("\t maxretry: %d", cfg->upstreams.maxretry);
+    log_debug("\t mr1m: %d", cfg->upstreams.mr1m);
+    log_debug("\t mr1h: %d", cfg->upstreams.mr1h);
+    log_debug("\t mr1d: %d", cfg->upstreams.mr1d);
+    log_debug("\t max_fail_rate: %.2f", cfg->upstreams.max_fail_rate);
     log_debug("");
     array_foreach(cfg->upstreams.pools, config_dump_upstream);
 
     
-    log_debug("[redis]");
-    log_debug("\t host: %s", cfg->redis.host.data);
-    log_debug("\t port: %d", cfg->redis.port);
-    log_debug("\t db: %d", cfg->redis.db);
-    log_debug("\t password: %s", cfg->redis.password.data);
-    log_debug("\t timeout: %d", cfg->redis.timeout);
+    log_debug("[api]");
+    log_debug("\t url: %s", cfg->api.url.data);
+    log_debug("\t timeout: %d", cfg->api.timeout);
     log_debug("");
     
     log_debug("[log]");
@@ -718,7 +717,7 @@ config_deinit(struct config *cfg) {
 
     config_upstreams_deinit(&cfg->upstreams);
 
-    config_redis_deinit(&cfg->redis);
+    config_api_deinit(&cfg->api);
 
     config_log_deinit(&cfg->log);
 }

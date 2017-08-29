@@ -13,6 +13,10 @@
 #define UPSTREAM_DEFAULT_BYBRID     0
 #define UPSTREAM_DEFAULT_MAXRECONN   3
 #define UPSTREAM_DEFAULT_MAXRETRY   3
+#define UPSTREAM_DEFAULT_MR1M   0
+#define UPSTREAM_DEFAULT_MR1H   0
+#define UPSTREAM_DEFAULT_MR1D   0
+#define UPSTREAM_DEFAULT_MAX_FIAL_RATE  0.0
 
 struct config_servers {
     rps_array_t     *ss;
@@ -30,7 +34,6 @@ struct config_server {
 
 struct config_upstream {
     rps_str_t       proto;
-    rps_str_t       rediskey;
 };
 
 struct config_upstreams {
@@ -39,15 +42,16 @@ struct config_upstreams {
     unsigned        hybrid:1;
     uint32_t        maxreconn;
     uint32_t        maxretry;
+    uint32_t        mr1m;
+    uint32_t        mr1h;
+    uint32_t        mr1d;
+    float           max_fail_rate;
     rps_array_t     *pools;
 };
 
-struct config_redis {
-    rps_str_t   host;
-    uint16_t    port;
-    uint16_t    db;
-    rps_str_t   password;
-    uint32_t    timeout;
+struct config_api {
+    rps_str_t       url;
+    uint32_t        timeout;
 };
 
 struct config_log {
@@ -64,7 +68,7 @@ struct config {
     unsigned                daemon:1;
     struct config_servers   servers;
     struct config_upstreams upstreams;
-    struct config_redis     redis;
+    struct config_api       api;
     struct config_log       log;
     rps_array_t             *args;
     uint32_t                depth;

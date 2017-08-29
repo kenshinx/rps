@@ -4,6 +4,7 @@
 #include "core.h"
 #include "util.h"
 #include "array.h"
+#include "queue.h"
 #include "_string.h"
 #include "config.h"
 
@@ -11,7 +12,14 @@
 
 #define UPSTREAM_DEFAULT_WEIGHT 10
 #define UPSTREAM_DEFAULT_POOL_LENGTH 1000
+#define UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH 1000
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
+
+#define UPSTREAM_MIN_FAILURE   10
+#define UPSTREAM_MAX_LOOP      10
+
+#define UPSTREAM_KEY_MAX_LENGTH 128
+#define UPSTREAM_PAYLOAD_MAX_LENGTH 512
 
 enum upstream_schedule {
     up_rr,         /* round-robin */
@@ -28,15 +36,30 @@ struct upstream  {
     rps_proto_t proto;
     rps_str_t   uname;
     rps_str_t   passwd;
+    rps_str_t   source;
+
     uint16_t    weight;
+    uint32_t    success;
+    uint32_t    failure;
     uint32_t    count;
+
+    rps_ts_t    insert_date;
+
+    /* The time wheel which be used to control the QPS
+     * The element storaged in queue are long int expressed timestamp, 
+     * 4 bytes in 32bit platform, 8 bytes in 64 bits which exactly the pointer length on various platform.
+     */
+    rps_queue_t timewheel;
+    
+    uint8_t     enable:1;
 };
 
 struct upstream_pool {
     rps_array_t             *pool;
     rps_proto_t             proto;
-    rps_str_t               rediskey;
-    struct config_redis     *cr;
+    rps_str_t               api;
+    rps_str_t               stats_api;
+    uint32_t                timeout; //api request max timeout
     uint32_t                index;
     uv_rwlock_t             rwlock;
 };
@@ -46,6 +69,10 @@ struct upstreams {
     bool                    hybrid;
     uint16_t                maxreconn;
     uint16_t                maxretry;
+    uint32_t                mr1m;
+    uint32_t                mr1h;
+    uint32_t                mr1d;
+    float                   max_fail_rate;
     rps_array_t             pools;
     uv_cond_t               ready;
     uv_mutex_t              mutex;
@@ -56,9 +83,8 @@ void upstream_init(struct upstream *u);
 void upstream_deinit(struct upstream *u);
 
 rps_status_t upstreams_init(struct upstreams *us, 
-        struct config_redis *cr, struct config_upstreams *cu);
-rps_status_t upstreams_get(struct upstreams *us, rps_proto_t proto, 
-        struct upstream *u);
+        struct config_api *api, struct config_upstreams *cu);
+struct upstream  *upstreams_get(struct upstreams *us, rps_proto_t proto);
 void upstreams_deinit(struct upstreams *us);
 void upstreams_refresh(uv_timer_t *handle);
 

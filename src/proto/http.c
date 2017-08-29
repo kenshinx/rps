@@ -474,7 +474,7 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
    static uint8_t lowcase[] =
         "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
         "\0\0\0\0\0\0\0\0\0\0\0\0\0-\0\0" "0123456789\0\0\0\0\0\0"
-        "\0abcdefghijklmnopqrstuvwxyz\0\0\0\0\0"
+        "\0abcdefghijklmnopqrstuvwxyz\0\0\0\0_"
         "\0abcdefghijklmnopqrstuvwxyz\0\0\0\0\0"
         "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
         "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
@@ -504,13 +504,13 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
                 break;
             }
 
-            log_error("http parse request header error, invalid symbol in key");
+            log_error("http parse header error, invalid symbol in key");
             return RPS_ERROR;
 
         case sw_key:
 
             if (ki >= HTTP_HEADER_MAX_KEY_LENGTH) {
-                log_error("http parse request header error, too large key");
+                log_error("http parse header error, too large key");
                 return RPS_ERROR;
             }
 
@@ -526,7 +526,7 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
                 break;
             }
 
-            log_error("http parse request header error, junk in key");
+            log_error("http parse header error, junk in key");
             return RPS_ERROR;
 
         case sw_space_before_value:
@@ -543,7 +543,7 @@ http_parse_header_line(rps_str_t *line, rps_hashmap_t *headers) {
 
         case sw_value:
             if (vi >= HTTP_HEADER_MAX_VALUE_LENGTH) {
-                log_error("http parse request header error, too large value");
+                log_error("http parse header error, too large value");
                 return RPS_ERROR;
             }
 
@@ -1307,7 +1307,7 @@ next:
     if (result == http_verify_success) {
         remote = &ctx->sess->remote;
         rps_addr_name(remote, req->host.data, req->host.len, req->port);
-        log_debug("http client handshake success");
+        log_verb("http client handshake success");
         log_debug("remote: %s:%d", req->host.data, req->port);
     }
 
@@ -1396,7 +1396,7 @@ http_send_request(struct context *ctx) {
                 strlen(BYPASS_PROXY_HEADER[i]));
     } 
 
-    u = &ctx->sess->upstream;
+    u = ctx->sess->upstream;
     
     if (!string_empty(&u->uname)) {
         /* autentication required */

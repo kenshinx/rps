@@ -5,31 +5,63 @@
 #include "_string.h"
 
 #include <uv.h>
-#include <hiredis.h>
 #include <jansson.h>
+#include <curl/curl.h>
 
+typedef struct upstream * (*upstream_pool_get_algorithm)(struct upstream_pool *);
+
+struct curl_buf {
+    uint8_t *buf;
+    size_t  len;
+};
 
 void
 upstream_init(struct upstream *u) {
     string_init(&u->uname);   
     string_init(&u->passwd);   
+    string_init(&u->source);
     u->weight = UPSTREAM_DEFAULT_WEIGHT;
+    u->proto = UNSUPPORT;
+    u->success = 0;
+    u->failure = 0;
     u->count = 0;
+    u->insert_date = 0;
+    u->enable = 0;
 
+    queue_null(&u->timewheel);
 }
 
 void
 upstream_deinit(struct upstream *u) {
     string_deinit(&u->uname);
     string_deinit(&u->passwd);
+    string_deinit(&u->source);
+    u->success = 0;
+    u->failure = 0;
     u->count = 0;
+    u->insert_date = 0;
+
+    if (!queue_is_null(&u->timewheel)) {
+        queue_deinit(&u->timewheel);
+    }
 }
+
+static rps_status_t
+upstream_init_timewheel(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uint32_t mr1d) {
+    uint32_t n;
+
+    n = MAX(MAX(mr1m, mr1h), mr1d);
+    
+    n = n > 0 ? n : UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH;
+
+    return queue_init(&u->timewheel, n);
+}
+
 
 static void
 upstream_copy(struct upstream *dst, struct upstream *src) {
     dst->proto = src->proto;
     dst->weight = src->weight;
-    dst->count = src->count;
 
     memcpy(&dst->server, &src->server, sizeof(src->server));
     if (!string_empty(&src->uname)) {
@@ -38,6 +70,22 @@ upstream_copy(struct upstream *dst, struct upstream *src) {
     if (!string_empty(&src->passwd)) {
         string_copy(&dst->passwd, &src->passwd);
     }
+    if (!string_empty(&src->source)) {
+        string_copy(&dst->source, &src->source);
+    }
+
+    dst->insert_date = src->insert_date;
+    dst->enable = src->enable;
+}
+
+static int 
+upstream_key(struct upstream *u, char *key, size_t max_size) {
+    char name[MAX_HOSTNAME_LEN];
+
+    rps_unresolve_addr(&u->server, name);   
+
+    return snprintf(key, max_size, "%s://%s:%d", rps_proto_str(u->proto), name, 
+            rps_unresolve_port(&u->server));
 }
 
 #ifdef RPS_DEBUG_OPEN
@@ -49,17 +97,115 @@ upstream_str(void *data) {
     u = (struct upstream *)data;
 
     rps_unresolve_addr(&u->server, name);
-    log_verb("\t%s://%s:%s@%s:%d #%d", rps_proto_str(u->proto), u->uname.data, 
-            u->passwd.data, name, rps_unresolve_port(&u->server), u->count);
+    log_verb("\t%s://%s:%s@%s:%d (s:%d, f:%d, c:%d, d:%d)", rps_proto_str(u->proto), 
+            u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server), 
+            u->success, u->failure, u->count, queue_n(&u->timewheel));
 }
 #endif
 
+static bool
+upstream_freshly(struct upstream *u) {
+    return queue_is_null(&u->timewheel);
+}
+
+static bool
+upstream_poor_quality(struct upstream *u, float max_fail_rate) {
+    float fail_rate;
+
+    if (u->failure <= UPSTREAM_MIN_FAILURE) {
+        return false;
+    }
+
+    if (max_fail_rate == 0.0) {
+        //ignore max_fail_rate if be setted to 0
+        return false;
+    }
+
+    fail_rate = (u->failure/(float)(u->failure + u->success));
+
+    return fail_rate > max_fail_rate;
+}
+
+
+static bool
+upstream_request_too_often(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uint32_t mr1d) {
+    uint32_t m, h, d;   
+    uint32_t i, j, n;
+    rps_ts_t now, m_ago, h_ago, d_ago;
+    rps_ts_t ts;
+    rps_ts_t deadline;
+    rps_queue_t *timewheel;
+
+    m = 0;
+    h = 0;
+    d = 0;
+
+    now = time(NULL);
+    m_ago = now - 60;
+    h_ago = now - 60 * 60;
+    d_ago = now - 60 * 60 * 24;
+
+    timewheel = &u->timewheel;
+
+    i = timewheel->head;
+    n = queue_n(timewheel);
+    
+    if (mr1d > 0) {
+        deadline = d_ago;
+    } else if (mr1h > 0) {
+        deadline = h_ago;
+    } else if (mr1m > 0) {
+        deadline = m_ago;
+    } else {
+        deadline = now;
+    }
+    
+    for (j = 0; j < n; j++) {
+        ts = (rps_ts_t)timewheel->elts[i];
+        i = (i + 1) % timewheel->nelts;
+
+        //remove the ts older than deadline.
+        if (ts < deadline) {
+            queue_de(timewheel);
+            continue;   
+        }
+
+        if (ts > m_ago) {
+            m += 1;
+            h += 1;
+            continue;
+        }
+
+        if (ts > h_ago) {
+            h += 1;
+        }
+    }
+
+    d = queue_n(timewheel); 
+
+    return ((mr1m != 0 && m >= mr1m) || 
+            (mr1h != 0 && h >= mr1h) || 
+            (mr1d != 0 && d >= mr1d));
+}
+
+static void
+upstream_timewheel_add(struct upstream *u) {
+    rps_ts_t now;
+    
+    now = time(NULL);
+
+    queue_en(&u->timewheel, (void *)now);
+}
+
 static rps_status_t
 upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu, 
-        struct config_redis *cr) {
+        struct config_api *capi) {
+    char api[MAX_API_LENGTH];
+    char stats_api[MAX_API_LENGTH];
+
     up->index = 0;
-    up->cr = cr;
     up->pool = NULL;
+    up->timeout = capi->timeout;
     uv_rwlock_init(&up->rwlock);
 
     up->proto = rps_proto_int((const char *)cu->proto.data);
@@ -68,8 +214,28 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
         return RPS_ERROR;
     }
     
-    string_init(&up->rediskey);
-    if (string_copy(&up->rediskey, &cu->rediskey) != RPS_OK) {
+    string_init(&up->api);
+    string_init(&up->stats_api);
+    switch (up->proto) {
+    case SOCKS5:
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5/", capi->url.data);
+        snprintf(stats_api, MAX_API_LENGTH, "%s/stats/socks5/", capi->url.data);
+        break;
+    case HTTP:
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/http/", capi->url.data);
+        snprintf(stats_api, MAX_API_LENGTH, "%s/stats/http/", capi->url.data);
+        break;
+    case HTTP_TUNNEL:
+        snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel/", capi->url.data);
+        snprintf(stats_api, MAX_API_LENGTH, "%s/stats/http_tunnel/", capi->url.data);
+        break;
+    default:
+        NOT_REACHED();
+    }
+    if (string_duplicate(&up->api, api, strlen(api)) != RPS_OK) {
+        return RPS_ERROR;
+    }
+    if (string_duplicate(&up->stats_api, stats_api, strlen(stats_api)) != RPS_OK) {
         return RPS_ERROR;
     }
 
@@ -91,8 +257,10 @@ upstream_pool_deinit(struct upstream_pool *up) {
         array_destroy(up->pool);
     }
     up->pool = NULL;
+    string_deinit(&up->api);
+    string_deinit(&up->stats_api);
+    up->timeout = 0;
     up->index = 0;
-    up->cr = NULL;
     uv_rwlock_destroy(&up->rwlock);
 } 
 
@@ -105,7 +273,7 @@ upstream_pool_dump(struct upstream_pool *up) {
 #endif
 
 rps_status_t 
-upstreams_init(struct upstreams *us, struct config_redis *cr, 
+upstreams_init(struct upstreams *us, struct config_api *capi, 
         struct config_upstreams *cus) {
 
     rps_status_t status;
@@ -117,6 +285,10 @@ upstreams_init(struct upstreams *us, struct config_redis *cr,
     us->hybrid = cus->hybrid;   
     us->maxreconn = cus->maxreconn;
     us->maxretry = cus->maxretry;
+    us->mr1m = cus->mr1m;
+    us->mr1h = cus->mr1h;
+    us->mr1d = cus->mr1d;
+    us->max_fail_rate = cus->max_fail_rate;
 
     schedule = &cus->schedule;
     if (rps_strcmp(schedule, "rr") == 0) {
@@ -141,7 +313,7 @@ upstreams_init(struct upstreams *us, struct config_redis *cr,
         up = (struct upstream_pool *)array_push(&us->pools);
         cu = (struct config_upstream *)array_get(cus->pools, i);
         
-        if (upstream_pool_init(up, cu, cr) != RPS_OK) {
+        if (upstream_pool_init(up, cu, capi) != RPS_OK) {
             goto error;
         }
     }
@@ -153,6 +325,8 @@ upstreams_init(struct upstreams *us, struct config_redis *cr,
     if (uv_cond_init(&us->ready) < 0) {
         goto error;     
     }
+
+    curl_global_init(CURL_GLOBAL_ALL);
     
     us->once = 0;
 
@@ -173,74 +347,29 @@ upstreams_deinit(struct upstreams *us) {
         upstream_pool_deinit((struct upstream_pool *)array_pop(&us->pools));
     }
 
+    array_deinit(&us->pools);
+
     uv_mutex_destroy(&us->mutex);
     uv_cond_destroy(&us->ready);
-}
-
-static redisContext *
-upstream_redis_connect(struct config_redis *cfg) {
-    redisContext *c;
-    redisReply  *reply;
-    
-    struct timeval timeout = {cfg->timeout, 0};
-
-    c = redisConnectWithTimeout((const char *)cfg->host.data, (int)cfg->port, timeout);
-
-    if (c == NULL || c->err) { 
-        if (c) {
-            log_error("connect redis %s:%d failed: %s\n", cfg->host.data, cfg->port, c->errstr);
-            redisFree(c);
-        } else {
-            log_error("connect redis %s:%d failed, can't allocate redis context",
-                    cfg->host.data, cfg->port);
-        }
-
-        return NULL;
-    }
-
-    if (string_empty(&cfg->password)) {
-        log_debug("connect redis %s:%d success", cfg->host.data, cfg->port);
-        return c;
-    }
-    
-    reply= redisCommand(c, "AUTH %s", cfg->password.data);
-    if (reply == NULL || reply->type == REDIS_REPLY_ERROR) {
-        if (reply) {
-            freeReplyObject(reply);
-        }
-        log_error("redis authentication failed.");
-		redisFree(c);
-        return NULL;
-    }
-
-    freeReplyObject(reply);
- 
-    log_debug("connect redis %s:%d success", cfg->host.data, cfg->port);
-
-    return c;
+    curl_global_cleanup();
 }
 
 static rps_status_t
-upstream_json_parse(const char *str, struct upstream *u) {
-    json_t *root;
-    json_error_t error;
+upstream_json_parse(struct upstream *u, json_t *element) {
     rps_str_t host;
     uint16_t port;
     void *kv;
     rps_status_t status;
 
-    port = 0;
-
-    string_init(&host);
-
-    root = json_loads(str, 0, &error);
-    if (!root) {
-        log_error("json decode '%s' error: %s", str, error.text);
+    if (json_typeof(element) != JSON_OBJECT) {
         return RPS_ERROR;
     }
+
+    port = 0;
+    status = RPS_OK;
+    string_init(&host);
     
-    for (kv = json_object_iter(root); kv; kv = json_object_iter_next(root, kv)) {
-        status = RPS_OK;
+    for (kv = json_object_iter(element); kv; kv = json_object_iter_next(element, kv)) {
         json_t *tmp = json_object_iter_value(kv);
         if (strcmp(json_object_iter_key(kv), "host") == 0 && 
                 json_typeof(tmp) == JSON_STRING) {
@@ -264,8 +393,21 @@ upstream_json_parse(const char *str, struct upstream *u) {
             if (json_typeof(tmp) == JSON_STRING) {
                 status = string_duplicate(&u->passwd, json_string_value(tmp), json_string_length(tmp));
             }
+        } else if (strcmp(json_object_iter_key(kv), "source") == 0) {
+            /* Ignore source is null */
+            if (json_typeof(tmp) == JSON_STRING) {
+                status = string_duplicate(&u->source, json_string_value(tmp), json_string_length(tmp));
+            }
         } else if (strcmp(json_object_iter_key(kv), "weight") == 0) {
             u->weight = (uint16_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "success") == 0) {
+            u->success = (uint32_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "failure") == 0) {
+            u->failure = (uint32_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "insert_date") == 0) {
+            u->insert_date = (rps_ts_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "enable") == 0) {
+            u->enable = (uint8_t)json_integer_value(tmp);
         } else {
             status = RPS_ERROR;
         }
@@ -273,7 +415,6 @@ upstream_json_parse(const char *str, struct upstream *u) {
         if (status != RPS_OK) {
             log_error("json parse '%s:%s' error", json_object_iter_key(kv), json_string_value(tmp));
             string_deinit(&host);
-            json_decref(root);
             return status;
         }
     }
@@ -281,59 +422,220 @@ upstream_json_parse(const char *str, struct upstream *u) {
     status = rps_resolve_inet((const char *)host.data, port, &u->server);
     if (status != RPS_OK) {
         log_error("jason parse error, invalid upstream address, %s:%d", host.data, port);
-        string_deinit(&host);
-        json_decref(root);
-        return status;
     }
 
     string_deinit(&host);
-    json_decref(root);
-    return RPS_OK;
+    return status;
 
 }
 
 static rps_status_t
-upstream_pool_load(rps_array_t *pool, struct config_redis *cr, rps_str_t *rediskey) {
-    redisContext *c;
-    redisReply  *reply;
+upstream_pool_json_parse(rps_array_t *pool, struct curl_buf *resp) {
+    json_t *root;
+    json_t *element;
+    json_error_t error;
     struct upstream *upstream;
+    size_t  len;
     size_t i;
 
-    c =  upstream_redis_connect(cr);
-    if (c == NULL) {
+    i = 0;
+    len = 0;
+
+    root = json_loads((const char *)resp->buf, 0, &error);
+    if (!root) {
+        log_error("json decode upstream pool error: %s", error.text);
         return RPS_ERROR;
     }
 
-    reply = redisCommand(c, "SMEMBERS %s", rediskey->data);
-    if (reply == NULL || reply->type != REDIS_REPLY_ARRAY) {
-        if (reply) {
-            freeReplyObject(reply);
-        }
-        log_error("redis get upstreams failed.");	
-		redisFree(c);
+    if (json_typeof(root) != JSON_ARRAY) {
+        log_error("json invalid records,  response should be array");
+        json_decref(root);
         return RPS_ERROR;
     }
 
-	redisFree(c);
-
-    for (i = 0; i < reply->elements; i++) {
+    len = json_array_size(root);
+    for (i = 0; i < len; i++) {
+        element = json_array_get(root, i);
         upstream = (struct upstream *)array_push(pool);
         upstream_init(upstream);
-        if (upstream_json_parse(reply->element[i]->str, upstream) != RPS_OK) {
+        if (upstream_json_parse(upstream, element) != RPS_OK) {
             array_pop(pool);
             upstream_deinit(upstream);
         }
     }
 
-    freeReplyObject(reply);
+    json_decref(root);
+
+    return RPS_OK;
+}
+
+static size_t
+upstream_pool_load_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize;
+    struct curl_buf *resp;
+        
+    realsize = size * nmemb;
+
+    resp = (struct curl_buf *)userp;
+    resp->buf = rps_realloc(resp->buf, resp->len + realsize + 1);
+    if (resp->buf == NULL) {
+        log_error("fetech upstreams error, not enough memory");
+        return 0;
+    }
+
+    memcpy(&resp->buf[resp->len], contents, realsize); 
+    resp->len += realsize;
+    resp->buf[resp->len] = '\0';
+    
+    return realsize;
+}
+
+static rps_status_t
+upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
+    CURL *curl_handle;
+    CURLcode res;
+    struct curl_buf resp;
+    rps_status_t status;
+
+    resp.buf = rps_alloc(1);
+    resp.len = 0;
+
+    curl_handle = curl_easy_init();
+    curl_easy_setopt(curl_handle, CURLOPT_URL, api->data);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, upstream_pool_load_callback);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&resp);
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, RPS_CURL_UA);
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
+    res = curl_easy_perform(curl_handle);
+
+    if(res != CURLE_OK) {
+        log_error("fetch upstreams from '%s' trigger error. %s", 
+                api->data,  curl_easy_strerror(res));
+        status = RPS_ERROR;
+    } else {
+        log_verb("fetch upstreams from '%s' success, %zu bytes", api->data, resp.len);
+        status = RPS_OK;
+    }
+    
+    if (status == RPS_OK) {
+        upstream_pool_json_parse(pool, &resp);
+    }
+    
+    curl_easy_cleanup(curl_handle);
+    rps_free(resp.buf);
+
+    return status;
+}
+static rps_status_t
+upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
+    rps_hashmap_t map;
+    struct upstream *u, *nu, *ou;
+    struct upstream **pu;
+    char u_key[UPSTREAM_KEY_MAX_LENGTH];
+    uint32_t i;
+    size_t key_size;
+    size_t val_size;
+
+    u = NULL;
+    ou = NULL;
+    nu = NULL;
+    pu = NULL;
+
+    hashmap_init(&map, 2 * array_n(n_pool), 0.05);
+    
+    for (i = 0; i < array_n(o_pool); i++) {
+        u = array_get(o_pool, i);   
+        key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
+        hashmap_set(&map, u_key, key_size, &u, sizeof(u));
+    }
+
+    for (i = 0; i < array_n(n_pool); i++) {
+        u = array_get(n_pool, i);
+        key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
+        pu = hashmap_get(&map, u_key, key_size, &val_size);
+        if (pu == NULL) { 
+            /* insert new upstream proxy */
+            if (!u->enable) {
+                continue;
+            }
+            nu = array_push(o_pool);
+            upstream_init(nu);
+            upstream_copy(nu, u);
+
+            hashmap_set(&map, u_key, key_size, &nu, sizeof(nu));
+            
+        } else {
+            /* update existence proxy*/
+            ou = *pu;
+            if (!u->enable && ou->enable) {
+                ou->enable = 0;
+            } else if (u->enable && !ou->enable) {
+                ou->enable = 1;
+                ou->failure /= 2; /* shrink the fail rate */
+            }
+        }
+    }
+
+    hashmap_deinit(&map);
 
     return RPS_OK;
 }
 
 static rps_status_t
-upstream_pool_refresh(struct upstream_pool *up) {
+upstream_stats_commit(struct upstream *u, rps_str_t *api, uint32_t timeout) {
+    CURL *curl_handle;
+    CURLcode res;
+    char name[MAX_HOSTNAME_LEN];
+    char payload[UPSTREAM_PAYLOAD_MAX_LENGTH];
+    rps_status_t status;
 
+    rps_unresolve_addr(&u->server, name);   
+    //avoid flush the output to stdout
+    FILE *devnull = fopen("/dev/null", "w+");
+
+    snprintf(payload, UPSTREAM_PAYLOAD_MAX_LENGTH, 
+        "ip=%s&port=%d&uname=%s&passwd=%s&source=%s&success=%d&failure=%d&count=%d&insert_date=%ld&enable=%d&timewheel=%d",
+        name, rps_unresolve_port(&u->server), u->uname.data, u->passwd.data, u->source.data, u->success,
+        u->failure, u->count,(long int)u->insert_date, u->enable, queue_n(&u->timewheel));
+
+    curl_handle = curl_easy_init();
+    curl_easy_setopt(curl_handle, CURLOPT_URL, api->data);
+    curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, payload);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, devnull);
+    curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, RPS_CURL_UA);
+    curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
+    res = curl_easy_perform(curl_handle);
+
+    if(res != CURLE_OK) {
+        log_error("post upstream (%s:%d) statistic to '%s' trigger error. %s", 
+                name, rps_unresolve_port(&u->server), api->data,  curl_easy_strerror(res));
+        status = RPS_ERROR;
+    } else {
+        //log_verb("post upstream (%s:%d) statistic success", name, rps_unresolve_port(&u->server));
+        status = RPS_OK;
+    }
+    
+    curl_easy_cleanup(curl_handle);
+    fclose(devnull);
+    return status;
+}
+
+static void
+upstream_pool_stats(struct upstream_pool *up) {
+    struct upstream *u;
+    uint32_t i;
+
+    for (i = 0; i < array_n(up->pool); i++) {
+        u = array_get(up->pool, i);
+        upstream_stats_commit(u, &up->stats_api, up->timeout);
+    }
+}
+
+static rps_status_t
+upstream_pool_refresh(struct upstream_pool *up) {
     rps_array_t *new_pool;
+
+    upstream_pool_stats(up);
 
     /* Free current upstream pool only when new pool load successful */
 
@@ -343,7 +645,7 @@ upstream_pool_refresh(struct upstream_pool *up) {
     }
 
 
-    if (upstream_pool_load(new_pool, up->cr, &up->rediskey) != RPS_OK) {
+    if (upstream_pool_load(new_pool, &up->api, up->timeout) != RPS_OK) {
         while(array_n(new_pool)) {
             upstream_deinit((struct upstream *)array_pop(new_pool));
         }
@@ -353,7 +655,7 @@ upstream_pool_refresh(struct upstream_pool *up) {
     }
 
     uv_rwlock_wrlock(&up->rwlock);
-    array_swap(&up->pool, &new_pool);
+    upstream_pool_merge(up->pool, new_pool);
     uv_rwlock_wrunlock(&up->rwlock);
     
     if (new_pool != NULL) {
@@ -391,13 +693,11 @@ upstreams_refresh(uv_timer_t *handle) {
 
         if (upstream_pool_refresh(up) != RPS_OK) { 
             log_error("update %s upstream proxy pool failed", proto) ;
-    log_debug("");
             return;
         } else {
             log_debug("refresh %s upstream pool, get <%d> proxys", proto, array_n(up->pool));
         }
     }
-
     
     //run only once
     if (us->once == 0) {
@@ -450,14 +750,18 @@ upstream_pool_get_random(struct upstream_pool *up) {
     
 }
 
-rps_status_t
-upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
+struct upstream *
+upstreams_get(struct upstreams *us, rps_proto_t proto) {
     struct upstream *upstream;
     struct upstream_pool *up;
     int i, len;
+    int count;
+    upstream_pool_get_algorithm get_func;
 
     upstream = NULL;
     up = NULL;
+    get_func = NULL;
+    count = 0;
 
     if (us->hybrid) {
         if (proto == HTTP_TUNNEL || proto == SOCKS5) {
@@ -481,34 +785,68 @@ upstreams_get(struct upstreams *us, rps_proto_t proto, struct upstream *u) {
         }
     }
 
-    uv_rwlock_rdlock(&up->rwlock);
-
     switch (us->schedule) {
         case up_rr:
-            upstream = upstream_pool_get_rr(up);
+            get_func = upstream_pool_get_rr;
             break;
         case up_random:
-            upstream = upstream_pool_get_random(up);       
+            get_func = upstream_pool_get_random;
             break;
         case up_wrr:
         default:
             NOT_REACHED();
     }   
 
-    if (upstream == NULL) {
-        uv_rwlock_rdunlock(&up->rwlock);
-        return RPS_EUPSTREAM;
+    uv_rwlock_rdlock(&up->rwlock);
+
+    for ( ; ; ) {
+        if (count >= UPSTREAM_MAX_LOOP) {
+            break;
+        }
+
+        upstream = get_func(up);
+
+        count += 1;
+
+        if (upstream == NULL) {
+            break;
+        }
+
+        if (!upstream->enable) {
+            continue;
+        }
+
+        if (upstream_poor_quality(upstream, us->max_fail_rate)) {
+            upstream->enable = 0;
+            continue;
+        }
+
+        if (upstream_freshly(upstream)) {
+            upstream_init_timewheel(upstream, us->mr1m, us->mr1h, us->mr1d);
+            break;
+        }
+
+        if (upstream_request_too_often(upstream, us->mr1m, us->mr1h, us->mr1d)) {
+            upstream = NULL;
+            continue;
+        }
+
+        break;
     }
 
-    upstream->count++;
-
-    upstream_copy(u, upstream);
-
 #if RPS_DEBUG_OPEN
-    upstream_str(upstream);
+    if (upstream != NULL) {
+        upstream_str(upstream);
+    } 
 #endif
     
+    if (upstream != NULL) {
+        upstream->count += 1;    
+        if (us->mr1m > 0 || us->mr1h > 0 || us->mr1d >0) {
+            upstream_timewheel_add(upstream);
+        }
+    }
+    
     uv_rwlock_rdunlock(&up->rwlock);
-
-    return RPS_OK;
+    return upstream;
 }

@@ -12,7 +12,6 @@ array_init(rps_array_t *a, uint32_t n, size_t size) {
 
     a->elts = rps_calloc(n,  size);
     if (a->elts == NULL) {
-        rps_free(a);
         return RPS_ENOMEM;
     }
 
@@ -44,6 +43,7 @@ array_create(uint32_t n, size_t size) {
 
     status = array_init(a, n, size);
     if (status != RPS_OK) {
+        rps_free(a);
         return NULL;
     }
     
