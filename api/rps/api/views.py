@@ -74,27 +74,33 @@ def proxy(tag, proto):
         records.append(r)
     return jsonify(records)
 
-@api.route("/<tag>/stats/<any('socks5', 'http', 'http_tunnel'):proto>/", methods=["POST"])
+@api.route("/<tag>/stats/<any('socks5', 'http', 'http_tunnel'):proto>/", methods=["GET", "POST"])
 def stats(tag, proto):
     collection = mongo.db.u_stats
-    form = request.form
+    if request.method == "POST":
+        form = request.form
 
-    filter = {"tag":tag, "proto":proto, "host": form.get("ip", None), "port":form.get("port", None)}
-    set = {
-        "uname": form.get("uname", None),
-        "passwd": form.get("passwd", None),
-        "enable": form.get("enable", None),
-        "success": form.get("success", None),
-        "failure": form.get("failure", None),
-        "count": form.get("count", None),
-        "timewheel": form.get("timewheel", None),
-        "insert_date": form.get("insert_date", None),
-        "source": form.get("source", None),
-    }
+        filter = {"tag":tag, "proto":proto, "host": form.get("ip", None), "port":form.get("port", None)}
+        set = {
+            "uname": form.get("uname", None),
+            "passwd": form.get("passwd", None),
+            "enable": form.get("enable", None),
+            "success": form.get("success", None),
+            "failure": form.get("failure", None),
+            "count": form.get("count", None),
+            "timewheel": form.get("timewheel", None),
+            "insert_date": form.get("insert_date", None),
+            "source": form.get("source", None),
+        }
 
-    collection.update(filter, {"$set":set}, upsert=True)
+        collection.update(filter, {"$set":set}, upsert=True)
 
-    return jsonify(status="ok")
+        return jsonify(status="ok")
+
+    elif request.method == "GET":
+        filter = {"tag":tag, "proto":proto}
+        records = [r for r in collection.find(filter, {"_id":0})]
+        return jsonify(records)
 
 
 
