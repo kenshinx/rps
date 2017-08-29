@@ -35,7 +35,7 @@ servers:
 
 
 upstreams:
-    refresh: 600 #5 minutes
+    refresh: 600 #10 minutes
 
     #rr: round-robin
     #random: random schedule
@@ -54,22 +54,29 @@ upstreams:
     # Need re-connect, re-handshake, re-auth etc..
     maxretry: 3
 
+    #max reques in 1 minute, 0 means no limits
+    mr1m: 100
+
+    #max request in 1 hour, 0 means no limits
+    mr1h: 1000
+
+    #max request in 1 day, 0 means no limits
+    mr1d: 0
+
+    # The upstream's fail rate that higher than the setting value will be dropped.
+    # The bigger value means higher fail tolerance, 0 means ignore this options.
+    max_fail_rate: 0.7
+
     pools:
         - proto: socks5
-          rediskey: rps:upstream:socks5
 
         - proto: http
-          rediskey: rps:upstream:http
 
         - proto: http_tunnel
-          rediskey: rps:upstream:http_tunnel
 
-redis:
-    host: dev1
-    port: 6379
-    db: 0
-    password: tfqmcA0JvG04EHKDj
-    timeout: 5
+api:
+    url: http://localhost:9898/api/godaddy
+    timeout: 30
 
 log:
     file: ../logs/rps.log

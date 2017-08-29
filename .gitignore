@@ -24,3 +24,7 @@ script/.*.swp
 /test/s5_client
 src/b64/*.o
 /src/murmur3/murmur3.o
+/api/logs/rps_api.log
+bin
+logs
+*.pyc

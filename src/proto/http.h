@@ -9,7 +9,7 @@
 #define HTTP_HEADER_REHASH_THRESHOLD   0.05
 
 #define HTTP_HEADER_MAX_KEY_LENGTH     256
-#define HTTP_HEADER_MAX_VALUE_LENGTH   1024
+#define HTTP_HEADER_MAX_VALUE_LENGTH   2048
 
 #define HTTP_BODY_MAX_LENGTH    2048
 // 1M is big enough in our approach

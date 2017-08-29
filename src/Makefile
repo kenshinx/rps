@@ -1,12 +1,13 @@
 
 OS := $(shell sh -c 'uname -s 2>/dev/null || echo unknow')
-
+ROOT := $(shell sh -c 'cd .. ; pwd')
 OPTIMIZATION?=-O2
 
 
 RM=rm -rf
 PREFIX?=/usr/local
-INSTALL_BIN=$(PREFIX)/bin
+#INSTALL_BIN=$(PREFIX)/bin
+INSTALL_BIN=$(ROOT)/bin
 INSTALL=install
 
 STD=-std=c99 -pedantic
@@ -17,10 +18,9 @@ DYNAMIC=-rdynamic
 RPS_DEBUG = $(RPS_DEBUG_OPEN)
 GNU_SOURCE=-D_GNU_SOURCE #libuv need this declaration in linux platform.
 
-DEPENDENCY_TARGETS=yaml libuv hiredis jansson
+DEPENDENCY_TARGETS=yaml libuv jansson
 LIBYAML=yaml-0.1.5
 LIBUV=libuv-v1.9.1
-HIREDIS=hiredis-0.13.3
 JANSSON=jansson-2.9
 
 
@@ -31,11 +31,11 @@ FINAL_LDFLAGS=$(LDFLAGS) $(DEBUG) $(DYNAMIC)
 
 ifeq ($(OS), Linux)
 	FINAL_CFLAGS+=$(GNU_SOURCE) 
-	FINAL_LIBS+= -lm -lrt -lpthread
+	FINAL_LIBS+= -lm -lrt -lpthread -lcurl
 else
 ifeq ($(OS), Darwin)
 	FINAL_CFLAGS+=$(STD) 
-	FINAL_LIBS+= -lm
+	FINAL_LIBS+= -lm -lcurl
 endif
 endif
 
@@ -49,7 +49,6 @@ FINAL_CFLAGS+= -I../contrib/$(JANSSON)/src
 FINAL_LIBS+= ./proto/proto.a
 FINAL_LIBS+= ../contrib/$(LIBYAML)/src/.libs/libyaml.a
 FINAL_LIBS+= ../contrib/$(LIBUV)/.libs/libuv.a
-FINAL_LIBS+= ../contrib/$(HIREDIS)/libhiredis.a
 FINAL_LIBS+= ../contrib/$(JANSSON)/src/.libs/libjansson.a
 
 
@@ -60,7 +59,7 @@ RPS_INSTALL=$(INSTALL)
 
 
 RPS_BIN=rps
-RPS_OBJ=rps.o log.o config.o util.o array.o hashmap.o _string.o _signal.o upstream.o server.o \
+RPS_OBJ=rps.o log.o config.o util.o array.o queue.o hashmap.o _string.o _signal.o upstream.o server.o \
 		b64/cencode.o b64/cdecode.o murmur3/murmur3.o
 
 %.o: %.c
@@ -106,11 +105,6 @@ noopt:
 debug:
 	$(MAKE) OPTIMIZATION="-O0" RPS_DEBUG_OPEN="-DRPS_DEBUG_OPEN"
 
-valgrind: debug
-	valgrind --tool=memcheck --leak-check=yes --log-file=valgrind.log ./rps
-	
-	
-	
 test:
 	@echo $(FINAL_CFLAGS)
 	@echo $(FINAL_LIBS)

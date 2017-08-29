@@ -36,7 +36,7 @@ http_tunnel_send_request(struct context *ctx) {
     hashmap_set(&nreq.headers, (void *)key1, strlen(key1), (void *)val1, v1len);
 #endif
 
-    u = &ctx->sess->upstream;
+    u = ctx->sess->upstream;
     
     if (!string_empty(&u->uname)) {
         /* autentication required */
@@ -114,7 +114,7 @@ static void
 http_tunnel_do_auth(struct context *ctx) {
     struct upstream *u;
 
-    u = &ctx->sess->upstream;
+    u = ctx->sess->upstream;
 
     if (string_empty(&u->uname)) {
         goto retry;

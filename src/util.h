@@ -85,6 +85,7 @@ void _rps_assert(const char *cond, const char *file, int line);
 #define MAX_HOSTNAME_LEN 255
 #define MAX_INET_ADDRSTRLEN MAX_HOSTNAME_LEN
 #define AF_DOMAIN 60 /* AF_INET is 2, AF_INET6 is 30, so we get 60 */
+#define AF_UNKNOWN 0
 
 struct sockaddr_name {
     uint16_t    family;
@@ -102,6 +103,18 @@ typedef struct sockinfo {
         struct sockaddr_name    name;
     } addr;
 } rps_addr_t;
+
+static inline void
+rps_addr_init(rps_addr_t *addr) {
+    addr->family = AF_UNKNOWN;
+    addr->addrlen = 0;
+    memset(&addr->addr, 0, sizeof(addr->addr));
+}
+
+static inline bool
+rps_addr_uninit(rps_addr_t *addr) {
+    return ((addr->family == AF_UNKNOWN) && (addr->addrlen == 0));
+}
 
 static inline bool 
 rps_valid_port(int port) {

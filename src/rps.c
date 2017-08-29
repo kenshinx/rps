@@ -364,7 +364,7 @@ rps_run(struct application *app) {
     uv_thread_t *tid;
     rps_array_t threads;
 
-    upstreams_init(&app->upstreams, &app->cfg.redis, &app->cfg.upstreams);
+    upstreams_init(&app->upstreams, &app->cfg.api, &app->cfg.upstreams);
 
     status = rps_server_load(app);
     if (status != RPS_OK) {
