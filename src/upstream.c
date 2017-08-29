@@ -215,6 +215,7 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
     }
     
     string_init(&up->api);
+    string_init(&up->stats_api);
     switch (up->proto) {
     case SOCKS5:
         snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5/", capi->url.data);
