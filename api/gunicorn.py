@@ -2,7 +2,7 @@
 
 bind = '0.0.0.0:9898'
 
-daemon = True
+daemon = False
 
 workers = 5
 worker_class = 'sync'
