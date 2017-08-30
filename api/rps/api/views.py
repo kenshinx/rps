@@ -68,8 +68,8 @@ def proxy(tag, proto):
                 records.append(r)
                 continue                
 
-            if not r.get("enable", 0):
-                continue
+        if not r.get("enable", 0):
+            continue
     
         records.append(r)
     return jsonify(records)
