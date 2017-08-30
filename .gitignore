@@ -28,3 +28,4 @@ src/b64/*.o
 bin
 logs
 *.pyc
+.svn
