@@ -409,7 +409,7 @@ upstream_json_parse(struct upstream *u, json_t *element) {
         } else if (strcmp(json_object_iter_key(kv), "enable") == 0) {
             u->enable = (uint8_t)json_integer_value(tmp);
         } else {
-            status = RPS_ERROR;
+            continue;
         }
 
         if (status != RPS_OK) {
