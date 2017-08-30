@@ -91,6 +91,7 @@ def stats(tag, proto):
             "timewheel": form.get("timewheel", None),
             "insert_date": form.get("insert_date", None),
             "source": form.get("source", None),
+            "last_commit":datetime.now(),
         }
 
         collection.update(filter, {"$set":set}, upsert=True)
