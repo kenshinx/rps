@@ -29,3 +29,4 @@ bin
 logs
 *.pyc
 .svn
+/script/nd.py

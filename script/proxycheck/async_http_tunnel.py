@@ -25,7 +25,7 @@ class HTTPTunnelTimeout(Exception):
 
 class AsyncHTTPTunnelClient(asyncore.dispatcher):
 
-    MAX_LOOP_COUNT = 1000
+    MAX_LOOP_COUNT = 512
 
     WHOIS_PAYLOAD =  "google.com"
 
