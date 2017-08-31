@@ -541,6 +541,10 @@ upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
     nu = NULL;
     pu = NULL;
 
+    if (array_n(n_pool) == 0) {
+        return RPS_OK;
+    }
+
     hashmap_init(&map, 2 * array_n(n_pool), 0.05);
     
     for (i = 0; i < array_n(o_pool); i++) {
@@ -658,12 +662,10 @@ upstream_pool_refresh(struct upstream_pool *up) {
     upstream_pool_merge(up->pool, new_pool);
     uv_rwlock_wrunlock(&up->rwlock);
     
-    if (new_pool != NULL) {
-        while(array_n(new_pool)) {
-            upstream_deinit((struct upstream *)array_pop(new_pool));
-        }
-        array_destroy(new_pool);
+    while(array_n(new_pool)) {
+        upstream_deinit((struct upstream *)array_pop(new_pool));
     }
+    array_destroy(new_pool);
     
 
     #ifdef RPS_DEBUG_OPEN
