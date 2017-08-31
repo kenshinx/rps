@@ -10,5 +10,5 @@ MONGO_REPLICA_SET = "7528"
 
 
 
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.INFO
 LOG_FORMAT = "%(name)s %(message)s"
