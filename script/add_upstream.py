@@ -67,7 +67,7 @@ def main():
     parser.add_option("-s", "--source", action="store", dest="source", type="string", default="nf")
     parser.add_option("-f", "--file", action="store", dest="file", type="string")
     parser.add_option("-d", "--database", action="store", dest="db", type="string", 
-                    default="rps_test", help="[rps|rps_test]")
+                    default="rps_test", help="[rps|rps_test], default:%default")
     parser.add_option("", "--proto", action="store", dest="proto", type="string", default="socks5")
     options, args = parser.parse_args()
 
