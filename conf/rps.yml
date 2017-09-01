@@ -75,7 +75,7 @@ upstreams:
         - proto: http_tunnel
 
 api:
-    url: http://localhost:9898/api/godaddy
+    url: http://localhost:9897/api/godaddy
     timeout: 30
 
 log:
