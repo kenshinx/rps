@@ -53,6 +53,7 @@ def proxy(tag, proto):
         if not r.has_key("insert_date"):
             continue
         r["insert_date"] = dt2ts(r["insert_date"])
+        r["enable"] = int(r["enable"])
 
         ban = r.pop("ban", None)
         if ban is not None:
