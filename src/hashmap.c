@@ -240,6 +240,7 @@ hashmap_rehash(rps_hashmap_t *map, uint32_t new_size) {
     struct hashmap_entry *next;
     uint32_t i;
 
+
     ASSERT(new_size > map->size);
 
     hashmap_init(&new_map, new_size, map->max_load_factor);
@@ -252,7 +253,8 @@ hashmap_rehash(rps_hashmap_t *map, uint32_t new_size) {
 
         while (entry != NULL) {
             next = entry->next;
-            hashmap_set_entry(&new_map, entry);
+            hashmap_set(&new_map, entry->key, entry->key_size, 
+                    entry->value, entry->value_size);
             entry = next;
         }
         map->buckets[i] = NULL;
