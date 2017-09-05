@@ -222,7 +222,7 @@ hashmap_set_entry(rps_hashmap_t *map, struct hashmap_entry *entry) {
     map->collisions++;
     map->count++;
 
-    current_load_factor = (double)(map->collisions/map->size);
+    current_load_factor = (double)map->collisions/(double)map->size;
     if (current_load_factor > map->max_load_factor) {
         hashmap_rehash(map, map->size * 2);
     }
