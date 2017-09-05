@@ -80,6 +80,29 @@ array_push(rps_array_t *a) {
 }
 
 void *
+array_push_is_realloc(rps_array_t *a, int *is_realloc) {
+    size_t size;
+    void *new, *elt;
+
+    *is_realloc = 0;
+    if (a->nelts == a->nalloc) {
+        size = a->size * a->nalloc;
+        new = rps_realloc(a->elts, 2 * size);
+        if (new == NULL) {
+            return NULL;
+        }
+        a->elts = new;
+        a->nalloc *= 2;
+        *is_realloc  = 1;
+    }
+    
+    elt = (uint8_t *)a->elts + a->size * a->nelts;
+    a->nelts++;
+
+    return elt;
+}
+
+void *
 array_pop(rps_array_t *a) {
     void *elt;
     

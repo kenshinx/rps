@@ -532,14 +532,16 @@ upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
     struct upstream *u, *nu, *ou;
     struct upstream **pu;
     char u_key[UPSTREAM_KEY_MAX_LENGTH];
-    uint32_t i;
+    uint32_t i, j;
     size_t key_size;
     size_t val_size;
+    int is_realloc;
 
     u = NULL;
     ou = NULL;
     nu = NULL;
     pu = NULL;
+    is_realloc = 0;
 
     if (array_n(n_pool) == 0) {
         return RPS_OK;
@@ -562,11 +564,25 @@ upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
             if (!u->enable) {
                 continue;
             }
-            nu = array_push(o_pool);
+            nu = array_push_is_realloc(o_pool, &is_realloc);
             upstream_init(nu);
             upstream_copy(nu, u);
 
             hashmap_set(&map, u_key, key_size, &nu, sizeof(nu));
+
+            // rebuild the hashtable due to array realloc may casued the memory address changed.
+            // realloc return new memory block, previous memory address storaged in hashtable will be invalid.
+            if (is_realloc != 0) {
+                hashmap_deinit(&map);
+                hashmap_init(&map, 2 * array_n(o_pool), 0.05);
+                for (j = 0; j < array_n(o_pool); j++) {
+                    u = array_get(o_pool, i);   
+                    key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
+                    hashmap_set(&map, u_key, key_size, &u, sizeof(u));
+                }
+                is_realloc = 0;
+            }
+
             
         } else {
             /* update existence proxy*/
