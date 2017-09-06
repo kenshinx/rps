@@ -247,7 +247,6 @@ static void
 s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
     uint8_t resp[512];
     int len, alen;
-    rps_addr_t *remote;
     int code;
 
     UNUSED(data);
@@ -264,11 +263,22 @@ s5_do_reply(struct context *ctx, uint8_t *data, size_t size) {
         code = s5_rep_socks_fail;
     }
 
-    remote = &ctx->sess->remote;
 
     resp[len++] = SOCKS5_VERSION;
     resp[len++] = code; //rep
     resp[len++] = 0x00; //rsv
+
+    rps_addr_t *remote;
+
+#ifdef X_FORWARD_PROXY
+    if (ctx->sess->upstream == NULL) {
+        remote = &ctx->sess->remote;
+    } else {
+        remote = &ctx->sess->upstream->server;       
+    }
+#else
+    remote = &ctx->sess->remote;
+#endif
 
     switch (remote->family) {
         case AF_INET:

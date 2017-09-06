@@ -1482,6 +1482,13 @@ http_send_response(struct context *ctx, uint16_t code) {
     char val3[64];
     int v3len;
 
+#ifdef X_FORWARD_PROXY
+    char host[MAX_HOSTNAME_LEN];
+    char addr[MAX_INET_ADDRSTRLEN];
+    const char key4[] = "X-Forward-Proxy";
+#endif
+        
+
     switch (code) {
     case http_proxy_auth_required:
         v3len = snprintf(val3, 64, "%s realm=\"%s\"", 
@@ -1490,18 +1497,33 @@ http_send_response(struct context *ctx, uint16_t code) {
         hashmap_set(&resp.headers, (void *)key3, strlen(key3), 
                 (void *)val3, v3len);
         break;
+
+#ifdef X_FORWARD_PROXY
+    case http_ok:
+        /* set x-forward-proxy header */
+        if (ctx->sess->upstream == NULL) {
+            break;
+        }
+        rps_unresolve_addr(&ctx->sess->upstream->server, host);
+        snprintf(addr, MAX_INET_ADDRSTRLEN, "%s:%d", host, 
+                rps_unresolve_port(&ctx->sess->upstream->server));
+
+        hashmap_set(&resp.headers, (void *)key4, strlen(key4), 
+                (void *)addr, strlen(addr));
+        break;
+#endif
+
     default:
         break;
     }
 
 #ifdef HTTP_PROXY_CONNECTION
-    /* set proxy-agent header*/
-    const char key4[] = "Porxy-Connection";
-    hashmap_set(&resp.headers, (void *)key4, strlen(key4), 
+    /* set proxy-connect header*/
+    const char key5[] = "Porxy-Connection";
+    hashmap_set(&resp.headers, (void *)key5, strlen(key5), 
             (void *)HTTP_DEFAULT_PROXY_CONNECTION, strlen(HTTP_DEFAULT_PROXY_CONNECTION));
     
 #endif
-
 
     len = http_response_message(message, &resp);
     

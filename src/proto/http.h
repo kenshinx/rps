@@ -40,8 +40,10 @@ static const char HTTP_DEFAULT_CONNECTION[] = "close";
     V(404, http_not_found, "Not Found")                                 \
     V(405, http_method_not_allowed, "Method Not Allowed")               \
     V(407, http_proxy_auth_required, "Proxy Authentication Required")   \
+    V(408, http_request_timeout, "Request Timeout")                     \
     V(500, http_server_error, "Internal Server Error")                  \
     V(502, http_bad_gateway, "Bad Gateway")                             \
+    V(503, http_proxy_unavailable, "Proxy Unavailable")                 \
 
 enum {
 #define HTTP_RESP_GEN(code, name, _) name = code,
@@ -69,8 +71,10 @@ http_resp_code_str(uint16_t code) {
     V(http_forbidden,           rps_rep_forbidden)                  \
     V(http_not_found,           rps_rep_not_found)                  \
     V(http_proxy_auth_required, rps_rep_auth_require)               \
+    V(http_request_timeout,     rps_rep_timeout)                    \
     V(http_server_error,        rps_rep_server_error)               \
     V(http_bad_gateway,         rps_rep_unreachable)                \
+    V(http_proxy_unavailable,   rps_rep_proxy_unavailable)          \
 
 
 static inline int
