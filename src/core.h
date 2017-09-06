@@ -77,6 +77,7 @@ typedef enum {
     rps_rep_timeout,
     rps_rep_bad_request,
     rps_rep_unreachable,
+    rps_rep_proxy_unavailable,
     rps_rep_undefined,
 } rps_reply_code_t;
 

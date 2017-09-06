@@ -108,6 +108,7 @@ s5_strerr(s5_err_t err) {
     V(0x07, s5_rep_cmd_not_support, "cmd not support")              \
     V(0x08, s5_rep_addr_not_support, "address type not support")    \
     V(0x09, s5_rep_unassigned, "unassigned")                        \
+    V(0x0a, s5_rep_proxy_unavailable, "s5_rep_proxy_unavailable")   \
 
 typedef enum {
 #define S5_REP_GEN(code, name, _) name = code,
@@ -134,6 +135,7 @@ s5_strrep(s5_rep_t code) {
     V(s5_rep_conn_refuse,       rps_rep_forbidden)              \
     V(s5_rep_ttl_expire,        rps_rep_timeout)                \
     V(s5_rep_cmd_not_support,   rps_rep_invalid_request)        \
+    V(s5_rep_proxy_unavailable, rps_rep_proxy_unavailable)      \
     V(s5_rep_unassigned,        rps_rep_undefined)              \
 
 static inline int
