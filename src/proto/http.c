@@ -1168,8 +1168,10 @@ http_response_message(char *message, struct http_response *resp) {
 
     len += snprintf(message + len, size - len, "\r\n");
 
-    len += snprintf(message + len, size - len, "%s", resp->body.data);
-
+    if (!string_empty(&resp->body)) {
+        len += snprintf(message + len, size - len, "%s", resp->body.data);
+    }
+    
 #ifdef RPS_DEBUG_OPEN
     http_response_dump(resp, http_send);
 #endif
@@ -1441,7 +1443,6 @@ rps_status_t
 http_send_response(struct context *ctx, uint16_t code) {
     struct http_response resp;
     size_t len;
-    char body[HTTP_BODY_MAX_LENGTH];
     char message[HTTP_MESSAGE_MAX_LENGTH];
 
     ASSERT(http_valid_code(code));
@@ -1451,8 +1452,11 @@ http_send_response(struct context *ctx, uint16_t code) {
     resp.code = code;
     string_duplicate(&resp.status, http_resp_code_str(resp.code), strlen(http_resp_code_str(resp.code)));
     string_duplicate(&resp.version, HTTP_DEFAULT_VERSION, strlen(HTTP_DEFAULT_VERSION));
-    
+
+
+#ifdef HTTP_STATUS_BODY 
     /* write http body */ 
+    char body[HTTP_BODY_MAX_LENGTH];
     len = snprintf(body, HTTP_BODY_MAX_LENGTH, "%d %s\n", 
             resp.code, http_resp_code_str(resp.code));
 
@@ -1468,6 +1472,8 @@ http_send_response(struct context *ctx, uint16_t code) {
     v1len = snprintf(val1, 32, "%zd", len);
 
     hashmap_set(&resp.headers, (void *)key1, strlen(key1), (void *)val1, v1len);
+
+#endif
 
 #ifdef HTTP_PROXY_AGENT
     /* set proxy-agent header*/
