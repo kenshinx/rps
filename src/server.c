@@ -864,6 +864,8 @@ server_forward_reconn(rps_ctx_t *forward) {
         return;
     }
 
+    forward->state = c_closing;
+
     uv_read_stop(&forward->handle.stream);
     uv_timer_stop(&forward->timer);
     uv_close(&forward->handle.handle, server_on_forward_close);
