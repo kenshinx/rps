@@ -833,12 +833,20 @@ server_switch(rps_sess_t *sess) {
 static void
 server_on_forward_close(uv_handle_t* handle) {
     rps_ctx_t *forward;
+    rps_ctx_t *request;
 
     forward = handle->data;
+    request = forward->sess->request;
 
     forward->connecting = 0;
     forward->connected = 0;
     forward->established = 0;
+
+    /* request context may have been free during server_forward_reconn called */
+    if (request == NULL) {
+        server_ctx_close(forward);
+        return;
+    }
 
     server_sess_upstream_mark_fail(forward->sess);
 
