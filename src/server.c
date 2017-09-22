@@ -467,7 +467,9 @@ server_on_read_done(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     }
 
     ASSERT(&ctx->handle.stream == stream);
-    ASSERT(ctx->rbuf == buf->base);
+    if (nread > 0) {
+        ASSERT(ctx->rbuf == buf->base);
+    }
 
     ctx->rstat = c_done;
     ctx->nread = nread;
