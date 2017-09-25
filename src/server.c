@@ -73,7 +73,7 @@ server_sess_upstream_mark_fail(rps_sess_t *sess) {
     rps_ctx_t *request, *forward;
     char remoteip[MAX_INET_ADDRSTRLEN];
 
-    if (sess->upstream == NULL) {
+    if (sess->request == NULL || sess->upstream == NULL) {
         return;
     }
 
@@ -97,9 +97,13 @@ server_sess_mark_fail(rps_sess_t *sess) {
     rps_ctx_t *request;
     char remoteip[MAX_INET_ADDRSTRLEN];
 
-    server_sess_upstream_mark_fail(sess);
-
     request = sess->request;
+    /* request may has been free */
+    if (request == NULL) {
+        return;
+    }
+
+    server_sess_upstream_mark_fail(sess);
 
     gettimeofday (&sess->end, NULL);
     elapsed = (sess->end.tv_sec - sess->start.tv_sec) + 
@@ -294,7 +298,6 @@ server_ctx_dead(rps_ctx_t *ctx) {
     }
 
     return false;
-    
 }
 
 
