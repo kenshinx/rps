@@ -142,7 +142,7 @@ def ban(action, host):
         set = {tag: None}
 
     for collection in collections:
-        collection.update(filter, {"$set":set}, upsert=True)
+        collection.update(filter, {"$set":set}, upsert=True, multi=True)
     
     return jsonify(status = "OK")
 
