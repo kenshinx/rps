@@ -51,7 +51,9 @@ struct config_upstreams {
 
 struct config_api {
     rps_str_t       url;
-    rps_str_t       source;
+    rps_str_t       s5_source;
+    rps_str_t       http_source;
+    rps_str_t       http_tunnel_source;
     uint32_t        timeout;
 };
 

@@ -223,22 +223,34 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
     string_init(&up->stats_api);
     switch (up->proto) {
     case SOCKS5:
-        snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5/", capi->url.data);
+        if (string_empty(&capi->s5_source)) {
+            snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5/", capi->url.data);
+        } else {
+            snprintf(api, MAX_API_LENGTH, "%s/proxy/socks5/?source=%s", 
+                    capi->url.data, capi->s5_source.data);
+        }
         snprintf(stats_api, MAX_API_LENGTH, "%s/stats/socks5/", capi->url.data);
         break;
     case HTTP:
-        snprintf(api, MAX_API_LENGTH, "%s/proxy/http/", capi->url.data);
+        if (string_empty(&capi->http_source)) {
+            snprintf(api, MAX_API_LENGTH, "%s/proxy/http/", capi->url.data);
+        } else {
+            snprintf(api, MAX_API_LENGTH, "%s/proxy/http/?source=%s", 
+                    capi->url.data, capi->http_source.data);
+        }
         snprintf(stats_api, MAX_API_LENGTH, "%s/stats/http/", capi->url.data);
         break;
     case HTTP_TUNNEL:
-        snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel/", capi->url.data);
+        if (string_empty(&capi->http_tunnel_source)) {
+            snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel/", capi->url.data);
+        } else {
+            snprintf(api, MAX_API_LENGTH, "%s/proxy/http_tunnel/?source=%s", 
+                    capi->url.data, capi->http_tunnel_source.data);
+        }
         snprintf(stats_api, MAX_API_LENGTH, "%s/stats/http_tunnel/", capi->url.data);
         break;
     default:
         NOT_REACHED();
-    }
-    if (!string_empty(&capi->source)) {
-        snprintf(api, MAX_API_LENGTH, "%s?source=%s", api, capi->source.data);
     }
 
     if (string_duplicate(&up->api, api, strlen(api)) != RPS_OK) {

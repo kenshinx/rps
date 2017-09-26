@@ -167,14 +167,18 @@ config_upstreams_deinit(struct config_upstreams *upstreams) {
 static void 
 config_api_init(struct config_api *api) {
     string_init(&api->url);
-    string_init(&api->source);
+    string_init(&api->s5_source);
+    string_init(&api->http_source);
+    string_init(&api->http_tunnel_source);
     api->timeout = 0;
 }
 
 static void
 config_api_deinit(struct config_api *api) {
     string_deinit(&api->url);
-    string_deinit(&api->source);
+    string_deinit(&api->s5_source);
+    string_deinit(&api->http_source);
+    string_deinit(&api->http_tunnel_source);
 }
 
 static void
@@ -285,9 +289,17 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
     } else if (rps_strcmp(section, "api") == 0) {
         if (rps_strcmp(key, "url") == 0) {
             status = string_copy(&cfg->api.url, val);
-        } else if (rps_strcmp(key, "source") == 0) {
+        } else if (rps_strcmp(key, "s5_source") == 0) {
             if (!string_empty(val)) {
-                status = string_copy(&cfg->api.source, val);
+                status = string_copy(&cfg->api.s5_source, val);
+            }
+        } else if (rps_strcmp(key, "http_source") == 0) {
+            if (!string_empty(val)) {
+                status = string_copy(&cfg->api.http_source, val);
+            }
+        } else if (rps_strcmp(key, "http_tunnel_source") == 0) {
+            if (!string_empty(val)) {
+                status = string_copy(&cfg->api.http_tunnel_source, val);
             }
         } else if (rps_strcmp(key, "timeout") == 0) {
             cfg->api.timeout = atoi((char *)val->data);
@@ -675,7 +687,9 @@ config_dump(struct config *cfg) {
     
     log_debug("[api]");
     log_debug("\t url: %s", cfg->api.url.data);
-    log_debug("\t source: %s", cfg->api.source.data);
+    log_debug("\t s5_source: %s", cfg->api.s5_source.data);
+    log_debug("\t http_source: %s", cfg->api.http_source.data);
+    log_debug("\t http_tunnel_source: %s", cfg->api.http_tunnel_source.data);
     log_debug("\t timeout: %d", cfg->api.timeout);
     log_debug("");
     
