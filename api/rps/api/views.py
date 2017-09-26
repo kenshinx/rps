@@ -48,8 +48,14 @@ def proxy(tag, proto):
     else:
         return jsonify(status="BAD", error="Invalid proto %s" %proto)    
 
+    filter = {}
+    source = request.args.get("source", None)
+    if source is not None:
+        filter["source"] = source
+        
+
     records = []
-    for r in collection.find({}, {"_id":0}):
+    for r in collection.find(filter, {"_id":0}):
         if not r.has_key("insert_date"):
             continue
         r["insert_date"] = dt2ts(r["insert_date"])
