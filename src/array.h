@@ -42,12 +42,12 @@ rps_array_t *array_create(uint32_t n, size_t size);
 void array_deinit(rps_array_t *a);
 void array_destroy(rps_array_t *a);
 void *array_push(rps_array_t *a);
+void *array_push_is_realloc(rps_array_t *a, int *is_realloc);
 void *array_pop(rps_array_t *a);
 void *array_get(rps_array_t *a, uint32_t idx);
 void *array_head(rps_array_t *a);
 void *array_random(rps_array_t *a);
 void array_foreach(rps_array_t *a, array_foreach_t func);
 void array_swap(rps_array_t **a, rps_array_t **b);
-
 
 #endif
