@@ -76,6 +76,8 @@ upstreams:
 
 api:
     url: http://localhost:9897/api/godaddy
+    #Fetching proxy resouce from specific source
+    source: ""
     timeout: 30
 
 log:

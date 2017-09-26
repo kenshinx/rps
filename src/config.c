@@ -49,9 +49,6 @@ config_push_scalar(struct config *cfg) {
 
     scalar = (char *)cfg->event.data.scalar.value;
     length = cfg->event.data.scalar.length;
-    if (length == 0) {
-        return RPS_ERROR;
-    }
 
     log_verb("push '%.*s'", length, scalar);
 
@@ -60,6 +57,10 @@ config_push_scalar(struct config *cfg) {
         return RPS_ENOMEM;
     }
     string_init(value);
+
+    if (length == 0) {
+        return RPS_OK;
+    }
 
     status = string_duplicate(value, scalar, length);
     if (status != RPS_OK) {
@@ -166,12 +167,14 @@ config_upstreams_deinit(struct config_upstreams *upstreams) {
 static void 
 config_api_init(struct config_api *api) {
     string_init(&api->url);
+    string_init(&api->source);
     api->timeout = 0;
 }
 
 static void
 config_api_deinit(struct config_api *api) {
     string_deinit(&api->url);
+    string_deinit(&api->source);
 }
 
 static void
@@ -282,6 +285,10 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
     } else if (rps_strcmp(section, "api") == 0) {
         if (rps_strcmp(key, "url") == 0) {
             status = string_copy(&cfg->api.url, val);
+        } else if (rps_strcmp(key, "source") == 0) {
+            if (!string_empty(val)) {
+                status = string_copy(&cfg->api.source, val);
+            }
         } else if (rps_strcmp(key, "timeout") == 0) {
             cfg->api.timeout = atoi((char *)val->data);
         } else {
@@ -668,6 +675,7 @@ config_dump(struct config *cfg) {
     
     log_debug("[api]");
     log_debug("\t url: %s", cfg->api.url.data);
+    log_debug("\t source: %s", cfg->api.source.data);
     log_debug("\t timeout: %d", cfg->api.timeout);
     log_debug("");
     
