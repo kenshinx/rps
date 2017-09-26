@@ -73,7 +73,9 @@ server_sess_upstream_mark_fail(rps_sess_t *sess) {
     rps_ctx_t *request, *forward;
     char remoteip[MAX_INET_ADDRSTRLEN];
 
-    if (sess->request == NULL || sess->upstream == NULL) {
+    if (sess->request == NULL || 
+            sess->forward == NULL || 
+            sess->upstream == NULL) {
         return;
     }
 
