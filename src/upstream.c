@@ -183,6 +183,11 @@ upstream_request_too_often(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uin
 
     d = queue_n(timewheel); 
 
+    //no free timewhell slot means balance exhasuted 
+    if queue_is_full(timewheel) {
+        return true;
+    }
+
     return ((mr1m != 0 && m >= mr1m) || 
             (mr1h != 0 && h >= mr1h) || 
             (mr1d != 0 && d >= mr1d));
@@ -235,6 +240,7 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
     if (!string_empty(&capi->source)) {
         snprintf(api, MAX_API_LENGTH, "%s?source=%s", api, capi->source.data);
     }
+
     if (string_duplicate(&up->api, api, strlen(api)) != RPS_OK) {
         return RPS_ERROR;
     }
