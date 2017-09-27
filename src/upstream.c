@@ -603,8 +603,6 @@ upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
                 }
                 is_realloc = 0;
             }
-
-            
         } else {
             /* update existence proxy*/
             ou = *pu;
@@ -676,15 +674,12 @@ static rps_status_t
 upstream_pool_refresh(struct upstream_pool *up) {
     rps_array_t *new_pool;
 
-    upstream_pool_stats(up);
-
     /* Free current upstream pool only when new pool load successful */
 
     new_pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
     if (new_pool == NULL) {
         return RPS_ERROR;
     }
-
 
     if (upstream_pool_load(new_pool, &up->api, up->timeout) != RPS_OK) {
         while(array_n(new_pool)) {
@@ -745,6 +740,25 @@ upstreams_refresh(uv_timer_t *handle) {
         uv_mutex_unlock(&us->mutex);
     }
     us->once = 1;
+}
+
+void
+upstreams_stats(uv_timer_t *handle) {
+    struct upstreams *us;
+    struct upstream_pool *up;
+    int i, len;
+    const char *proto;
+
+    us = (struct upstreams *)handle->data;
+
+    len = array_n(&us->pools);
+
+    for (i=0; i< len; i++) {
+        up = (struct upstream_pool *)array_get(&us->pools, i);
+        proto = rps_proto_str(up->proto);
+        upstream_pool_stats(up);
+        log_debug("commit %s upstream pool, count <%d> proxys", proto, array_n(up->pool));
+    }
 }
 
 static struct upstream *

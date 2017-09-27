@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #define UPSTREAM_DEFAULT_REFRESH    60
+#define UPSTREAM_DEFAULT_STATS      600
 #define UPSTREAM_DEFAULT_BYBRID     0
 #define UPSTREAM_DEFAULT_MAXRECONN   3
 #define UPSTREAM_DEFAULT_MAXRETRY   3
@@ -38,6 +39,7 @@ struct config_upstream {
 
 struct config_upstreams {
     uint32_t        refresh;
+    uint32_t        stats;
     rps_str_t       schedule;
     unsigned        hybrid:1;
     uint32_t        maxreconn;

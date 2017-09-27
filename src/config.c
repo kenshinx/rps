@@ -132,6 +132,7 @@ config_upstream_deinit(struct config_upstream *upstream) {
 static rps_status_t
 config_upstreams_init(struct config_upstreams *upstreams) {
     upstreams->refresh = UPSTREAM_DEFAULT_REFRESH;
+    upstreams->stats = UPSTREAM_DEFAULT_STATS;
     upstreams->maxreconn = UPSTREAM_DEFAULT_MAXRECONN;
     upstreams->maxretry = UPSTREAM_DEFAULT_MAXRETRY;
     string_init(&upstreams->schedule);
@@ -255,6 +256,8 @@ config_handler_map(struct config *cfg, rps_str_t *key, rps_str_t *val, rps_str_t
     } else if (rps_strcmp(section, "upstreams") == 0) {
         if (rps_strcmp(key, "refresh") == 0) {
             cfg->upstreams.refresh = (atoi((char *)val->data)) * 1000;
+        } else if (rps_strcmp(key, "stats") == 0) {
+            cfg->upstreams.stats = (atoi((char *)val->data)) * 1000;
         } else if (rps_strcmp(key, "schedule") == 0) {
             status = string_copy(&cfg->upstreams.schedule, val);
         } else if (rps_strcmp(key, "hybrid") == 0) {
@@ -674,6 +677,7 @@ config_dump(struct config *cfg) {
     log_debug("[upstreams]");
     log_debug("\t schedule: %s", cfg->upstreams.schedule.data);
     log_debug("\t refresh: %d", cfg->upstreams.refresh/1000);
+    log_debug("\t stats: %d", cfg->upstreams.stats/1000);
     log_debug("\t hybrid: %d", cfg->upstreams.hybrid);
     log_debug("\t maxreconn: %d", cfg->upstreams.maxreconn);
     log_debug("\t maxretry: %d", cfg->upstreams.maxretry);

@@ -265,9 +265,8 @@ error:
     return RPS_ERROR;
 }
 
-
 static void
-rps_upstream_load(struct application *app) {
+rps_add_crontab(struct application *app, uv_timer_cb callback, uint64_t repeat) {
     uv_loop_t *loop;
     uv_timer_t *timer;
 
@@ -282,7 +281,7 @@ rps_upstream_load(struct application *app) {
     timer->data = &app->upstreams;
 
     uv_timer_init(loop, timer);
-    uv_timer_start(timer, (uv_timer_cb)upstreams_refresh, 0, app->cfg.upstreams.refresh);
+    uv_timer_start(timer, callback, 0, repeat);
 
     uv_run(loop, UV_RUN_DEFAULT);
 
@@ -290,6 +289,20 @@ rps_upstream_load(struct application *app) {
     uv_loop_delete(loop);
     rps_free(loop);
     rps_free(timer);
+}
+
+static void
+rps_upstreams_refresh(struct application *app) {
+    rps_add_crontab(app, 
+            (uv_timer_cb)upstreams_refresh, 
+            app->cfg.upstreams.refresh);
+}
+
+static void
+rps_upstreams_stats(struct application *app) {
+    rps_add_crontab(app, 
+            (uv_timer_cb)upstreams_stats, 
+            app->cfg.upstreams.stats);
 }
 
 static void
@@ -379,7 +392,10 @@ rps_run(struct application *app) {
     }
 
     tid = (uv_thread_t *)array_push(&threads);
-    uv_thread_create(tid, (uv_thread_cb)rps_upstream_load, app);
+    uv_thread_create(tid, (uv_thread_cb)rps_upstreams_refresh, app);
+    
+    tid = (uv_thread_t *)array_push(&threads);
+    uv_thread_create(tid, (uv_thread_cb)rps_upstreams_stats, app);
     
     for (i = 0; i < array_n(&app->servers); i++) {
         tid = (uv_thread_t *)array_push(&threads);

@@ -87,5 +87,6 @@ rps_status_t upstreams_init(struct upstreams *us,
 struct upstream  *upstreams_get(struct upstreams *us, rps_proto_t proto);
 void upstreams_deinit(struct upstreams *us);
 void upstreams_refresh(uv_timer_t *handle);
+void upstreams_stats(uv_timer_t *handler);
 
 #endif
