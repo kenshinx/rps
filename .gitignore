@@ -30,3 +30,6 @@ logs
 *.pyc
 .svn
 /script/nd.py
+/script/zhima.py
+/script/add_upstream.py
+script/*
