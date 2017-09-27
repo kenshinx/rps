@@ -285,7 +285,7 @@ upstream_pool_deinit(struct upstream_pool *up) {
     uv_rwlock_destroy(&up->rwlock);
 } 
 
-#ifdef RPS_DEBUG_OPEN
+#ifdef  RPS_MORE_VERBOSE
 static void
 upstream_pool_dump(struct upstream_pool *up) {
     log_verb("[rps upstream proxy pool]");
@@ -705,7 +705,7 @@ upstream_pool_refresh(struct upstream_pool *up) {
     array_destroy(new_pool);
     
 
-    #ifdef RPS_DEBUG_OPEN
+    #ifdef RPS_MORE_VERBOSE
         upstream_pool_dump(up);
     #endif
 

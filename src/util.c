@@ -57,9 +57,12 @@ _rps_realloc(void *ptr, size_t size, const char *name, int line) {
     
     if (p == NULL) {
         log_error("realloc(%zu) failed @ %s:%d", size, name, line);
-    } else {
-        log_verb("realloc(%zu) at %p @ %s:%d", size, p, name, line);
+        return NULL;
     }
+
+#ifdef  RPS_MORE_VERBOSE
+    log_verb("realloc(%zu) at %p @ %s:%d", size, p, name, line);
+#endif
     
     return p;
 }
