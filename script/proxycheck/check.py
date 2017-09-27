@@ -156,7 +156,7 @@ class HTTPTunnelProxyCheck(BaseCheck):
         BaseCheck.__init__(self, db, AsyncHTTPTunnelClient, payload_proto, concurrency)
 
     def getProxyList(self):
-        for r in self.db.http_tunnel.find():
+        for r in self.db.http_tunnel.find({"source":{"$in":["nd", "nf"]}}):
             yield r
 
     def updateProxy(self, host, port, enable):
@@ -169,7 +169,7 @@ class Socks5ProxyCheck(BaseCheck):
         BaseCheck.__init__(self, db, AsyncSocks5Client, payload_proto, concurrency)
 
     def getProxyList(self):
-        for r in self.db.socks5.find():
+        for r in self.db.socks5.find({"source":{"$in":["nd", "nf"]}}):
             yield r
                 
     def updateProxy(self, host, port, enable):
