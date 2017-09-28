@@ -228,11 +228,6 @@ hashmap_set_entry(rps_hashmap_t *map, struct hashmap_entry *entry) {
     }
 }
 
-uint32_t
-hashmap_n(rps_hashmap_t *map) {
-    return map->count;
-}
-
 void
 hashmap_rehash(rps_hashmap_t *map, uint32_t new_size) {
     rps_hashmap_t new_map;
@@ -309,6 +304,41 @@ hashmap_get(rps_hashmap_t *map, void *key, size_t key_size, size_t *value_size) 
 
     *value_size = 0;
     return NULL;
+}
+
+struct hashmap_entry *
+hashmap_get_random_entry(rps_hashmap_t *map) {
+    struct hashmap_entry *entry, *o_entry;
+    int i;
+    int listlen;
+    
+    if (hashmap_is_empty(map)) {
+        return NULL;
+    }
+    
+    do {
+        i = rps_random(map->size);
+        entry = map->buckets[i];
+    } while(entry == NULL);
+    
+    /* Now we found a non empty bucket, but it is a linked
+     * list and we need to get a random element from the list.
+     * The only sane way to do so is counting the elements and
+     * select a random index. -- inspired by Redis */
+    listlen = 0;
+    o_entry = entry;
+    while (entry != NULL) {
+        listlen += 1;
+        entry = entry->next;
+    }
+
+    entry = o_entry;
+    i = rps_random(listlen);
+    while (i--) {
+        entry = entry->next;
+    }
+
+    return entry;
 }
 
 int 
