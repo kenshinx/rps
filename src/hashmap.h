@@ -11,7 +11,7 @@
     ((_m)->count == 0)
 
 typedef void (*hashmap_hash_t)(const void *key, int len, uint32_t seed, void *out);
-typedef void (*hashmap_iter_t) (void *key, size_t key_size, void *value, size_t value_size);
+typedef void (*hashmap_foreach_t) (void *key, size_t key_size, void *value, size_t value_size);
 
 struct hashmap_entry {
     void                *key;
@@ -46,6 +46,12 @@ struct rps_hashmap_s {
 
 typedef struct rps_hashmap_s rps_hashmap_t;
 
+struct hashmap_iterator {
+    struct rps_hashmap_s    *map;
+    uint32_t                index;
+    uint32_t                listele;
+};
+
 int hashmap_init(rps_hashmap_t *map, uint32_t nbuckets, double max_load_factor);
 void hashmap_deinit(rps_hashmap_t *map);
 rps_hashmap_t *hashmap_create(uint32_t nbuckets, double max_load_factor);
@@ -61,8 +67,10 @@ struct hashmap_entry * hashmap_get_random_entry(rps_hashmap_t *map);
 int hashmap_has(rps_hashmap_t *map, void *key, size_t key_size);
 int hashmap_remove(rps_hashmap_t *map, void *key, size_t key_size);
 
-void hashmap_iter(rps_hashmap_t *map, hashmap_iter_t func);
+void hashmap_foreach(rps_hashmap_t *map, hashmap_foreach_t func);
 void hashmap_deepcopy(rps_hashmap_t *dst, rps_hashmap_t *src);
 
+void hashmap_iterator_init(struct hashmap_iterator *iterator, rps_hashmap_t *map);
+struct hashmap_entry *hashmap_next(struct hashmap_iterator *iter);
 
 #endif

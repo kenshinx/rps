@@ -107,6 +107,13 @@ hashmap_index(rps_hashmap_t *map, void *key, size_t key_size) {
     return index;
 }
 
+void
+hashmap_iterator_init(struct hashmap_iterator *iterator, rps_hashmap_t *map) {
+    iterator->map = map;
+    iterator->index = 0;
+    iterator->listele = 0;
+}
+
 int
 hashmap_init(rps_hashmap_t *map, uint32_t nbuckets, double max_load_factor) {
     uint32_t i;
@@ -394,7 +401,7 @@ hashmap_remove(rps_hashmap_t *map, void *key, size_t key_size) {
 
 
 void
-hashmap_iter(rps_hashmap_t *map, hashmap_iter_t func) {
+hashmap_foreach(rps_hashmap_t *map, hashmap_foreach_t func) {
     uint32_t i;
     struct hashmap_entry *entry;
 
@@ -406,6 +413,51 @@ hashmap_iter(rps_hashmap_t *map, hashmap_iter_t func) {
             func(entry->key, entry->key_size, entry->value, entry->value_size);
             entry = entry->next;
         }
+    }
+}
+
+struct hashmap_entry *
+hashmap_next(struct hashmap_iterator *iter) {
+    rps_hashmap_t *map;
+    struct hashmap_entry *entry;
+    int j;
+
+    ASSERT(iter->map != NULL);
+
+    map = iter->map;
+    if hashmap_is_empty(map) {
+        return NULL;
+    }
+
+    while (1) {
+        if (iter->index >= map->size) {
+            iter->index = 0;
+            iter->listele = 0;
+        }
+
+        entry = map->buckets[iter->index];
+        if (entry == NULL) {
+            iter->index += 1;
+            iter->listele = 0;
+            continue;
+        }
+
+        j = iter->listele;
+        while (j--) {
+            entry = entry->next;
+            if (entry == NULL) {
+                break;
+            }
+        }
+
+        if (entry == NULL) {
+            iter->index += 1;
+            iter->listele = 0;
+            continue;
+        }
+
+        iter->listele += 1;
+        return entry;
     }
 }
 

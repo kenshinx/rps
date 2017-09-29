@@ -721,7 +721,7 @@ http_response_check(struct http_response *resp) {
 }
 
 #ifdef RPS_DEBUG_OPEN
-/* implement hashmap_iter_t */
+/* implement hashmap_foreach_t */
 static void
 http_header_dump(void *key, size_t key_size, void *value, size_t value_size) {
     char skey[key_size + 1];
@@ -758,7 +758,7 @@ http_request_dump(struct http_request *req, uint8_t rs) {
     }
 
     log_verb("\t%s %s %s", http_method_str(req->method), uri, req->version.data);
-    hashmap_iter(&req->headers, http_header_dump);
+    hashmap_foreach(&req->headers, http_header_dump);
 
     if (!string_empty(&req->body)) {
         log_verb("");
@@ -780,7 +780,7 @@ http_response_dump(struct http_response *resp, uint8_t rs) {
 
     log_verb("\t%s %d %s", resp->version.data, resp->code, 
         resp->status.data);
-    hashmap_iter(&resp->headers, http_header_dump);
+    hashmap_foreach(&resp->headers, http_header_dump);
 
     if (!string_empty(&resp->body)) {
         log_verb("");
