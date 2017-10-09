@@ -108,10 +108,15 @@ hashmap_index(rps_hashmap_t *map, void *key, size_t key_size) {
 }
 
 void
-hashmap_iterator_init(struct hashmap_iterator *iterator, rps_hashmap_t *map) {
-    iterator->map = map;
-    iterator->index = 0;
-    iterator->listele = 0;
+hashmap_iterator_init(rps_hashmap_iterator_t *iter, rps_hashmap_t *map) {
+    iter->map = map;
+    iter->index = 0;
+    iter->listele = 0;
+}
+
+void
+hashmap_iterator_deinit(rps_hashmap_iterator_t *iter) {
+    iter->map = NULL;
 }
 
 int
@@ -416,8 +421,27 @@ hashmap_foreach(rps_hashmap_t *map, hashmap_foreach_t func) {
     }
 }
 
+/* upstream pool foreach, value storage the pointer to upstream */
+void
+hashmap_foreach2(rps_hashmap_t *map, hashmap_foreach2_t func) {
+    uint32_t i;
+    void **pv;
+    struct hashmap_entry *entry;
+
+    for (i = 0; i < map->size; i++) {
+        
+        entry = map->buckets[i];
+
+        while (entry != NULL) {
+            pv = (void **)entry->value;
+            func(*pv);
+            entry = entry->next;
+        }
+    }
+}
+
 struct hashmap_entry *
-hashmap_next(struct hashmap_iterator *iter) {
+hashmap_next(rps_hashmap_iterator_t *iter) {
     rps_hashmap_t *map;
     struct hashmap_entry *entry;
     int j;

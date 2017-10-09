@@ -208,8 +208,6 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
     char api[MAX_API_LENGTH];
     char stats_api[MAX_API_LENGTH];
 
-    up->index = 0;
-    up->pool = NULL;
     up->timeout = capi->timeout;
     uv_rwlock_init(&up->rwlock);
 
@@ -260,28 +258,36 @@ upstream_pool_init(struct upstream_pool *up, struct config_upstream *cu,
         return RPS_ERROR;
     }
 
-    up->pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
-    if (up->pool == NULL) {
-        return RPS_ERROR;
+    if (hashmap_init(&up->pool, UPSTREAM_DEFAULT_POOL_LENGTH, HASHMAP_DEFAULT_COLLISIONS) != RPS_OK) {
+        return RPS_ERROR;       
     }
+
+    hashmap_iterator_init(&up->iter, &up->pool);
 
     return RPS_OK;
 }
 
+static void
+upstream_pool_deinit_foreach(void *data) {
+    struct upstream *u;
+
+    ASSERT(data != NULL);
+
+    u = (struct upstream *)data;
+    
+    upstream_deinit(u);
+    rps_free(u);
+    
+}
 
 static void
 upstream_pool_deinit(struct upstream_pool *up) {
-    if (up->pool != NULL) {
-        while(array_n(up->pool)) {
-            upstream_deinit((struct upstream *)array_pop(up->pool));
-        }
-        array_destroy(up->pool);
-    }
-    up->pool = NULL;
+    hashmap_foreach2(&up->pool, (hashmap_foreach2_t)upstream_pool_deinit_foreach);
+    hashmap_deinit(&up->pool);
+    hashmap_iterator_deinit(&up->iter);
     string_deinit(&up->api);
     string_deinit(&up->stats_api);
     up->timeout = 0;
-    up->index = 0;
     uv_rwlock_destroy(&up->rwlock);
 } 
 
@@ -289,7 +295,7 @@ upstream_pool_deinit(struct upstream_pool *up) {
 static void
 upstream_pool_dump(struct upstream_pool *up) {
     log_verb("[rps upstream proxy pool]");
-    array_foreach(up->pool, upstream_str);
+    hashmap_foreach2(&up->pool, (hashmap_foreach2_t)upstream_str);
 }
 #endif
 
@@ -451,11 +457,13 @@ upstream_json_parse(struct upstream *u, json_t *element) {
 }
 
 static rps_status_t
-upstream_pool_json_parse(rps_array_t *pool, struct curl_buf *resp) {
+upstream_pool_json_parse(rps_hashmap_t *pool, struct curl_buf *resp) {
     json_t *root;
     json_t *element;
     json_error_t error;
-    struct upstream *upstream;
+    char u_key[UPSTREAM_KEY_MAX_LENGTH];
+    size_t key_size;
+    struct upstream *u;
     size_t  len;
     size_t i;
 
@@ -477,12 +485,17 @@ upstream_pool_json_parse(rps_array_t *pool, struct curl_buf *resp) {
     len = json_array_size(root);
     for (i = 0; i < len; i++) {
         element = json_array_get(root, i);
-        upstream = (struct upstream *)array_push(pool);
-        upstream_init(upstream);
-        if (upstream_json_parse(upstream, element) != RPS_OK) {
-            array_pop(pool);
-            upstream_deinit(upstream);
+        if ((u = rps_alloc(sizeof(struct upstream))) == NULL) {
+            continue;
         }
+        upstream_init(u);
+        if (upstream_json_parse(u, element) != RPS_OK) {
+            upstream_deinit(u);
+            rps_free(u);
+            continue;
+        }
+        key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
+        hashmap_set(pool, u_key, key_size, &u, sizeof(u));
     }
 
     json_decref(root);
@@ -512,7 +525,7 @@ upstream_pool_load_callback(void *contents, size_t size, size_t nmemb, void *use
 }
 
 static rps_status_t
-upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
+upstream_pool_load(rps_hashmap_t *pool, rps_str_t *api, uint32_t timeout) {
     CURL *curl_handle;
     CURLcode res;
     struct curl_buf resp;
@@ -548,74 +561,51 @@ upstream_pool_load(rps_array_t *pool, rps_str_t *api, uint32_t timeout) {
     return status;
 }
 static rps_status_t
-upstream_pool_merge(rps_array_t *o_pool, rps_array_t *n_pool) {
-    rps_hashmap_t map;
+upstream_pool_merge(rps_hashmap_t *o_pool, rps_hashmap_t *n_pool) {
     struct upstream *u, *nu, *ou;
-    struct upstream **pu;
     char u_key[UPSTREAM_KEY_MAX_LENGTH];
-    uint32_t i, j;
+    uint32_t i;
     size_t key_size;
     size_t val_size;
-    int is_realloc;
+    struct hashmap_entry *e;
+    void *ov;
 
     u = NULL;
     ou = NULL;
     nu = NULL;
-    pu = NULL;
-    is_realloc = 0;
 
-    if (array_n(n_pool) == 0) {
+    if (hashmap_is_empty(n_pool)) {
         return RPS_OK;
     }
 
-    hashmap_init(&map, 2 * array_n(n_pool), 0.05);
-    
-    for (i = 0; i < array_n(o_pool); i++) {
-        u = array_get(o_pool, i);   
-        key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
-        hashmap_set(&map, u_key, key_size, &u, sizeof(u));
-    }
-
-    for (i = 0; i < array_n(n_pool); i++) {
-        u = array_get(n_pool, i);
-        key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
-        pu = hashmap_get(&map, u_key, key_size, &val_size);
-        if (pu == NULL) { 
-            /* insert new upstream proxy */
-            if (!u->enable) {
-                continue;
-            }
-            nu = array_push_is_realloc(o_pool, &is_realloc);
-            upstream_init(nu);
-            upstream_copy(nu, u);
-
-            hashmap_set(&map, u_key, key_size, &nu, sizeof(nu));
-
-            // rebuild the hashtable due to array realloc may casued the memory address changed.
-            // realloc return new memory block, previous memory address storaged in hashtable will be invalid.
-            if (is_realloc != 0) {
-                hashmap_deinit(&map);
-                hashmap_init(&map, 2 * array_n(o_pool), 0.05);
-                for (j = 0; j < array_n(o_pool); j++) {
-                    u = array_get(o_pool, i);   
-                    key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
-                    hashmap_set(&map, u_key, key_size, &u, sizeof(u));
+    for (i = 0; i < hashmap_n(n_pool); i++) {
+        e = n_pool->buckets[i];
+        while (e != NULL) {
+            u = (struct upstream *)*(void **)e->value;
+            key_size = upstream_key(u, u_key, UPSTREAM_KEY_MAX_LENGTH);
+            ov = hashmap_get(o_pool, u_key, key_size, &val_size);
+            if (ov == NULL) {
+                /* insert new upstream proxy */
+                if ((nu = rps_alloc(sizeof(struct upstream))) == NULL) {
+                    return RPS_ENOMEM;
+                }   
+                upstream_init(nu);
+                upstream_copy(nu, u);
+                hashmap_set(o_pool, u_key, key_size, &nu, sizeof(nu));
+            } else {
+                /* update existence proxy */
+                ou = (struct upstream *)*(void **)ov;
+                if (!u->enable && ou->enable) {
+                    ou->enable = 0;
+                } else if (u->enable && !ou->enable) {
+                    ou->enable = 1;
+                    ou->failure /= 2; // shrink the fail rate
                 }
-                is_realloc = 0;
             }
-        } else {
-            /* update existence proxy*/
-            ou = *pu;
-            if (!u->enable && ou->enable) {
-                ou->enable = 0;
-            } else if (u->enable && !ou->enable) {
-                ou->enable = 1;
-                ou->failure /= 2; /* shrink the fail rate */
-            }
+
+            e = e->next;
         }
     }
-
-    hashmap_deinit(&map);
 
     return RPS_OK;
 }
@@ -661,43 +651,43 @@ upstream_stats_commit(struct upstream *u, rps_str_t *api, uint32_t timeout) {
 
 static void
 upstream_pool_stats(struct upstream_pool *up) {
-    struct upstream *u;
+    struct hashmap_entry *entry;
+    struct upstream *upstream;
     uint32_t i;
 
-    for (i = 0; i < array_n(up->pool); i++) {
-        u = array_get(up->pool, i);
-        upstream_stats_commit(u, &up->stats_api, up->timeout);
+    for (i = 0; i < hashmap_n(&up->pool); i++) {
+        entry = up->pool.buckets[i];
+        while (entry != NULL) {
+            upstream = (struct upstream *)*(void **)entry->value;
+            upstream_stats_commit(upstream, &up->stats_api, up->timeout);
+            entry = entry->next;
+        }
     }
 }
 
 static rps_status_t
 upstream_pool_refresh(struct upstream_pool *up) {
-    rps_array_t *new_pool;
+    rps_hashmap_t new_pool;
 
     /* Free current upstream pool only when new pool load successful */
 
-    new_pool = array_create(UPSTREAM_DEFAULT_POOL_LENGTH, sizeof(struct upstream));
-    if (new_pool == NULL) {
+    if (hashmap_init(&new_pool, UPSTREAM_DEFAULT_POOL_LENGTH, HASHMAP_DEFAULT_COLLISIONS) != RPS_OK) {
         return RPS_ERROR;
     }
 
-    if (upstream_pool_load(new_pool, &up->api, up->timeout) != RPS_OK) {
-        while(array_n(new_pool)) {
-            upstream_deinit((struct upstream *)array_pop(new_pool));
-        }
-        array_destroy(new_pool);
+    if (upstream_pool_load(&new_pool, &up->api, up->timeout) != RPS_OK) {
+        hashmap_foreach2(&new_pool, (hashmap_foreach2_t)upstream_pool_deinit_foreach);
+        hashmap_deinit(&new_pool);
         log_error("load %s upstreams from webapi failed.", rps_proto_str(up->proto));
         return RPS_ERROR;
     }
 
     uv_rwlock_wrlock(&up->rwlock);
-    upstream_pool_merge(up->pool, new_pool);
+    upstream_pool_merge(&up->pool, &new_pool);
     uv_rwlock_wrunlock(&up->rwlock);
     
-    while(array_n(new_pool)) {
-        upstream_deinit((struct upstream *)array_pop(new_pool));
-    }
-    array_destroy(new_pool);
+    hashmap_foreach2(&new_pool, (hashmap_foreach2_t)upstream_pool_deinit_foreach);
+    hashmap_deinit(&new_pool);
     
 
     #ifdef RPS_MORE_VERBOSE
@@ -706,8 +696,6 @@ upstream_pool_refresh(struct upstream_pool *up) {
 
     return RPS_OK;
 }
-
-
 
 void
 upstreams_refresh(uv_timer_t *handle) {
@@ -729,7 +717,7 @@ upstreams_refresh(uv_timer_t *handle) {
             log_error("update %s upstream proxy pool failed", proto) ;
             return;
         } else {
-            log_debug("refresh %s upstream pool, get <%d> proxys", proto, array_n(up->pool));
+            log_debug("refresh %s upstream pool, get <%d> proxys", proto, hashmap_n(&up->pool));
         }
     }
     
@@ -757,50 +745,36 @@ upstreams_stats(uv_timer_t *handle) {
         up = (struct upstream_pool *)array_get(&us->pools, i);
         proto = rps_proto_str(up->proto);
         upstream_pool_stats(up);
-        log_debug("commit %s upstream pool, count <%d> proxys", proto, array_n(up->pool));
+        log_debug("commit %s upstream pool, count <%d> proxys", proto, hashmap_n(&up->pool));
     }
 }
 
 static struct upstream *
 upstream_pool_get_rr(struct upstream_pool *up) {
+    struct hashmap_entry *entry;
     struct upstream *upstream;
 
-    if (up->pool == NULL) {
-        log_error("upstream pool is null");
+    entry = hashmap_next(&up->iter);
+    if (entry == NULL) {
         return NULL;
     }
-    
-    if (up->index >= array_n(up->pool)) {
-        up->index = 0;
-    }
-
-    upstream = array_get(up->pool, up->index++);
+    upstream = (struct upstream *)*(void **)entry->value;
 
     return upstream;
 }
 
 static struct upstream *
 upstream_pool_get_random(struct upstream_pool *up) {
+    struct hashmap_entry *entry;
     struct upstream *upstream;
-    int i;
 
-    if (up->pool == NULL) {
-        log_error("upstream pool is null");
+    entry = hashmap_get_random_entry(&up->pool);
+    if (entry == NULL) {
         return NULL;
     }
-
-    if (array_is_empty(up->pool)) {
-        log_error("upstream pool is null");
-        return NULL;
-    }
-
-    i = rps_random(array_n(up->pool));
-    
-    upstream = array_get(up->pool, i);
-    up->index = i;
+    upstream = (struct upstream *)*(void **)entry->value;
 
     return upstream;
-    
 }
 
 struct upstream *

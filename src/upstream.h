@@ -5,13 +5,14 @@
 #include "util.h"
 #include "array.h"
 #include "queue.h"
+#include "hashmap.h"
 #include "_string.h"
 #include "config.h"
 
 #include <uv.h>
 
 #define UPSTREAM_DEFAULT_WEIGHT 10
-#define UPSTREAM_DEFAULT_POOL_LENGTH 1000
+#define UPSTREAM_DEFAULT_POOL_LENGTH 10000
 #define UPSTREAM_DEFAULT_TIME_WHEEL_LENGTH 1000
 #define UPSTREAM_DEFAULT_SCHEDULE up_rr
 
@@ -55,12 +56,12 @@ struct upstream  {
 };
 
 struct upstream_pool {
-    rps_array_t             *pool;
+    rps_hashmap_t           pool;
+    rps_hashmap_iterator_t  iter;
     rps_proto_t             proto;
     rps_str_t               api;
     rps_str_t               stats_api;
     uint32_t                timeout; //api request max timeout
-    uint32_t                index;
     uv_rwlock_t             rwlock;
 };
 
