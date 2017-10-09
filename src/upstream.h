@@ -45,6 +45,7 @@ struct upstream  {
     uint32_t    count;
 
     rps_ts_t    insert_date;
+    rps_ts_t    expire_date;
 
     /* The time wheel which be used to control the QPS
      * The element storaged in queue are long int expressed timestamp, 

@@ -82,6 +82,8 @@ void _rps_assert(const char *cond, const char *file, int line);
     }                                                               \
 } while(0)
 
+#define rps_now()   time(NULL)
+
 #define MAX_HOSTNAME_LEN 255
 #define MAX_INET_ADDRSTRLEN MAX_HOSTNAME_LEN
 #define AF_DOMAIN 60 /* AF_INET is 2, AF_INET6 is 30, so we get 60 */

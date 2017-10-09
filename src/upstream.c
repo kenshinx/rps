@@ -26,6 +26,7 @@ upstream_init(struct upstream *u) {
     u->failure = 0;
     u->count = 0;
     u->insert_date = 0;
+    u->expire_date = 0;
     u->enable = 0;
 
     queue_null(&u->timewheel);
@@ -40,6 +41,7 @@ upstream_deinit(struct upstream *u) {
     u->failure = 0;
     u->count = 0;
     u->insert_date = 0;
+    u->expire_date = 0;
 
     if (!queue_is_null(&u->timewheel)) {
         queue_deinit(&u->timewheel);
@@ -75,6 +77,7 @@ upstream_copy(struct upstream *dst, struct upstream *src) {
     }
 
     dst->insert_date = src->insert_date;
+    dst->expire_date = src->expire_date;
     dst->enable = src->enable;
 }
 
@@ -97,9 +100,9 @@ upstream_str(void *data) {
     u = (struct upstream *)data;
 
     rps_unresolve_addr(&u->server, name);
-    log_verb("\t%s://%s:%s@%s:%d (s:%d, f:%d, c:%d, d:%d)", rps_proto_str(u->proto), 
+    log_verb("\t%s://%s:%s@%s:%d (s:%d, f:%d, c:%d, d:%d) expire_date:%d", rps_proto_str(u->proto), 
             u->uname.data, u->passwd.data, name, rps_unresolve_port(&u->server), 
-            u->success, u->failure, u->count, queue_n(&u->timewheel));
+            u->success, u->failure, u->count, queue_n(&u->timewheel), u->expire_date);
 }
 #endif
 
@@ -140,7 +143,7 @@ upstream_request_too_often(struct upstream *u, uint32_t mr1m, uint32_t mr1h, uin
     h = 0;
     d = 0;
 
-    now = time(NULL);
+    now = rps_now();
     m_ago = now - 60;
     h_ago = now - 60 * 60;
     d_ago = now - 60 * 60 * 24;
@@ -197,7 +200,7 @@ static void
 upstream_timewheel_add(struct upstream *u) {
     rps_ts_t now;
     
-    now = time(NULL);
+    now = rps_now();
 
     queue_en(&u->timewheel, (void *)now);
 }
@@ -433,6 +436,8 @@ upstream_json_parse(struct upstream *u, json_t *element) {
             u->failure = (uint32_t)json_integer_value(tmp);
         } else if (strcmp(json_object_iter_key(kv), "insert_date") == 0) {
             u->insert_date = (rps_ts_t)json_integer_value(tmp);
+        } else if (strcmp(json_object_iter_key(kv), "expire_date") == 0) {
+            u->expire_date = (rps_ts_t)json_integer_value(tmp);
         } else if (strcmp(json_object_iter_key(kv), "enable") == 0) {
             u->enable = (uint8_t)json_integer_value(tmp);
         } else {
@@ -610,6 +615,59 @@ upstream_pool_merge(rps_hashmap_t *o_pool, rps_hashmap_t *n_pool) {
     return RPS_OK;
 }
 
+/* cleanup expired upstream proxy, recycle memory resource */
+static rps_status_t
+upstream_pool_cleanup(rps_hashmap_t *pool) {
+    uint32_t i;
+    rps_ts_t now;
+    struct hashmap_entry *e;
+    struct upstream *u;
+    char name[MAX_HOSTNAME_LEN];
+
+    now = rps_now();
+
+    for (i = 0; i < pool->size; i++) {
+        e = pool->buckets[i];
+        while (e != NULL) {
+            u = (struct upstream *)*(void **)e->value;
+            rps_unresolve_addr(&u->server, name);
+            /* unset expire date parameter */
+            if (u->expire_date == 0) {
+                e = e->next;
+                continue;
+            }
+
+            if (u->expire_date > now) {
+                e = e->next;
+                continue;
+            }
+
+#ifdef RPS_UPSTREAM_DELAY_CLEANUP
+            if (u->enable) {
+                e = e->next;
+                continue
+            }
+#endif
+            /* still be using */
+            if ((u->success + u->failure) != u->count) {
+                e = e->next;
+                continue;
+            }
+            
+            log_verb("%s:%d be cleanup, expire_date:%ld, now:%ld (s:%d, f:%d, c:%d)", 
+                    name, rps_unresolve_port(&u->server), u->expire_date, now, 
+                    u->success, u->failure, u->count);
+
+            upstream_deinit(u);
+            rps_free(u);
+            hashmap_remove(pool, e->key, e->key_size);
+            e = e->next;
+        }
+    }
+
+    return RPS_OK;
+}
+
 static rps_status_t
 upstream_stats_commit(struct upstream *u, rps_str_t *api, uint32_t timeout) {
     CURL *curl_handle;
@@ -623,9 +681,10 @@ upstream_stats_commit(struct upstream *u, rps_str_t *api, uint32_t timeout) {
     FILE *devnull = fopen("/dev/null", "w+");
 
     snprintf(payload, UPSTREAM_PAYLOAD_MAX_LENGTH, 
-        "ip=%s&port=%d&uname=%s&passwd=%s&source=%s&success=%d&failure=%d&count=%d&insert_date=%ld&enable=%d&timewheel=%d",
+        "ip=%s&port=%d&uname=%s&passwd=%s&source=%s&success=%d&failure=%d&count=%d&insert_date=%ld \
+        &expire_date=%ld&enable=%d&timewheel=%d",
         name, rps_unresolve_port(&u->server), u->uname.data, u->passwd.data, u->source.data, u->success,
-        u->failure, u->count,(long int)u->insert_date, u->enable, queue_n(&u->timewheel));
+        u->failure, u->count,(long int)u->insert_date, (long int)u->expire_date, u->enable, queue_n(&u->timewheel));
 
     curl_handle = curl_easy_init();
     curl_easy_setopt(curl_handle, CURLOPT_URL, api->data);
@@ -684,6 +743,7 @@ upstream_pool_refresh(struct upstream_pool *up) {
 
     uv_rwlock_wrlock(&up->rwlock);
     upstream_pool_merge(&up->pool, &new_pool);
+    upstream_pool_cleanup(&up->pool);
     uv_rwlock_wrunlock(&up->rwlock);
     
     hashmap_foreach2(&new_pool, (hashmap_foreach2_t)upstream_pool_deinit_foreach);
