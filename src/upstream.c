@@ -578,7 +578,7 @@ upstream_pool_merge(rps_hashmap_t *o_pool, rps_hashmap_t *n_pool) {
         return RPS_OK;
     }
 
-    for (i = 0; i < hashmap_n(n_pool); i++) {
+    for (i = 0; i < n_pool->size; i++) {
         e = n_pool->buckets[i];
         while (e != NULL) {
             u = (struct upstream *)*(void **)e->value;
@@ -655,7 +655,7 @@ upstream_pool_stats(struct upstream_pool *up) {
     struct upstream *upstream;
     uint32_t i;
 
-    for (i = 0; i < hashmap_n(&up->pool); i++) {
+    for (i = 0; i < up->pool.size; i++) {
         entry = up->pool.buckets[i];
         while (entry != NULL) {
             upstream = (struct upstream *)*(void **)entry->value;
