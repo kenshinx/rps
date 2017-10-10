@@ -38,7 +38,7 @@ upstreams:
     refresh: 60 #1 minutes
 
     #commit upstream status per 10 minutes
-    stats: 60
+    stats: 600
 
     #rr: round-robin
     #random: random schedule
