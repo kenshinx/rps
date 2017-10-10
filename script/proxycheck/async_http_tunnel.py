@@ -171,7 +171,7 @@ if __name__ == "__main__":
     HTTP_HOST = "www.baidu.com"
     HTTP_PORT = 80
 
-    WHOIS_HOST = "36.55.244.17"
+    WHOIS_HOST = "133.130.126.119"
     WHOIS_PORT = 43
 
 
