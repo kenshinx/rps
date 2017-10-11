@@ -699,7 +699,9 @@ upstream_stats_commit(struct upstream *u, rps_str_t *api, uint32_t timeout) {
                 name, rps_unresolve_port(&u->server), api->data,  curl_easy_strerror(res));
         status = RPS_ERROR;
     } else {
-        //log_verb("post upstream (%s:%d) statistic success", name, rps_unresolve_port(&u->server));
+#ifdef RPS_MORE_VERBOSE
+        log_verb("post upstream (%s:%d) statistic success", name, rps_unresolve_port(&u->server));
+#endif
         status = RPS_OK;
     }
     
@@ -712,16 +714,38 @@ static void
 upstream_pool_stats(struct upstream_pool *up) {
     struct hashmap_entry *entry;
     struct upstream *upstream;
+    struct upstream *t_upstream;
     uint32_t i;
+    rps_array_t t_pool;
 
+    if (hashmap_n(&up->pool) == 0) {
+        return;
+    }
+
+    /* hashmap is non thread safe
+     * copy the upstream pool in temporary array, avoid memory race condition 
+     */
+    uv_rwlock_rdlock(&up->rwlock);
+    array_init(&t_pool, hashmap_n(&up->pool), sizeof(struct upstream));
     for (i = 0; i < up->pool.size; i++) {
         entry = up->pool.buckets[i];
         while (entry != NULL) {
             upstream = (struct upstream *)*(void **)entry->value;
-            upstream_stats_commit(upstream, &up->stats_api, up->timeout);
+            t_upstream = (struct upstream *)array_push(&t_pool);
+            upstream_init(t_upstream);
+            upstream_copy(t_upstream, upstream);
             entry = entry->next;
         }
     }
+    uv_rwlock_rdunlock(&up->rwlock);
+
+    while (array_n(&t_pool)) {
+        t_upstream = (struct upstream *)array_pop(&t_pool);
+        upstream_stats_commit(t_upstream, &up->stats_api, up->timeout);
+        upstream_deinit(t_upstream);
+    }
+
+    array_deinit(&t_pool);
 }
 
 static rps_status_t
