@@ -33,3 +33,4 @@ logs
 /script/zhima.py
 /script/add_upstream.py
 script/*
+/pkg
