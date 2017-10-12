@@ -912,6 +912,7 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
 
     for ( ; ; ) {
         if (count >= UPSTREAM_MAX_LOOP) {
+            upstream = NULL;
             break;
         }
 
