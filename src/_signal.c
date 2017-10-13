@@ -12,7 +12,11 @@ static struct _signal signals[] = {
     { SIGINT,  "SIGINT",  0,                 signal_handler },
     { SIGTERM, "SIGTERM", 0,                 signal_handler },
     { SIGSEGV, "SIGSEGV", (int)SA_RESETHAND, signal_handler },
+    { SIGBUS,  "SIGBUS",  (int)SA_RESETHAND, signal_handler },
+    { SIGFPE,  "SIGFPE",  (int)SA_RESETHAND, signal_handler },
+    { SIGILL,  "SIGILL",  (int)SA_RESETHAND, signal_handler },
     { SIGPIPE, "SIGPIPE", 0,                 SIG_IGN },
+    { SIGHUP,  "SIGHUP",  0,                 SIG_IGN },
     { 0,        NULL,     0,                 NULL }
 };
 
@@ -91,6 +95,26 @@ signal_handler(int signo) {
         actionstr = ", core dumping";
         raise(SIGSEGV);
         break;
+
+    case SIGBUS:
+        log_stacktrace();
+        actionstr = ", hadrware fault";
+        raise(SIGBUS);
+        break;
+
+    case SIGFPE:
+        log_stacktrace();
+        actionstr = ", arithmetic exception";
+        raise(SIGFPE);
+        break;
+
+
+    case SIGILL:
+        log_stacktrace();
+        actionstr = ", illegal instruction";
+        raise(SIGILL);
+        break;
+
 
     default:
         NOT_REACHED();
