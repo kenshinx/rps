@@ -105,6 +105,7 @@ def stats(tag, proto):
             "count": form.get("count", None),
             "timewheel": form.get("timewheel", None),
             "insert_date": form.get("insert_date", None),
+            "expire_date": form.get("expire_date", None),
             "source": form.get("source", None),
             "last_commit":datetime.now(),
         }
