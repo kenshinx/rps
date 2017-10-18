@@ -204,6 +204,7 @@ server_ctx_init(rps_ctx_t *ctx, rps_sess_t *sess, uint8_t flag, uint32_t timeout
     ctx->wbuf2 = (char *)rps_alloc(WRITE_BUF_SIZE);
     if (ctx->wbuf2 == NULL) {
         rps_free(ctx->wbuf);
+        ctx->wbuf = NULL;
         return RPS_ENOMEM;
     }
 
@@ -725,11 +726,13 @@ server_on_request_connect(uv_stream_t *us, int err) {
 
     request = (struct context *)rps_alloc(sizeof(struct context));
     if (request == NULL) {
+        rps_free(sess);
         return;
     }
     sess->request = request;
     status = server_ctx_init(request, sess, c_request, s->rtimeout);
     if (status != RPS_OK) {
+        rps_free(sess);
         return;
     }
 
