@@ -544,6 +544,7 @@ upstream_pool_load(rps_hashmap_t *pool, rps_str_t *api, uint32_t timeout) {
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, upstream_pool_load_callback);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&resp);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, RPS_CURL_UA);
+    curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
     res = curl_easy_perform(curl_handle);
 
@@ -691,6 +692,7 @@ upstream_stats_commit(struct upstream *u, rps_str_t *api, uint32_t timeout) {
     curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS, payload);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, devnull);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, RPS_CURL_UA);
+    curl_easy_setopt(curl_handle, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_TIMEOUT, timeout);
     res = curl_easy_perform(curl_handle);
 
