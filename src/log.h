@@ -74,7 +74,7 @@ static const char *LOG_LEVEL_TEXT[] = {
 
 #define log_level_to_text(level)    (LOG_LEVEL_TEXT[level])
 
-static inline log_level
+static inline int
 log_level_to_int(const char *level) {
     int i;
     int n = sizeof(LOG_LEVEL_TEXT) / sizeof(LOG_LEVEL_TEXT[0]);

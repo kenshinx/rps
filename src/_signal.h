@@ -3,7 +3,7 @@
 
 struct _signal {
     int  signo;
-    char *signame;
+    const char *signame;
     int  flags;
     void (*handler)(int signo);
 };

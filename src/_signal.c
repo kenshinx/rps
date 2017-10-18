@@ -49,7 +49,7 @@ void
 signal_handler(int signo) {
 	struct _signal *sig;
     void (*action)(void);
-    char *actionstr;
+    const char *actionstr;
     bool done;
 
     for (sig = signals; sig->signo != 0; sig++) {
