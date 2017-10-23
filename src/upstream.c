@@ -803,7 +803,7 @@ upstreams_refresh(uv_timer_t *handle) {
             log_error("update %s upstream proxy pool failed", proto) ;
             return;
         } else {
-            log_debug("refresh %s upstream pool, get <%d> proxys", proto, hashmap_n(&up->pool));
+            log_info("refresh %s upstream pool, get <%d> proxys", proto, hashmap_n(&up->pool));
         }
     }
     
