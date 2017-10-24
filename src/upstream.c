@@ -75,7 +75,10 @@ upstream_copy(struct upstream *dst, struct upstream *src) {
     if (!string_empty(&src->source)) {
         string_copy(&dst->source, &src->source);
     }
-
+    
+    dst->success = src->success;
+    dst->failure = src->failure;
+    dst->count = src->count;
     dst->insert_date = src->insert_date;
     dst->expire_date = src->expire_date;
     dst->enable = src->enable;
