@@ -834,7 +834,7 @@ upstreams_stats(uv_timer_t *handle) {
         up = (struct upstream_pool *)array_get(&us->pools, i);
         proto = rps_proto_str(up->proto);
         upstream_pool_stats(up);
-        log_debug("commit %s upstream pool, count <%d> proxys", proto, hashmap_n(&up->pool));
+        log_info("commit %s upstream pool, count <%d> proxys", proto, hashmap_n(&up->pool));
     }
 }
 
