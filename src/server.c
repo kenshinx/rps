@@ -932,7 +932,7 @@ server_forward_connect(rps_ctx_t *forward) {
 
     sess->upstream = upstreams_get(s->upstreams, sess->request->proto);
     if (sess->upstream == NULL) {
-        log_error("no available %s upstream proxy.", rps_proto_str(sess->request->proto));
+        log_debug("no available %s upstream proxy.", rps_proto_str(sess->request->proto));
         forward->state = c_failed;
         forward->reply_code = rps_rep_proxy_unavailable;
         server_do_next(forward);
