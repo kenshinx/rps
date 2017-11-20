@@ -624,7 +624,7 @@ static rps_status_t
 upstream_pool_cleanup(rps_hashmap_t *pool) {
     uint32_t i;
     rps_ts_t now;
-    struct hashmap_entry *e;
+    struct hashmap_entry *e, *n;
     struct upstream *u;
     char name[MAX_HOSTNAME_LEN];
 
@@ -664,8 +664,9 @@ upstream_pool_cleanup(rps_hashmap_t *pool) {
 
             upstream_deinit(u);
             rps_free(u);
+            n = e->next;
             hashmap_remove(pool, e->key, e->key_size);
-            e = e->next;
+            e = n;
         }
     }
 
