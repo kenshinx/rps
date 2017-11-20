@@ -705,6 +705,11 @@ http_response_check(struct http_response *resp) {
     const char http0[] = "HTTP/1.0";
     const char http1[] = "HTTP/1.1";
 
+    if (string_empty(&resp->version)) {
+        log_error("http response check error, empty http version");
+        return RPS_ERROR;
+    }
+
     if (rps_strcmp(&resp->version, http0) != 0 && 
             rps_strcmp(&resp->version, http1) != 0) {
         log_error("http response check error, invalid http version: %s", 
