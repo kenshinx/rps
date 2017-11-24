@@ -146,7 +146,7 @@ rps_unresolve_addr(rps_addr_t *addr, char *name) {
             return -1;
         }
     } else if (addr->family == AF_DOMAIN) {
-        strcpy(name, addr->addr.name.host);
+        strncpy(name, addr->addr.name.host, MAX_INET_ADDRSTRLEN);
     } else {
         log_error("Unknow inet family:%d", addr->family);
         return -1;
