@@ -36,7 +36,7 @@ string_duplicate(rps_str_t *dst, const char *src, size_t len) {
     }
 
     dst->len = len;
-    dst->data[len] = '\0';
+    //dst->data[len] = '\0';
     
     return RPS_OK;
 }
