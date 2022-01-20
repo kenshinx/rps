@@ -1,0 +1,100 @@
+0000000000000000000000000000000000000000 28be5fcfc09de7bcbebe3dc4bf73ab4c2bf0c788 kenshin <kenshin.acs@gmail.com> 1490109919 +0800	branch: Created from master
+28be5fcfc09de7bcbebe3dc4bf73ab4c2bf0c788 050665f8295c48fa95bb0eed82f633df06d350b0 kenshin <kenshin.acs@gmail.com> 1490112448 +0800	commit: test: http tunnel client for debug tool
+050665f8295c48fa95bb0eed82f633df06d350b0 7628a5d70ba5fa94483f8302636db26d81bdb8af kenshin <kenshin.acs@gmail.com> 1490179611 +0800	commit: http proxy listen on 0.0.0.0 instead ipv6 loop address
+7628a5d70ba5fa94483f8302636db26d81bdb8af 6c1d3d7df6a7d58724a4cac504b0b46718be2297 kenshin <kenshin.acs@gmail.com> 1490179759 +0800	commit: Use rps custom UA header and add Host header in handshake phase
+6c1d3d7df6a7d58724a4cac504b0b46718be2297 bc91eec65b12beedd0f39a3c76fcda0a9ac5c82a kenshin <kenshin.acs@gmail.com> 1490179935 +0800	commit: http tunnel debug pcap
+bc91eec65b12beedd0f39a3c76fcda0a9ac5c82a 052d3b644d4980ddceda3c2cda37927ce51b38b8 kenshin <kenshin.acs@gmail.com> 1490194553 +0800	commit: test: move http and socks5 test script to test directory
+052d3b644d4980ddceda3c2cda37927ce51b38b8 e81dd13b667391b384a5728fbccf5edeceff83d8 kenshin <kenshin.acs@gmail.com> 1490197520 +0800	commit: HTTP tunnel ascii flow chart
+e81dd13b667391b384a5728fbccf5edeceff83d8 c06497add4409797d774d987c262a81a87cdc310 kenshin <kenshin.acs@gmail.com> 1490281681 +0800	commit: define CR & LF
+c06497add4409797d774d987c262a81a87cdc310 fb094b7cb7fe041a3f598a441553218edc9efd4f kenshin <kenshin.acs@gmail.com> 1490284282 +0800	commit: Remove needless blank line
+fb094b7cb7fe041a3f598a441553218edc9efd4f 53ffc87364f03c8889c2c391660f1a2c01902fad kenshin <kenshin.acs@gmail.com> 1490286222 +0800	commit: define http tunnel related struct
+53ffc87364f03c8889c2c391660f1a2c01902fad 30328493824870becc3a53bbddabe0291ac921f9 kenshin <kenshin.acs@gmail.com> 1490286260 +0800	commit: http read line and part of parse request line
+30328493824870becc3a53bbddabe0291ac921f9 8dc41f570d90adccc0b72753c356bc4f6cdd521d kenshin <kenshin.acs@gmail.com> 1490286353 +0800	commit: Ignore vim temporary file
+8dc41f570d90adccc0b72753c356bc4f6cdd521d a1695e19e4fc2a1bb4877a1cd9fd25ee4da3afb7 kenshin <kenshin.acs@gmail.com> 1490333853 +0800	commit: Parse http reuqest line: method and host
+a1695e19e4fc2a1bb4877a1cd9fd25ee4da3afb7 5bbf89937b0207beeab0723cb119450adb0035ca kenshin <kenshin.acs@gmail.com> 1490346737 +0800	commit: Parse http request line: port
+5bbf89937b0207beeab0723cb119450adb0035ca 8bd7b54fc20c4bddf95a67fc98a4689195bb3945 kenshin <kenshin.acs@gmail.com> 1490581578 +0800	commit: Parse http request line: protocol
+8bd7b54fc20c4bddf95a67fc98a4689195bb3945 ea2154b53b7e45e4da21dde068a7391bdd82a8b7 kenshin <kenshin.acs@gmail.com> 1490586062 +0800	commit: check and print http request line
+ea2154b53b7e45e4da21dde068a7391bdd82a8b7 f2d6a3199eff3ae192d18f2a6dd6bb8ec00f3b42 kenshin <kenshin.acs@gmail.com> 1490586091 +0800	commit: Disable hexdump http payload
+f2d6a3199eff3ae192d18f2a6dd6bb8ec00f3b42 d531e757caadee09efdbd3c55475f0ea2cf2dd00 kenshin <kenshin.acs@gmail.com> 1490586205 +0800	commit: Not make sense to check a uint_16 declared port number
+d531e757caadee09efdbd3c55475f0ea2cf2dd00 e4b2001ca743ace5b4990ced257f8a14512b99a8 kenshin <kenshin.acs@gmail.com> 1490586279 +0800	commit: Ignore s5_client binary file.
+e4b2001ca743ace5b4990ced257f8a14512b99a8 392ca6b8e892a38656c054e98bdf2195983297d5 kenshin <kenshin.acs@gmail.com> 1490588541 +0800	commit: style: use better naming
+392ca6b8e892a38656c054e98bdf2195983297d5 ce37418132f93d2f73626396a0ab1a9908b7d809 kenshin <kenshin.acs@gmail.com> 1490588986 +0800	commit: Extract http_request_parse function
+ce37418132f93d2f73626396a0ab1a9908b7d809 7d94e07fdbd82c357a6767dfa8967ede5bc6b5f8 kenshin <kenshin.acs@gmail.com> 1490679513 +0800	merge feature-hashtable: Fast-forward
+7d94e07fdbd82c357a6767dfa8967ede5bc6b5f8 446539a7a988bd089b18b1735cef80a894ae192e kenshin <kenshin.acs@gmail.com> 1490680132 +0800	commit: Use hashmap storage http headers
+446539a7a988bd089b18b1735cef80a894ae192e 4460aee97192bba6ec002015bd32e9e2472ad8d8 kenshin <kenshin.acs@gmail.com> 1490696008 +0800	commit: parse http header line: key
+4460aee97192bba6ec002015bd32e9e2472ad8d8 5a2847b947b72c447bdca62b64e11685509b20c6 kenshin <kenshin.acs@gmail.com> 1490698906 +0800	commit: Parse http request header
+5a2847b947b72c447bdca62b64e11685509b20c6 b08d5a5f69a56a86e83c544d7bc08656610619b6 kenshin <kenshin.acs@gmail.com> 1490698928 +0800	commit: compile hashmap and murmur3
+b08d5a5f69a56a86e83c544d7bc08656610619b6 068f127244faf51dc499717618bd89cfa0dc7acc kenshin <kenshin.acs@gmail.com> 1490715106 +0800	commit: hashmap_iter operation
+068f127244faf51dc499717618bd89cfa0dc7acc 3902ff3d2efd1c3e1309d942742a85d40615110e kenshin <kenshin.acs@gmail.com> 1490715131 +0800	commit: check and dump http header
+3902ff3d2efd1c3e1309d942742a85d40615110e c8d586699a3e7c65933b6e8c6c1ce523cfcaaae6 kenshin <kenshin.acs@gmail.com> 1490715139 +0800	commit: style:
+c8d586699a3e7c65933b6e8c6c1ce523cfcaaae6 a05b6784d9c09771fa84c5dd267a16bb7b7003ce kenshin <kenshin.acs@gmail.com> 1490758617 +0800	commit: Ignore auth phase if rps didn’t set username or password
+a05b6784d9c09771fa84c5dd267a16bb7b7003ce 73546706f9431546c95d5f4918166a974f0b9471 kenshin <kenshin.acs@gmail.com> 1490759715 +0800	commit: Authorization required or not
+73546706f9431546c95d5f4918166a974f0b9471 cccd605366edde16055c7d8f231fc61c6379f970 kenshin <kenshin.acs@gmail.com> 1490760222 +0800	commit: clarify c_handshake_req and c_auth_req phase
+cccd605366edde16055c7d8f231fc61c6379f970 ca5f47b53ad20f2bb21be6fdcff2bf5975e4b378 kenshin <kenshin.acs@gmail.com> 1490764073 +0800	commit: import base64
+ca5f47b53ad20f2bb21be6fdcff2bf5975e4b378 fa12a757098d7219c83e713cc9b22d95dfea07ef kenshin <kenshin.acs@gmail.com> 1490777456 +0800	commit: ignore b64/*.o
+fa12a757098d7219c83e713cc9b22d95dfea07ef 8a5c727dfa0970f655218ab49d36f1b10407fe72 kenshin <kenshin.acs@gmail.com> 1490779467 +0800	commit: rps_str6_cmp
+8a5c727dfa0970f655218ab49d36f1b10407fe72 202e898a4c508935ee4107442c60ff5384b688b4 kenshin <kenshin.acs@gmail.com> 1490780372 +0800	commit: Parse http request authentication credentials
+202e898a4c508935ee4107442c60ff5384b688b4 7cd1c3b6359a6537469763c388e89cad27f21dbd kenshin <kenshin.acs@gmail.com> 1490802326 +0800	commit: http basic authentication
+7cd1c3b6359a6537469763c388e89cad27f21dbd b6f4c3298e12a8411acd196f43050287a055b920 kenshin <kenshin.acs@gmail.com> 1490802871 +0800	commit: free http_request and http_request_auth
+b6f4c3298e12a8411acd196f43050287a055b920 872b6b86853887a097dce05a6c5eaa5eeaef8a4a kenshin <kenshin.acs@gmail.com> 1490841561 +0800	commit: Move murmur3 into single directory
+872b6b86853887a097dce05a6c5eaa5eeaef8a4a f06d000790a9d5ddecdef62e306e54cc37934204 kenshin <kenshin.acs@gmail.com> 1490841626 +0800	commit: Remove duplicate log
+f06d000790a9d5ddecdef62e306e54cc37934204 43ca698ca2f00174cb07fe9757ba366b59b46c03 kenshin <kenshin.acs@gmail.com> 1490843715 +0800	commit: define http response struct
+43ca698ca2f00174cb07fe9757ba366b59b46c03 82a716a4218b927d4a50081fd984702a68457298 kenshin <kenshin.acs@gmail.com> 1490844390 +0800	commit: http.c share public function for both client and server http protocol
+82a716a4218b927d4a50081fd984702a68457298 e1aede32f7e9fe11ef373a6e9c563393c40b5d1c kenshin <kenshin.acs@gmail.com> 1490844459 +0800	commit: remove murmur3.o
+e1aede32f7e9fe11ef373a6e9c563393c40b5d1c 1f7b2c440cd35bba5c40a163a9cdf27d8c095daa kenshin <kenshin.acs@gmail.com> 1490846494 +0800	commit: define http response status code and http response init &deinit
+1f7b2c440cd35bba5c40a163a9cdf27d8c095daa 9c2dc8916c8660afd4bc6248233093adc6da8ed8 kenshin <kenshin.acs@gmail.com> 1490851402 +0800	commit: Joint http response staus, headers and body
+9c2dc8916c8660afd4bc6248233093adc6da8ed8 89c161e6869f3ba497b5d33984b10b295e08a0da kenshin <kenshin.acs@gmail.com> 1490867935 +0800	commit: http response 407
+89c161e6869f3ba497b5d33984b10b295e08a0da 331a8a57da93fd9d6b622e165dba40bbd66afb6a kenshin <kenshin.acs@gmail.com> 1490872710 +0800	commit: Response add Proxy-agent header
+331a8a57da93fd9d6b622e165dba40bbd66afb6a afe17f3f5bc978c88c9290143fc7c86c1f50af49 kenshin <kenshin.acs@gmail.com> 1490928949 +0800	commit: http response message
+afe17f3f5bc978c88c9290143fc7c86c1f50af49 68ded4f0174e5f88ea5380cc257734d749e1a2b1 kenshin <kenshin.acs@gmail.com> 1490929175 +0800	commit: Ouput http response in debug mode
+68ded4f0174e5f88ea5380cc257734d749e1a2b1 c57a0a9662d989da2e235bea6a3843cba9496c74 kenshin <kenshin.acs@gmail.com> 1490948505 +0800	commit: http tunnel allow reperform handshake if authentication required
+c57a0a9662d989da2e235bea6a3843cba9496c74 dfd5322094379fe135bdae1a2e0280a6849f5e63 kenshin <kenshin.acs@gmail.com> 1490953151 +0800	commit: http tunnel proxy protocol server endpoint.
+dfd5322094379fe135bdae1a2e0280a6849f5e63 868e06b74395adbab65de0fe2c3ead3716148ef8 kenshin <kenshin.acs@gmail.com> 1490956918 +0800	commit: Improve the robust during some client implemtation unregular.
+868e06b74395adbab65de0fe2c3ead3716148ef8 652e2ce4389a73aceacd6a36269f856ad7db08be kenshin <kenshin.acs@gmail.com> 1490956945 +0800	commit: Add authentication procedure
+652e2ce4389a73aceacd6a36269f856ad7db08be d03049e9fad0a8ef5c44388b2aeafdaa103981cf kenshin <kenshin.acs@gmail.com> 1490957125 +0800	commit: Spell error
+d03049e9fad0a8ef5c44388b2aeafdaa103981cf c140764a4f2c3cfa2d4f71506f6b3d615243d23b kenshin <kenshin.acs@gmail.com> 1490957741 +0800	commit: http backend add authentication configuration
+c140764a4f2c3cfa2d4f71506f6b3d615243d23b 13e7c0830081f8e3158ead0da5b162ec6accaf1e kenshin <kenshin.acs@gmail.com> 1490958211 +0800	commit: recommit error restore file
+13e7c0830081f8e3158ead0da5b162ec6accaf1e a04c69bb73c50ff4c16a069e832cea5fca6d44bc kenshin <kenshin.acs@gmail.com> 1490973943 +0800	commit: millstone: http tunnel protocol server side implementation done
+a04c69bb73c50ff4c16a069e832cea5fca6d44bc 4f78cb2226b8ee630209102a0feab40b721505ea kenshin <kenshin.acs@gmail.com> 1491016752 +0800	commit: Free http response before retrun
+4f78cb2226b8ee630209102a0feab40b721505ea a8fdb4c9e08c1b087e9bfc7e3d38b0788599c624 kenshin <kenshin.acs@gmail.com> 1491026458 +0800	commit: Make sure ctx memory be freed in all kinds of approach
+a8fdb4c9e08c1b087e9bfc7e3d38b0788599c624 ef6de7d18a91830bd0ccb738d1268d4b1b52928b kenshin <kenshin.acs@gmail.com> 1491027966 +0800	commit: Storage sockaddr_name port in host byte order default instead of network byte order
+ef6de7d18a91830bd0ccb738d1268d4b1b52928b 94f3ef6d8be2cce6d4b911671227fec55b64ba9f kenshin <kenshin.acs@gmail.com> 1491038685 +0800	commit: Transform port from host byte oder to network byte in sockaddr_name struct
+94f3ef6d8be2cce6d4b911671227fec55b64ba9f d52a57272de27874d6a26ad7f720f872949d4df9 kenshin <kenshin.acs@gmail.com> 1491039933 +0800	commit: Storage remote address
+d52a57272de27874d6a26ad7f720f872949d4df9 7b2cf0b8ac07975994cc42cb70e3e6def31054ea kenshin <kenshin.acs@gmail.com> 1491040587 +0800	commit: server_ctx_dead instead of server_ctx_closed
+7b2cf0b8ac07975994cc42cb70e3e6def31054ea 46ce95590acf8b9abdd544f0f4767f701d999352 kenshin <kenshin.acs@gmail.com> 1491041777 +0800	commit: Begin http client side implementation
+46ce95590acf8b9abdd544f0f4767f701d999352 17ff300316994c2cb461746d0d358eb5d838f185 kenshin <kenshin.acs@gmail.com> 1491321189 +0800	commit: Naming http protocol 1.1 is more accurate than version
+17ff300316994c2cb461746d0d358eb5d838f185 730eabd22127aea22745d499fbe3d3647d32eea6 kenshin <kenshin.acs@gmail.com> 1491322289 +0800	commit: Should uv_close should be called if context be connecting or have connected
+730eabd22127aea22745d499fbe3d3647d32eea6 15142b3d5bc9dafe665417cc9889f0a673d56f2b kenshin <kenshin.acs@gmail.com> 1491322308 +0800	commit (amend): Should uv_close should be called if context be connecting or have connected
+15142b3d5bc9dafe665417cc9889f0a673d56f2b 0de532cdf12be7e3640deb1893c99b7fd0f8e72f kenshin <kenshin.acs@gmail.com> 1491361138 +0800	commit: Use more security snprintf instead of sprintf
+0de532cdf12be7e3640deb1893c99b7fd0f8e72f 36c5e63a4046cb974cf08749777763158043bbfd kenshin <kenshin.acs@gmail.com> 1491361976 +0800	commit: hashmap, key and value needn’t the last ‘\0’
+36c5e63a4046cb974cf08749777763158043bbfd 79f43b3d0c308075b938c93f5750896062ce800a kenshin <kenshin.acs@gmail.com> 1491371735 +0800	commit: Generate http basic authentication challenge
+79f43b3d0c308075b938c93f5750896062ce800a af785b56c790a4f94e68bdfcbdf13014967120e5 kenshin <kenshin.acs@gmail.com> 1491371775 +0800	commit: Don’t send proxy agent default.
+af785b56c790a4f94e68bdfcbdf13014967120e5 1db9241b3db287915088afbf915fbd1a5caa9eaf kenshin <kenshin.acs@gmail.com> 1491372329 +0800	commit: http response dump
+1db9241b3db287915088afbf915fbd1a5caa9eaf 8da80dd3012c538beff1e2e35e182b63875b3130 kenshin <kenshin.acs@gmail.com> 1491384359 +0800	commit: http method mapping
+8da80dd3012c538beff1e2e35e182b63875b3130 2312f83665c06754e9063f2ad3528189ece4f25c kenshin <kenshin.acs@gmail.com> 1491386118 +0800	commit: Generate http request message and dump request & response for debug
+2312f83665c06754e9063f2ad3528189ece4f25c 2f0ca5f8700de994d0f7bcfe101f5d0552d6eb1c kenshin <kenshin.acs@gmail.com> 1491387111 +0800	commit: http client do handshake and send request
+2f0ca5f8700de994d0f7bcfe101f5d0552d6eb1c 36a2f7dcec97d97f282f3df3bbedee5445c2f239 kenshin <kenshin.acs@gmail.com> 1491387226 +0800	commit: refactor: more clean
+36a2f7dcec97d97f282f3df3bbedee5445c2f239 4cd6cbfc523da7ed420a52d522e8117f55a69f18 kenshin <kenshin.acs@gmail.com> 1491407813 +0800	commit: output malloc and free log only during set RPS_MORE_VERBOSE cflags
+4cd6cbfc523da7ed420a52d522e8117f55a69f18 6d04b7fa0913ca91b463bdf7b9103c079c73396d kenshin <kenshin.acs@gmail.com> 1491408183 +0800	commit: http response add protocol field.
+6d04b7fa0913ca91b463bdf7b9103c079c73396d 18a401b2f13767482ac0409a3983a31b154fdd9e kenshin <kenshin.acs@gmail.com> 1491410385 +0800	commit: http response add status field
+18a401b2f13767482ac0409a3983a31b154fdd9e 7506070e25d88b4bf52793d8713a8df42f6d0bdc kenshin <kenshin.acs@gmail.com> 1491410513 +0800	commit: Parse http response line
+7506070e25d88b4bf52793d8713a8df42f6d0bdc 81c05d905679241ea1466283b7e0354b0b0ac629 kenshin <kenshin.acs@gmail.com> 1491410527 +0800	commit: http client do handshake response
+81c05d905679241ea1466283b7e0354b0b0ac629 29d1ff04a68490b8cbace24323a1056d7d2376ea kenshin <kenshin.acs@gmail.com> 1491455178 +0800	commit: Parse http response and adjust debug log
+29d1ff04a68490b8cbace24323a1056d7d2376ea 896b520b7e68bf618b841889c6fa4190b68e09d0 kenshin <kenshin.acs@gmail.com> 1491455216 +0800	commit: http verify response
+896b520b7e68bf618b841889c6fa4190b68e09d0 04e88994a2cebdfdf0ccdd4c48521c5ae798a866 kenshin <kenshin.acs@gmail.com> 1491456191 +0800	commit: check http response
+04e88994a2cebdfdf0ccdd4c48521c5ae798a866 cfd16e1f69a09dfa9f90c19bc7b375fe62be2386 kenshin <kenshin.acs@gmail.com> 1491456682 +0800	commit: fix: return immediately during http response parse error detected
+cfd16e1f69a09dfa9f90c19bc7b375fe62be2386 a260f2a0641a9681dc78a4a521ac0df7cb8f2311 kenshin <kenshin.acs@gmail.com> 1491464105 +0800	commit: log http response status and switch context state accroding response status
+a260f2a0641a9681dc78a4a521ac0df7cb8f2311 fd27483014e1ad234e75a11a5d96759d6fe72fb8 kenshin <kenshin.acs@gmail.com> 1491532768 +0800	merge master: Fast-forward
+fd27483014e1ad234e75a11a5d96759d6fe72fb8 e1ad6002efa411a90b25f27536f09dd26b2dd8de kenshin <kenshin.acs@gmail.com> 1491534789 +0800	commit: handle http 404
+e1ad6002efa411a90b25f27536f09dd26b2dd8de fb5ac790944c34ae58b224ddd4106c8c7a11f080 kenshin <kenshin.acs@gmail.com> 1491543817 +0800	commit: Parse http response body
+fb5ac790944c34ae58b224ddd4106c8c7a11f080 9a8cd42089d3152e138d616b87c07378462a8782 kenshin <kenshin.acs@gmail.com> 1491556788 +0800	commit: output http response body
+9a8cd42089d3152e138d616b87c07378462a8782 d36206aea6ee1344b22218f5be236992694ae56e kenshin <kenshin.acs@gmail.com> 1491557603 +0800	commit: define http valid port
+d36206aea6ee1344b22218f5be236992694ae56e 3181ff780a40981fff337b6f17f8325060c42f7e kenshin <kenshin.acs@gmail.com> 1491561700 +0800	commit: http server send reply
+3181ff780a40981fff337b6f17f8325060c42f7e b733591b745d6b5f6a01887c2ffccc2c1ac50845 kenshin <kenshin.acs@gmail.com> 1491562974 +0800	commit: add debug log during request parse error
+b733591b745d6b5f6a01887c2ffccc2c1ac50845 581871f9e2dfe338313fe407bb5138eab8aa6177 kenshin <kenshin.acs@gmail.com> 1491798092 +0800	commit: remove the last \n from the output of base64_encode_blockend
+581871f9e2dfe338313fe407bb5138eab8aa6177 7e400d8540d1cfdd1df296f9a7fba4b58b00d7cf kenshin <kenshin.acs@gmail.com> 1491800361 +0800	commit: Reperform authentication request during first 407 received
+7e400d8540d1cfdd1df296f9a7fba4b58b00d7cf d13756d30d428297487bd27e74e09d461d31b70a kenshin <kenshin.acs@gmail.com> 1491804847 +0800	commit: Add Proxy-Connection header
+d13756d30d428297487bd27e74e09d461d31b70a 7d630cea6d6c159c7c9aa34e5f95c7ed7a082a53 kenshin <kenshin.acs@gmail.com> 1491819325 +0800	commit: mofify upstream default refresh interval
+7d630cea6d6c159c7c9aa34e5f95c7ed7a082a53 efc1d38e0407e454402b1cedf454514c5c3aa01c kenshin <kenshin.acs@gmail.com> 1491819385 +0800	commit: http client support Proxy-Connection header
+efc1d38e0407e454402b1cedf454514c5c3aa01c c53209fadfc2e3d70c442aa4cfc2e5d0ca03fe97 kenshin <kenshin.acs@gmail.com> 1491838443 +0800	commit: End http request and response with one single CRLF instead of double CRLF
+c53209fadfc2e3d70c442aa4cfc2e5d0ca03fe97 99acc5bda119bd58e2229434301bcedc24de150c kenshin <kenshin.acs@gmail.com> 1491879868 +0800	commit: Pretty log output

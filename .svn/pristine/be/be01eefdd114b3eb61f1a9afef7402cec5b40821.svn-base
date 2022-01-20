@@ -1,0 +1,140 @@
+#! /usr/bin/env python
+
+import sys
+import json
+import logging
+import optparse
+import time
+import requests
+import schedule
+from datetime import datetime, timedelta
+from pymongo import MongoReplicaSetClient, MongoClient
+
+MONGO_HOST     = "10.160.151.227:7528, 10.160.121.95:7528"
+MONGO_USERNAME = "mongo"
+MONGO_PASSWORD = "70d05ef8690900a4"
+MONGO_REPLICA_SET = "7528"
+
+
+SOCKS5_API = "http://webapi.http.zhimacangku.com/getip?num=200&type=2&pro=0&city=0&yys=0&port=2&pack=5725&ts=1&ys=0&cs=0&lb=1&sb=0&pb=4&mr=3&regions=&big_num=994"
+HTTP_API = "http://webapi.http.zhimacangku.com/getip?num=200&type=2&pro=0&city=0&yys=0&port=1&pack=5725&ts=1&ys=0&cs=0&lb=1&sb=0&pb=4&mr=3&regions=&big_num=994"
+HTTPS_API = "http://webapi.http.zhimacangku.com/getip?num=200&type=2&pro=0&city=0&yys=0&port=11&pack=5725&ts=1&ys=0&cs=0&lb=1&sb=0&pb=4&mr=3&regions=&big_num=994"
+
+
+class ZhimaProxy():
+    def __init__(self, dbname):
+    	self.dbname = dbname
+    	self.conn = self.createConn()
+
+    @property
+    def db(self):
+        if self.dbname == "rps":
+            return self.conn.rps
+        elif self.dbname == "rps_test":
+            return self.conn.rps_test
+        else:
+            raise Exception("Invalid DataBase <%s>" %self.dbname)
+
+    def createConn(self):
+        addr = "mongodb://%s:%s@%s" %(MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST)
+        conn = MongoClient(addr, replicaSet = MONGO_REPLICA_SET)
+        return conn
+
+    def insertProxy(self, r, proto):
+        if proto == "socks5":
+            collection = self.db.socks5
+        elif proto == "http_tunnel":
+            collection = self.db.http_tunnel
+        elif proto == "http":
+            collection = self.db.http
+        else:
+            raise Exception("Error proxy protocol '%s'", proto)
+
+        data = {
+            "host": r["ip"], 
+            "port": int(r["port"]), 
+            "proto": proto,
+            "username": None,
+            "password": None,
+            "source": "zhima",
+            "success":0,
+            "failure": 0,
+            "weight":0,
+            "enable":1,
+            "insert_date": datetime.now(),
+            "expire_date": r["expire_time"]
+            
+        }
+        expire_date = datetime.strptime(r["expire_time"], "%Y-%m-%d %H:%M:%S")
+        #expire in one minute.
+        if expire_date < (datetime.now() + timedelta(seconds=60)):
+            print "%s:%d will expire in one minute" %(r["ip"], r["port"])
+            return
+
+        filter = {"host": r["ip"], "port":int(r["port"]), "proto":proto}    
+        set = {"username": None, "password": None, "weight": 0, "enable":1, "expire_date":expire_date}
+        setOnInsert = {"success":0, "failure": 0, "source": "zhima", "insert_date": datetime.now()}
+
+        collection.update_one(filter, {"$set": set, "$setOnInsert": setOnInsert}, upsert = True)
+
+    def _addProxy(self, api, proto):
+        try:
+            resp = requests.get(api)
+        except Exception, e:
+            logging.error("zhima %s api http request error: %s", proto, str(e))
+            return
+        try:
+            records = resp.json()["data"]
+        except Exception, e:
+            logging.error("zhima %s api json decode error: %s, resp content: %s", proto, str(e), resp.content)
+            return
+        logging.info("get %d %s proxy records from zhima API." %(len(records), proto)) 
+
+    	for r in records:
+            self.insertProxy(r, proto)
+
+
+    def addNewProxy(self):
+        self._addProxy(SOCKS5_API, "socks5")
+        time.sleep(2)
+        self._addProxy(HTTP_API, "http")
+        time.sleep(2)
+        self._addProxy(HTTPS_API, "http_tunnel")
+
+    def delExpireProxy(self):
+        #expire in one minute.
+        expire_date = datetime.now() + timedelta(seconds = 60)
+        socks5 = self.db.socks5.delete_many({"source":"zhima", "expire_date": {"$lt": expire_date}})
+        http = self.db.http.delete_many({"source":"zhima", "expire_date": {"$lt": expire_date}})
+        http_tunnel = self.db.http_tunnel.delete_many({"source":"zhima", "expire_date": {"$lt": expire_date}})
+        logging.info("delete [s5: %d, http: %d, https: %d] expire records from mongo." 
+            %(socks5.deleted_count, http.deleted_count, http_tunnel.deleted_count)) 
+
+
+    def run(self):
+        self.delExpireProxy()
+        self.addNewProxy()
+    
+
+def main():
+    parser = optparse.OptionParser()
+    parser.add_option("-d", "--database", action="store", dest="db", type="string", 
+                    default="rps_test", help="[rps|rps_test]")
+    parser.add_option("-e", "--every", action="store", dest="every", type="int", default=5,
+                    help="run check every %default minutes")
+    options, args = parser.parse_args()
+
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+
+    zp = ZhimaProxy(options.db)
+
+    schedule.every(options.every).seconds.do(zp.run).run()
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+    
+
+if __name__ == "__main__":
+    main()

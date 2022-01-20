@@ -1,0 +1,17 @@
+0000000000000000000000000000000000000000 ce37418132f93d2f73626396a0ab1a9908b7d809 kenshin <kenshin.acs@gmail.com> 1490604189 +0800	branch: Created from http-tunnel-proxy
+ce37418132f93d2f73626396a0ab1a9908b7d809 7e392e761dac5d0683e800e6fa4aded3e3e304d6 kenshin <kenshin.acs@gmail.com> 1490606863 +0800	commit: define hashtable and hash entry struct
+7e392e761dac5d0683e800e6fa4aded3e3e304d6 96b23b3334ec51b2e52d3726668c87f970204ba8 kenshin <kenshin.acs@gmail.com> 1490606897 +0800	commit: Import murmur3 as hash function
+96b23b3334ec51b2e52d3726668c87f970204ba8 42f04bb2edb6c10b8f16f0ee9fdfe0a95fb5a0ca kenshin <kenshin.acs@gmail.com> 1490607543 +0800	commit: Remove the Executable mode
+42f04bb2edb6c10b8f16f0ee9fdfe0a95fb5a0ca 56ff71405590ce4f51ab4c808f74751f8dbc5841 kenshin <kenshin.acs@gmail.com> 1490608484 +0800	commit: hashtable init & create function
+56ff71405590ce4f51ab4c808f74751f8dbc5841 67cf9033d97c5fd11ffead6e46955ccda6ab39b3 kenshin <kenshin.acs@gmail.com> 1490609200 +0800	commit: Make hashtable seed be random
+67cf9033d97c5fd11ffead6e46955ccda6ab39b3 df7af2006a75e653bcf39d2b51f38392b6950d20 kenshin <kenshin.acs@gmail.com> 1490611865 +0800	commit: hashtable_entry_create
+df7af2006a75e653bcf39d2b51f38392b6950d20 7601fe9a4b8a16c60e123d0dc5c4ac7fd08f0b50 kenshin <kenshin.acs@gmail.com> 1490612446 +0800	commit: free hashtable entry
+7601fe9a4b8a16c60e123d0dc5c4ac7fd08f0b50 58ab2c9a5f2f38c94a46e1f7dd05471d230b1576 kenshin <kenshin.acs@gmail.com> 1490627890 +0800	commit: Rename hashtable to hashmap
+58ab2c9a5f2f38c94a46e1f7dd05471d230b1576 951044bc99be1d10c55cbc799d76145bf2b28b50 kenshin <kenshin.acs@gmail.com> 1490628586 +0800	commit: free hashmap
+951044bc99be1d10c55cbc799d76145bf2b28b50 c44b13ca1c25f81e9a177d6cb4ef033dc4f30eb2 kenshin <kenshin.acs@gmail.com> 1490630096 +0800	commit: hashmap index function and unfinished set
+c44b13ca1c25f81e9a177d6cb4ef033dc4f30eb2 da649930e8c7bd455cd4b662ecf490e34e13dae0 kenshin <kenshin.acs@gmail.com> 1490632012 +0800	commit: hashmap_entry_compare and hashmap_entry_set
+da649930e8c7bd455cd4b662ecf490e34e13dae0 7c1ecd6fc2dcb10358595cb6bd82e1437ed8abfd kenshin <kenshin.acs@gmail.com> 1490673028 +0800	commit: hashmap set and rehash operation
+7c1ecd6fc2dcb10358595cb6bd82e1437ed8abfd c50a14c10d9076e72a054176ca4de63960d84174 kenshin <kenshin.acs@gmail.com> 1490675169 +0800	commit: hashmap get
+c50a14c10d9076e72a054176ca4de63960d84174 7e55dbf56664734fd13a08ef3a846a279fd0870e kenshin <kenshin.acs@gmail.com> 1490677280 +0800	commit: hashmap_has
+7e55dbf56664734fd13a08ef3a846a279fd0870e 0f553984b8afde75e04a7d32c3f2ab70dcc280f4 kenshin <kenshin.acs@gmail.com> 1490679212 +0800	commit: hashmap_remove
+0f553984b8afde75e04a7d32c3f2ab70dcc280f4 7d94e07fdbd82c357a6767dfa8967ede5bc6b5f8 kenshin <kenshin.acs@gmail.com> 1490679433 +0800	commit: hashmap_n

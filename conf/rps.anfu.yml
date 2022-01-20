@@ -1,0 +1,79 @@
+
+title: Rotating Proxy Server
+
+daemon: false
+
+pidfile: /tmp/rps.anfu.pid
+
+servers:
+    #Request timeout
+    rtimeout: 30
+
+    #Forward timeout should consider retry times
+    #So set forward timeout less than request timeout is make sense in general
+    ftimeout: 20
+
+    #servers
+    ss:
+        - proto: socks5
+          listen: 10.220.137.171
+          port: 9855
+          username: anfu
+          password: tQsdz7sukfh
+          
+
+upstreams:
+    refresh: 60 #1 minutes
+
+    #commit upstream status per 10 minutes
+    stats: 0
+
+    #rr: round-robin
+    #random: random schedule
+    #wrr: weighted round robin
+    schedule: rr
+
+    # Just leave hybrid=false if you don't understand what will happen 
+    # after enable hybrid
+    hybrid: false
+
+    # If connect upstream failed in upstream phase, attempt connect new upstream.
+    # re-connect is low cost operation compared to retry.
+    maxreconn: 3 
+
+    # If handshake with upstream failed, try handshake with new upstream.
+    # Need re-connect, re-handshake, re-auth etc..
+    maxretry: 3
+
+    #max reques in 1 minute, 0 means no limits
+    mr1m: 1000
+
+    #max request in 1 hour, 0 means no limits
+    mr1h: 0
+
+    #max request in 1 day, 0 means no limits
+    mr1d: 0
+
+    # The upstream's fail rate that higher than the setting value will be dropped.
+    # The bigger value means higher fail tolerance, 0 means ignore this options.
+    max_fail_rate: 0.7
+
+    pools:
+        - proto: socks5
+
+        #- proto: http
+
+        #- proto: http_tunnel
+
+api:
+    url: http://10.220.137.171:9897/api/anfu
+    #Fetching proxy resouce from specific source
+    s5_source: "zhima"
+    http_source: "zhima"
+    http_tunnel_source: "zhima"
+    timeout: 30
+
+log:
+    file: ../logs/rps.anfu.log
+    level: INFO #DEBUG| INFO| NOTICE| WARN| ERROR| CRIT
+

@@ -1,0 +1,320 @@
+0000000000000000000000000000000000000000 d204732c225588fd33fb345f93934d9a4d0605bb kenshin <kenshin.acs@gmail.com> 1468321562 +0800	commit (initial): First step of RPG(Rotating Proxy Gateway)
+d204732c225588fd33fb345f93934d9a4d0605bb 050e6c30b940e77b3396c39d7c46a1754145da88 kenshin <kenshin.acs@gmail.com> 1468321585 +0800	commit: Ignore log and build temp files.
+050e6c30b940e77b3396c39d7c46a1754145da88 8b3d3453481ca9a72aa627e5f2c07d756e68df1b kenshin <kenshin.acs@gmail.com> 1468321625 +0800	commit: Ignore ctags file
+8b3d3453481ca9a72aa627e5f2c07d756e68df1b f6275d8e8e8d55e7507ab2f936577f7199bd7afb kenshin <kenshin.acs@gmail.com> 1468400388 +0800	commit: Remove libyaml build files.
+f6275d8e8e8d55e7507ab2f936577f7199bd7afb 67b334ccde097193387f30d7f0fdb3417fc099c5 kenshin <kenshin.acs@gmail.com> 1468400437 +0800	commit: Build enable debug mode.
+67b334ccde097193387f30d7f0fdb3417fc099c5 4315cedeaf734c3ff98694c5efc81add4ed3d537 kenshin <kenshin.acs@gmail.com> 1468400490 +0800	commit: Refactor && getopt_long()
+4315cedeaf734c3ff98694c5efc81add4ed3d537 f9eda938f527c7cb02a23ec03ad02bd5208abf2c kenshin <kenshin.acs@gmail.com> 1468467892 +0800	commit: Parse configure file.
+f9eda938f527c7cb02a23ec03ad02bd5208abf2c f7493eb7315955284a196724faaa0b517f117083 kenshin <kenshin.acs@gmail.com> 1468467933 +0800	commit: utils and version defines
+f7493eb7315955284a196724faaa0b517f117083 8bcb4146d9cb8011ec8d33ccf8f4adc3cbdd5d69 kenshin <kenshin.acs@gmail.com> 1468468608 +0800	commit: Better protocols directory designs
+8bcb4146d9cb8011ec8d33ccf8f4adc3cbdd5d69 f052bd4634a893d3fc231f196460cb5781780895 kenshin <kenshin.acs@gmail.com> 1468490275 +0800	commit: Configure file load function
+f052bd4634a893d3fc231f196460cb5781780895 b4b24930ae73e6fe0f07798773d784a295a8c6ed kenshin <kenshin.acs@gmail.com> 1468490307 +0800	commit: rpg_alloc(), rpg_free etc.. functions
+b4b24930ae73e6fe0f07798773d784a295a8c6ed 9497536a2de3305619b33dd8de538c0fbf79e6ea kenshin <kenshin.acs@gmail.com> 1468494776 +0800	commit: Set verbose
+9497536a2de3305619b33dd8de538c0fbf79e6ea 3582ee10e00e2b9d23b46aac43869bbd745f24cd kenshin <kenshin.acs@gmail.com> 1468577912 +0800	commit: typedef rpg_array_t
+3582ee10e00e2b9d23b46aac43869bbd745f24cd 23b989ff7c367f8aecbfdcb9910637c4a3ade283 kenshin <kenshin.acs@gmail.com> 1468577937 +0800	commit: Remove debug file.
+23b989ff7c367f8aecbfdcb9910637c4a3ade283 783a99b579f11c7ba86e1e6dcf107f8423027823 kenshin <kenshin.acs@gmail.com> 1468812490 +0800	commit: Set pdifile at configuration file rather than cmd.
+783a99b579f11c7ba86e1e6dcf107f8423027823 c5cebadcc88d62248ccc5991c98d7e5706c1dec6 kenshin <kenshin.acs@gmail.com> 1468834519 +0800	commit: define NOT_REACHED macro.
+c5cebadcc88d62248ccc5991c98d7e5706c1dec6 d362e926b8b8df4866bbbed1998c7820d6921a94 kenshin <kenshin.acs@gmail.com> 1468834540 +0800	commit: Configuration Parser Handler.
+d362e926b8b8df4866bbbed1998c7820d6921a94 7eeb3be20025e5a66db6f9aca1fba87f1d83b20a kenshin <kenshin.acs@gmail.com> 1468859484 +0800	commit: yaml configuration file parser
+7eeb3be20025e5a66db6f9aca1fba87f1d83b20a 68c3e4919546a5a09038149e8530474a38e83e1f kenshin <kenshin.acs@gmail.com> 1469066740 +0800	commit: config_parse_core function
+68c3e4919546a5a09038149e8530474a38e83e1f bbddbfca68aba4c4bb868ec649c9dd23db4079da kenshin <kenshin.acs@gmail.com> 1469076496 +0800	commit: Add sting_new(), string_free() functions.
+bbddbfca68aba4c4bb868ec649c9dd23db4079da 78ec9a75363707b05ada907bdb45bdb70ba5abfd kenshin <kenshin.acs@gmail.com> 1469094519 +0800	commit: config_parse_core() implementation.
+78ec9a75363707b05ada907bdb45bdb70ba5abfd ffdc6589b97e2df1c66a2ecf6dfb346bdcf252a6 kenshin <kenshin.acs@gmail.com> 1469117043 +0800	commit: config_handler() function & config_handler_map()
+ffdc6589b97e2df1c66a2ecf6dfb346bdcf252a6 2a7ce364b1595ab5a87de9e1acda0cb8c09957be kenshin <kenshin.acs@gmail.com> 1469117695 +0800	commit: array add head & get functions
+2a7ce364b1595ab5a87de9e1acda0cb8c09957be e5ae1f3ca90dcc4fb9ca81b9401aaed5f62ee079 kenshin <kenshin.acs@gmail.com> 1469161674 +0800	commit: Get config parse & conifg print done.
+e5ae1f3ca90dcc4fb9ca81b9401aaed5f62ee079 d331ba7028378cc264b8da5b689ff4c38619539b kenshin <kenshin.acs@gmail.com> 1469178769 +0800	commit: Make sure cfg->args array free memory.
+d331ba7028378cc264b8da5b689ff4c38619539b 3829e4d911db1b00177ccd93c881c0344a3a85df kenshin <kenshin.acs@gmail.com> 1469286329 +0800	commit: Free the memory of configure snippet
+3829e4d911db1b00177ccd93c881c0344a3a85df 5be309e0e1991cc304d6fae1e0e71fed5a5fadba kenshin <kenshin.acs@gmail.com> 1469507034 +0800	commit: #valgrind# Fix an memory leak bug.
+5be309e0e1991cc304d6fae1e0e71fed5a5fadba 78b5347bedc35cd6196b75aea64f79b1409339ad kenshin <kenshin.acs@gmail.com> 1469526602 +0800	commit: Print configuration in debug mode.
+78b5347bedc35cd6196b75aea64f79b1409339ad 32372247f5551625f48274e43e25069061876876 kenshin <kenshin.acs@gmail.com> 1469586332 +0800	commit: Set log after load configuration.
+32372247f5551625f48274e43e25069061876876 25be8ae7dd5124a8a6e73b916c5a118e56ad5930 kenshin <kenshin.acs@gmail.com> 1469590635 +0800	commit: set log after configuration parser.
+25be8ae7dd5124a8a6e73b916c5a118e56ad5930 af51b5b588f948c59cd33e581284c04cd2f7a5f8 kenshin <kenshin.acs@gmail.com> 1469594537 +0800	commit: Redirect log to stdout if running in un-daemon mode.
+af51b5b588f948c59cd33e581284c04cd2f7a5f8 cdc4c11fab68641b105e228cf454b8dd78a4d713 kenshin <kenshin.acs@gmail.com> 1470028434 +0800	commit: Commit contrib - libuv
+cdc4c11fab68641b105e228cf454b8dd78a4d713 0f76760dd162bb8a17136a94551e902afefc79e1 kenshin <kenshin.acs@gmail.com> 1470029420 +0800	commit: Ignore libuv build tool logs.
+0f76760dd162bb8a17136a94551e902afefc79e1 eb43abe2668501ee57a50f7602ce9d706c8b99a7 kenshin <kenshin.acs@gmail.com> 1470104846 +0800	commit: array_init() function
+eb43abe2668501ee57a50f7602ce9d706c8b99a7 138466507b2bc97384872d5e9e133a3d13be949e kenshin <kenshin.acs@gmail.com> 1470120957 +0800	commit: Forgot return value.
+138466507b2bc97384872d5e9e133a3d13be949e deb04e2383b3c29fa0f08c7f3081e236f525533a kenshin <kenshin.acs@gmail.com> 1470120996 +0800	commit: make clean remove .swp and .i files.
+deb04e2383b3c29fa0f08c7f3081e236f525533a 8e5eb84fb0ddb6217009dbf8c225f563ce538628 kenshin <kenshin.acs@gmail.com> 1470121155 +0800	commit: Add rpg.h and prune core.h
+8e5eb84fb0ddb6217009dbf8c225f563ce538628 43b25acdac3554914e15bd4719cfad8bf0931661 kenshin <kenshin.acs@gmail.com> 1470121645 +0800	commit: Modification yaml proxy server configuration.
+43b25acdac3554914e15bd4719cfad8bf0931661 22f786367b34130a0350eaa4a114ae97212205a0 kenshin <kenshin.acs@gmail.com> 1470129701 +0800	commit: Create server.c & server.h
+22f786367b34130a0350eaa4a114ae97212205a0 4ceffaccc7dea92b7cec87eede0b03da6d575456 kenshin <kenshin.acs@gmail.com> 1470191519 +0800	commit: array_deinit()
+4ceffaccc7dea92b7cec87eede0b03da6d575456 36c8b8c38454198dfaceba5d960e2f20752f61bb kenshin <kenshin.acs@gmail.com> 1473220085 +0800	commit: pre-operation before server run
+36c8b8c38454198dfaceba5d960e2f20752f61bb f20277aa67bac8b9a2cb93cf699f6898ce16f83c kenshin <kenshin.acs@gmail.com> 1473236030 +0800	commit: Unity name style.
+f20277aa67bac8b9a2cb93cf699f6898ce16f83c 1d288d10014073a5686fb979b962ad76764ebd1f kenshin <kenshin.acs@gmail.com> 1473245366 +0800	commit: Define, pre_run run and post_run behavior
+1d288d10014073a5686fb979b962ad76764ebd1f 92b1e0957394cec2796a38077f961c5835820a4c kenshin <kenshin.acs@gmail.com> 1473247274 +0800	commit: bind & listen at specified port
+92b1e0957394cec2796a38077f961c5835820a4c 1ff60a798528831ebdb4e05826b7208dd46ac41c kenshin <kenshin.acs@gmail.com> 1482293096 +0800	commit: Rename rpg to rps
+1ff60a798528831ebdb4e05826b7208dd46ac41c a84540d1aabb4f73d8c7a9ec7c2af3651c8fe91c kenshin <kenshin.acs@gmail.com> 1482294463 +0800	commit: Rename rpg to rps
+a84540d1aabb4f73d8c7a9ec7c2af3651c8fe91c 20902c0fdbe4c213451f6176f0a602998ceada6c kenshin <kenshin.acs@gmail.com> 1482296719 +0800	commit: Modify log default level be INFO
+20902c0fdbe4c213451f6176f0a602998ceada6c 3b67907d614877668e06bcc08f29678b4d67c4bd kenshin <kenshin.acs@gmail.com> 1482317429 +0800	commit: Move configure struct from heap into stack
+3b67907d614877668e06bcc08f29678b4d67c4bd a65ef508ac4d9a967a53b7e06932b48543bfcc20 kenshin <kenshin.acs@gmail.com> 1482422161 +0800	commit: new_connect callback
+a65ef508ac4d9a967a53b7e06932b48543bfcc20 44d66a39ae059f71dd37c1e6e70809aced7f2126 kenshin <kenshin.acs@gmail.com> 1482422182 +0800	commit: Support ipv6
+44d66a39ae059f71dd37c1e6e70809aced7f2126 dfd48a1724b50bd5b48916506cd99be5dd61a18c kenshin <kenshin.acs@gmail.com> 1482467814 +0800	commit: Resolve inet address
+dfd48a1724b50bd5b48916506cd99be5dd61a18c 15ce2ca33dc27cdc7d367add021b5cc16a35b226 kenshin <kenshin.acs@gmail.com> 1482470854 +0800	commit: Support ipv6 address
+15ce2ca33dc27cdc7d367add021b5cc16a35b226 c9ba81b7a8383472466e0e7b4a5744e5d2f21adf kenshin <kenshin.acs@gmail.com> 1482490658 +0800	commit: getpeername
+c9ba81b7a8383472466e0e7b4a5744e5d2f21adf 61c67835eb0660d137433d569ea60ea59b8cc4a7 kenshin <kenshin.acs@gmail.com> 1482720887 +0800	commit: rps_unresolve_addr
+61c67835eb0660d137433d569ea60ea59b8cc4a7 f133961e0bc79e559fa37defeae2f802800c243c kenshin <kenshin.acs@gmail.com> 1482720928 +0800	commit: Re-define context and session object
+f133961e0bc79e559fa37defeae2f802800c243c cf6ec3da676a4c66b0ac58345bd87e285d770137 kenshin <kenshin.acs@gmail.com> 1482766750 +0800	commit: rps_unresolve_addr coding optimization
+cf6ec3da676a4c66b0ac58345bd87e285d770137 b70eed4f2e413ccbf28eb83b325da0d2e07f06e6 kenshin <kenshin.acs@gmail.com> 1482766832 +0800	commit: Use snprintf instead of sprintf
+b70eed4f2e413ccbf28eb83b325da0d2e07f06e6 5e3c0665edff4aa18e62382f08cd36457056eda5 kenshin <kenshin.acs@gmail.com> 1482767681 +0800	commit: Avoid use pointer as return value.
+5e3c0665edff4aa18e62382f08cd36457056eda5 d3a47069babc8863eede1b6b3523c62c8c44efd5 kenshin <kenshin.acs@gmail.com> 1482769957 +0800	commit: error handle routine.
+d3a47069babc8863eede1b6b3523c62c8c44efd5 9da72922a497fee7da7dc6380eb79e97c4730c3d kenshin <kenshin.acs@gmail.com> 1482810478 +0800	commit: define MAX_INET_ADDRSTRLEN
+9da72922a497fee7da7dc6380eb79e97c4730c3d 75211691f945adbbcc4359aea7017a52e3587bd0 kenshin <kenshin.acs@gmail.com> 1482827533 +0800	commit: Work on linux platform.
+75211691f945adbbcc4359aea7017a52e3587bd0 c4f287367fceba41bb3142ee16dd718f04371949 kenshin <kenshin.acs@gmail.com> 1482830728 +0800	commit: Tunning listen address
+c4f287367fceba41bb3142ee16dd718f04371949 ff608a54b9d77bc8800ef86cbb91a110f40d2d66 kenshin <kenshin.acs@gmail.com> 1482830763 +0800	commit: Eliminate compile warnning on linux platform.
+ff608a54b9d77bc8800ef86cbb91a110f40d2d66 cf476384cc6b696d035972b3891b81e6604f206d kenshin <kenshin.acs@gmail.com> 1482831817 +0800	rebase finished: refs/heads/master onto 6fcb1c830d223b3ab5261a5982ae512137cfabce
+cf476384cc6b696d035972b3891b81e6604f206d 726d41607b0b7cc200fd88e581fc8bc19096a941 kenshin <kenshin.acs@gmail.com> 1482831934 +0800	commit: libuv and libyaml
+726d41607b0b7cc200fd88e581fc8bc19096a941 10d29890425a35e16edd1325356558cdc152fefd kenshin <kenshin.acs@gmail.com> 1482832370 +0800	commit: Add yaml library archive
+10d29890425a35e16edd1325356558cdc152fefd 4ef8196b6597450f0c11b5dd20c06473ec40d274 kenshin <kenshin.acs@gmail.com> 1482832433 +0800	commit: Remove conflict flags
+4ef8196b6597450f0c11b5dd20c06473ec40d274 f8903bfa9646ddccd910e3c417c3d607bc0b8170 kenshin <kenshin.acs@gmail.com> 1482832542 +0800	commit: Ignore swp file
+f8903bfa9646ddccd910e3c417c3d607bc0b8170 3137539f15ebb6f7a334f888f3915f1b976c4dfc kenshin <kenshin.acs@gmail.com> 1482832964 +0800	commit: commit libyaml
+3137539f15ebb6f7a334f888f3915f1b976c4dfc 0eedad492100df8c77fd6a749dbbb83ddba2c5da kenshin <kenshin.acs@gmail.com> 1482902391 +0800	pull https://github.com/kenshinx/rps: Fast-forward
+0eedad492100df8c77fd6a749dbbb83ddba2c5da 95672441fd9abb84a1f72cdfd58a3d70b07465b1 kenshin <kenshin.acs@gmail.com> 1482906451 +0800	commit: Handle request timeout
+95672441fd9abb84a1f72cdfd58a3d70b07465b1 28c1a1e73374a725571c8241b565937c544f0a05 kenshin <kenshin.acs@gmail.com> 1482916529 +0800	commit: Declare handle union
+28c1a1e73374a725571c8241b565937c544f0a05 87eaf3be6a3032b3fd2d98f27161d9ccb168ea59 kenshin <kenshin.acs@gmail.com> 1482917050 +0800	commit (amend): Declare handle union
+87eaf3be6a3032b3fd2d98f27161d9ccb168ea59 ce0e92e8587557f8b9602d42d38ef2073b9f5c31 kenshin <kenshin.acs@gmail.com> 1482941410 +0800	commit: Uniform naming rule
+ce0e92e8587557f8b9602d42d38ef2073b9f5c31 b6dd11b050b12160d57c56a7d3a8bc73eb7607d8 kenshin <kenshin.acs@gmail.com> 1483006686 +0800	commit: Set address string length depend of marco define
+b6dd11b050b12160d57c56a7d3a8bc73eb7607d8 fa6ca4ec6b34c3b7cbf533071cd0181fa8221b30 kenshin <kenshin.acs@gmail.com> 1483006834 +0800	commit: Context add state field and perform close operation by state mark.
+fa6ca4ec6b34c3b7cbf533071cd0181fa8221b30 eb6e171eb230d18c5d6c77255b9003fb6c89522b kenshin <kenshin.acs@gmail.com> 1483024585 +0800	commit: Make sure timer stop be called.
+eb6e171eb230d18c5d6c77255b9003fb6c89522b c4fb203939e1adc8d709dcef27c393f57e841bd2 kenshin <kenshin.acs@gmail.com> 1483026512 +0800	commit: context struct add peername and flag field
+c4fb203939e1adc8d709dcef27c393f57e841bd2 3ae6be268bf2382c56a4e33ee5cb85d9673f7ef0 kenshin <kenshin.acs@gmail.com> 1483026897 +0800	commit: Remove unused variable
+3ae6be268bf2382c56a4e33ee5cb85d9673f7ef0 1f750df4720a8d72cd480c33f40939aa07b7b3e9 kenshin <kenshin.acs@gmail.com> 1483418771 +0800	commit: Free memory alloc for session struct
+1f750df4720a8d72cd480c33f40939aa07b7b3e9 8233fc704e0cf5852d8f593477fe92d6bbc5328d kenshin <kenshin.acs@gmail.com> 1483432397 +0800	commit: Receive data
+8233fc704e0cf5852d8f593477fe92d6bbc5328d 3f3a6463524c81902cd88e52a9f512d9cad3923d kenshin <kenshin.acs@gmail.com> 1483441160 +0800	commit: Adjust protocol directory struct
+3f3a6463524c81902cd88e52a9f512d9cad3923d d4253d0eb0178b0136e30f898174b67badfb61fb kenshin <kenshin.acs@gmail.com> 1483506298 +0800	commit: Add proto sub directory makefile
+d4253d0eb0178b0136e30f898174b67badfb61fb 4c424cd7e72a1f2ef2d1a46bd02bc47afc0ec5bc kenshin <kenshin.acs@gmail.com> 1483507020 +0800	commit: Rename string.c string.h to _string.h _string.c
+4c424cd7e72a1f2ef2d1a46bd02bc47afc0ec5bc 755d0d66488ca947b2b246b1d7303cadda793b31 kenshin <kenshin.acs@gmail.com> 1483507957 +0800	commit: Ignore vim temporary file
+755d0d66488ca947b2b246b1d7303cadda793b31 d38ea6017c0e9cc2fa73f57af502d1096f6c2025 kenshin <kenshin.acs@gmail.com> 1483522377 +0800	commit: Compile static library for ./proto sub directory
+d38ea6017c0e9cc2fa73f57af502d1096f6c2025 6182664d4e15903e78b088dc2a006572a019edc4 kenshin <kenshin.acs@gmail.com> 1483526911 +0800	commit: Begin protocol-specific parse routine.
+6182664d4e15903e78b088dc2a006572a019edc4 3bd6d585496c2ffb3f5ad7285688bcd832945e52 kenshin <kenshin.acs@gmail.com> 1483584572 +0800	commit: Set null after free memory
+3bd6d585496c2ffb3f5ad7285688bcd832945e52 b801258fdebe60fe04d4702826d5b9641046feb1 kenshin <kenshin.acs@gmail.com> 1483955393 +0800	commit: Ascii Art: RPS work based socks5 proxy
+b801258fdebe60fe04d4702826d5b9641046feb1 164a8dd2c352ac44d94263af82337a70be0b576f kenshin <kenshin.acs@gmail.com> 1483975470 +0800	commit: Define s5_err_t
+164a8dd2c352ac44d94263af82337a70be0b576f c05356e51ce1e08c6a4a4e3dd50915fa725ae654 kenshin <kenshin.acs@gmail.com> 1484022889 +0800	commit: Add context state
+c05356e51ce1e08c6a4a4e3dd50915fa725ae654 e9c6f91efd4740dfde0e6c958d2cb4b4be532fb4 kenshin <kenshin.acs@gmail.com> 1484022896 +0800	commit (amend): Add context state
+e9c6f91efd4740dfde0e6c958d2cb4b4be532fb4 5f037ec37315db1dad0f015aba8c15d91f8c644f kenshin <kenshin.acs@gmail.com> 1484026238 +0800	commit: Remove private protocol files
+5f037ec37315db1dad0f015aba8c15d91f8c644f f71118179417caa273f7af550bbe4bdc7a0b5183 kenshin <kenshin.acs@gmail.com> 1484038431 +0800	commit: Export common http and socks5 protocol interface
+f71118179417caa273f7af550bbe4bdc7a0b5183 578cf82101f531a9ae4f94c8bae094fdbece25ac kenshin <kenshin.acs@gmail.com> 1484038735 +0800	commit: Remove the c_connect state
+578cf82101f531a9ae4f94c8bae094fdbece25ac b4d3ddd44c7eb39c12d7df22cbbf09d6bcfedb6e kenshin <kenshin.acs@gmail.com> 1484045300 +0800	commit: DRY, reuse the the read callback and timer callback function
+b4d3ddd44c7eb39c12d7df22cbbf09d6bcfedb6e 7d30f21865f491e0eb60c634a8cffc364e9a0387 kenshin <kenshin.acs@gmail.com> 1484046119 +0800	commit: log should keep highly self-include
+7d30f21865f491e0eb60c634a8cffc364e9a0387 66c912028c827afa35b79f20bf2c568bd06c6f9e kenshin <kenshin.acs@gmail.com> 1484046164 +0800	commit: Move session and context declare from server.h to core.h
+66c912028c827afa35b79f20bf2c568bd06c6f9e aac91357f45db31a2cb00799a02b144d864cfb7d kenshin <kenshin.acs@gmail.com> 1484058318 +0800	commit: Define protocol handle
+aac91357f45db31a2cb00799a02b144d864cfb7d d5991c9d21815836e10f3ece043ce39ddb8a4b1c kenshin <kenshin.acs@gmail.com> 1484113041 +0800	commit: Call protocol specific do_next routine
+d5991c9d21815836e10f3ece043ce39ddb8a4b1c 811895381835931fc2d344a13b2db4cccbf10798 kenshin <kenshin.acs@gmail.com> 1484151721 +0800	commit: Still decide make s5_do_next() accept struct context pointer as parameter.
+811895381835931fc2d344a13b2db4cccbf10798 7c2a95b76483f8216b7c7560e42881afde4db321 kenshin <kenshin.acs@gmail.com> 1484151771 +0800	commit: typo, http not s5
+7c2a95b76483f8216b7c7560e42881afde4db321 636f29c2fb84916989fd2f49d877ad1c91d05c91 kenshin <kenshin.acs@gmail.com> 1484152047 +0800	commit: Break inner loop when state be established
+636f29c2fb84916989fd2f49d877ad1c91d05c91 1ef89416712dba8fa131b4038bb5cdfb37ab7739 kenshin <kenshin.acs@gmail.com> 1484192287 +0800	commit: proxy handle init function
+1ef89416712dba8fa131b4038bb5cdfb37ab7739 efac0baa8f6df331390a01be9381ed54740fb35b kenshin <kenshin.acs@gmail.com> 1484235675 +0800	commit: Begin parse socks5 protocol and finished the server side methods phase
+efac0baa8f6df331390a01be9381ed54740fb35b 5f64b13d86d63dc7a723e40548492cbdca59af7f kenshin <kenshin.acs@gmail.com> 1484238955 +0800	commit: socks5 protocol define methods would be uint8_t[255] array
+5f64b13d86d63dc7a723e40548492cbdca59af7f 70711f156e118592fd8526db20b683e9c7a8d29b kenshin <kenshin.acs@gmail.com> 1484275962 +0800	commit: s5 parse handle default branch
+70711f156e118592fd8526db20b683e9c7a8d29b 0d195e523322f506a79989b3b3b8f7652ee91bba kenshin <kenshin.acs@gmail.com> 1484671386 +0800	merge s5-new-parse: Fast-forward
+0d195e523322f506a79989b3b3b8f7652ee91bba e780fc98097b9d8f50385cf4845de200e2390bec kenshin <kenshin.acs@gmail.com> 1484671876 +0800	commit: Adjust include order
+e780fc98097b9d8f50385cf4845de200e2390bec 0efb031d302065f8fa19e91cb8de3a83c9dae9e2 kenshin <kenshin.acs@gmail.com> 1484672388 +0800	commit: Convert identation to spaces
+0efb031d302065f8fa19e91cb8de3a83c9dae9e2 1217f5a733e916ecc21fb349a9d4b228d119c8e9 kenshin <kenshin.acs@gmail.com> 1486962684 +0800	commit: Make htons to uin16_t port, compatible with big-endian and little-endian
+1217f5a733e916ecc21fb349a9d4b228d119c8e9 866345b94eef5a27d873aa2e962a6eddbab46d79 kenshin <kenshin.acs@gmail.com> 1486973499 +0800	commit: TCP Backlog
+866345b94eef5a27d873aa2e962a6eddbab46d79 ba359902ff144484f96442b8620ff9a2cbc3f984 kenshin <kenshin.acs@gmail.com> 1487238036 +0800	commit: READ_BUF_SIZE
+ba359902ff144484f96442b8620ff9a2cbc3f984 e03cde7903004b000ecf6d27be0ef7ff9cce21b3 kenshin <kenshin.acs@gmail.com> 1487565494 +0800	commit: Storage network byte order port
+e03cde7903004b000ecf6d27be0ef7ff9cce21b3 57004daa22084bb566d1d38b2cc0c00d3e8c30b8 kenshin <kenshin.acs@gmail.com> 1487670762 +0800	commit: reset timer after each I/O operation called.
+57004daa22084bb566d1d38b2cc0c00d3e8c30b8 3fbce0837b61c0fef1b059bda40b87c1bce1c1c3 kenshin <kenshin.acs@gmail.com> 1487672352 +0800	commit: Only reveal file and line in debug open
+3fbce0837b61c0fef1b059bda40b87c1bce1c1c3 39ff830922248169e1088a090eab1da9a3e03656 kenshin <kenshin.acs@gmail.com> 1487696880 +0800	commit: log_hex: log read & write data in hex formatting
+39ff830922248169e1088a090eab1da9a3e03656 d1c164cbb8003f228242693595a2701ddb07e8c8 kenshin <kenshin.acs@gmail.com> 1487732047 +0800	commit: Reconstructed log_hex function
+d1c164cbb8003f228242693595a2701ddb07e8c8 11ffa0c27573aab0b7070d220a9306a9762c9ec0 kenshin <kenshin.acs@gmail.com> 1487736320 +0800	commit: Make context timeout configurable
+11ffa0c27573aab0b7070d220a9306a9762c9ec0 0fda6ee93edc7c284cf09023348cf8ae081a8219 kenshin <kenshin.acs@gmail.com> 1487748724 +0800	commit: define MIN marco
+0fda6ee93edc7c284cf09023348cf8ae081a8219 339a4a82ce653f4540674044e0b3e86f31506506 kenshin <kenshin.acs@gmail.com> 1487748792 +0800	commit: Bug fix: snprintf size parameter must >0
+339a4a82ce653f4540674044e0b3e86f31506506 99d79ae075210e70ab4f3d7f0723a11ab4e1f77a kenshin <kenshin.acs@gmail.com> 1487755272 +0800	commit: Eliminate gcc warnning during rps debug disable
+99d79ae075210e70ab4f3d7f0723a11ab4e1f77a 3257525b0d3baf896fdc1b58fef45765131ea945 kenshin <kenshin.acs@gmail.com> 1487756042 +0800	commit: Eliminate unused parameter warnning
+3257525b0d3baf896fdc1b58fef45765131ea945 79163cc5298b9e7099df8a601d2379a96775cdb1 kenshin <kenshin.acs@gmail.com> 1487756837 +0800	commit: Bug fix: forget declaration _log_hex function
+79163cc5298b9e7099df8a601d2379a96775cdb1 71fd69f835c4c277d1793787ac80b1020f1a3b69 kenshin <kenshin.acs@gmail.com> 1487756971 +0800	commit: define marco UNUSED
+71fd69f835c4c277d1793787ac80b1020f1a3b69 e3103e6e421042403fe892ca501f7cb3fb4ce7ab kenshin <kenshin.acs@gmail.com> 1487782000 +0800	commit: Verify handshake and request packet, avoid junk message
+e3103e6e421042403fe892ca501f7cb3fb4ce7ab ee1de130083b053e5c45f4f48911f7066bab34ef kenshin <kenshin.acs@gmail.com> 1487822865 +0800	commit: Free session in a appropriate way
+ee1de130083b053e5c45f4f48911f7066bab34ef 70975daf6a2b7305bfe96103adb57f101e71aa6b kenshin <kenshin.acs@gmail.com> 1487823809 +0800	commit: Close context if ctx->do_next return c_kill state
+70975daf6a2b7305bfe96103adb57f101e71aa6b b9ac22bf12d888f16c647cbcad6b21ce25ade49b kenshin <kenshin.acs@gmail.com> 1487827713 +0800	commit: Add s_reply state
+b9ac22bf12d888f16c647cbcad6b21ce25ade49b 26d6a47df88bf7af3f7be5a8d7f1a983ad1dca16 kenshin <kenshin.acs@gmail.com> 1487906695 +0800	commit: do_next return new state
+26d6a47df88bf7af3f7be5a8d7f1a983ad1dca16 72cc804cd1bf5b2bf8b3c3204c2d4c33cc1b1ae1 kenshin <kenshin.acs@gmail.com> 1487906713 +0800	commit: server_upstream_kickoff() function
+72cc804cd1bf5b2bf8b3c3204c2d4c33cc1b1ae1 6fe5da9245046ec06dccb1f14e3b5bb60bb04946 kenshin <kenshin.acs@gmail.com> 1487910645 +0800	commit: define proxy and proxy_pool struct
+6fe5da9245046ec06dccb1f14e3b5bb60bb04946 a0076faa82c1f0cc05c664b828225ee08a93b128 kenshin <kenshin.acs@gmail.com> 1487910678 +0800	commit: Bug fix: return c_reply_pre after reuqest finished
+a0076faa82c1f0cc05c664b828225ee08a93b128 29adb9f3229efbc8ad46c3033c0beb0f6bc4b8ab kenshin <kenshin.acs@gmail.com> 1487913052 +0800	commit: Redis config
+29adb9f3229efbc8ad46c3033c0beb0f6bc4b8ab 3b83defad323069686cc4e62dede774cb2a7264b kenshin <kenshin.acs@gmail.com> 1488164119 +0800	commit: Rename rps_proxy_t to rps_proto_t
+3b83defad323069686cc4e62dede774cb2a7264b a5d3148f3087658ceb83ecaea874b1af9a95f76f kenshin <kenshin.acs@gmail.com> 1488173978 +0800	commit: Ignore swp and .o temp file
+a5d3148f3087658ceb83ecaea874b1af9a95f76f 5bf3d489bb7feaf97a02af734c0439075c7fbb71 kenshin <kenshin.acs@gmail.com> 1488173998 +0800	commit (amend): Ignore swp and .o temp file
+5bf3d489bb7feaf97a02af734c0439075c7fbb71 4e9ef2eaff4ae8ad4f639fcbb811b7263ef40d0b kenshin <kenshin.acs@gmail.com> 1488174097 +0800	commit: Test: s5 client script
+4e9ef2eaff4ae8ad4f639fcbb811b7263ef40d0b f1ed54c8ecbbb75d26d89596f3013fa47c0d081c kenshin <kenshin.acs@gmail.com> 1488189511 +0800	commit: Setup upstream proxy pool
+f1ed54c8ecbbb75d26d89596f3013fa47c0d081c 39b17c7b50dd0ad8f6e3a81e5284dfde95cafabc kenshin <kenshin.acs@gmail.com> 1488189597 +0800	commit: 3rd hiredis
+39b17c7b50dd0ad8f6e3a81e5284dfde95cafabc 920ff5d369f79984b5e1f15f66e0efc50fc76329 kenshin <kenshin.acs@gmail.com> 1488190230 +0800	commit: Include hiredis
+920ff5d369f79984b5e1f15f66e0efc50fc76329 0185b7ee64ea91704f94a223446f321825594e5e kenshin <kenshin.acs@gmail.com> 1488205886 +0800	commit: Connect redis snippet
+0185b7ee64ea91704f94a223446f321825594e5e edb921bf4e389a2c5a76d034081f4b71693dd288 kenshin <kenshin.acs@gmail.com> 1488205994 +0800	commit: Redis need password authentication
+edb921bf4e389a2c5a76d034081f4b71693dd288 2536078d5752cfe8c039c746fb4a45056591888a kenshin <kenshin.acs@gmail.com> 1488208618 +0800	commit: Upstream related config
+2536078d5752cfe8c039c746fb4a45056591888a eaba053086afa31a3c7e1d962f35eaea4d5a3e2e kenshin <kenshin.acs@gmail.com> 1488209109 +0800	commit: Use upstream pool instead of proxy pool
+eaba053086afa31a3c7e1d962f35eaea4d5a3e2e 66caa5cf955ee53ab9d5e6c8ca95f38fc4a2d8c8 kenshin <kenshin.acs@gmail.com> 1488209234 +0800	commit (amend): Use upstream pool instead of proxy pool
+66caa5cf955ee53ab9d5e6c8ca95f38fc4a2d8c8 d19593f5241670fae5950f0035b11c76e5d36782 kenshin <kenshin.acs@gmail.com> 1488248765 +0800	commit: Pass upstream config
+d19593f5241670fae5950f0035b11c76e5d36782 03c248a08c344596b7c6406d4a9b2b58a2705648 kenshin <kenshin.acs@gmail.com> 1488248934 +0800	commit: Import jansson library into contrib directory
+03c248a08c344596b7c6406d4a9b2b58a2705648 c7fe2d7a8196090736776ce01b7f68365ff61070 kenshin <kenshin.acs@gmail.com> 1488257477 +0800	commit: Mapping protocol between string and int
+c7fe2d7a8196090736776ce01b7f68365ff61070 8bafce569adba221d88ed868e9bc1b95f8984762 kenshin <kenshin.acs@gmail.com> 1488257513 +0800	commit: Add upstream configuration
+8bafce569adba221d88ed868e9bc1b95f8984762 a96b2f6cccac7cd808f3fcf7df624c872d5ce012 kenshin <kenshin.acs@gmail.com> 1488257559 +0800	commit: Add jasson related gcc build reference
+a96b2f6cccac7cd808f3fcf7df624c872d5ce012 86fa98e41d0807c74e0954ce64323c0659c2bfcc kenshin <kenshin.acs@gmail.com> 1488257569 +0800	commit (amend): Add jasson related gcc build reference
+86fa98e41d0807c74e0954ce64323c0659c2bfcc f387c99cb40dcee59b23653c085d420527267640 kenshin <kenshin.acs@gmail.com> 1488261502 +0800	commit: Bug fix: include string.h
+f387c99cb40dcee59b23653c085d420527267640 47d0e13cc7e2e83e069f58be9688c8d43cb6d338 kenshin <kenshin.acs@gmail.com> 1488261519 +0800	commit: Make gcc happy
+47d0e13cc7e2e83e069f58be9688c8d43cb6d338 1c72db1d42e409ec335b30d22dbcea9d35823220 kenshin <kenshin.acs@gmail.com> 1488269808 +0800	commit: Use standard naming
+1c72db1d42e409ec335b30d22dbcea9d35823220 eb5e14a8e4f060414335e3c087572fed562d0523 kenshin <kenshin.acs@gmail.com> 1488297873 +0800	commit: Use AI_CANONNAME instead of AI_NUMERICHOST
+eb5e14a8e4f060414335e3c087572fed562d0523 ad6d77421cb3c75c9c78d412c9b59cbb3d52e958 kenshin <kenshin.acs@gmail.com> 1488300242 +0800	commit: Parse redis response to upstream struct
+ad6d77421cb3c75c9c78d412c9b59cbb3d52e958 fe7eb8d67eefc5b5717cde08e78f02d5023eb48c kenshin <kenshin.acs@gmail.com> 1488339328 +0800	commit: Free upstream memory
+fe7eb8d67eefc5b5717cde08e78f02d5023eb48c 8ecd9533030d86a890b1d79f8bd39e3df90ea573 kenshin <kenshin.acs@gmail.com> 1488340128 +0800	commit: typedef ctx_state_t and ctx_flag_t
+8ecd9533030d86a890b1d79f8bd39e3df90ea573 531b388e8113822ac41493666b01587eaeb714de kenshin <kenshin.acs@gmail.com> 1488341568 +0800	commit: Free redis connect and print upstream during debug open
+531b388e8113822ac41493666b01587eaeb714de dc2441e6d8891bf844a622fa9d9c974fd190b4ef kenshin <kenshin.acs@gmail.com> 1488346487 +0800	commit: use rps_init function
+dc2441e6d8891bf844a622fa9d9c974fd190b4ef 1c63555f46db691f601ba6c93846acf6f75a1941 kenshin <kenshin.acs@gmail.com> 1488346586 +0800	commit: Make gcc happy, add type declaration
+1c63555f46db691f601ba6c93846acf6f75a1941 4a4b72a324986d358b467b07f687d74c3e4b8a84 kenshin <kenshin.acs@gmail.com> 1488349558 +0800	commit: Define null array
+4a4b72a324986d358b467b07f687d74c3e4b8a84 afa1d3283938309620e9c134fc5245ab36450bfa kenshin <kenshin.acs@gmail.com> 1488384995 +0800	commit: Test: s5 client script
+afa1d3283938309620e9c134fc5245ab36450bfa f7d7180a7efeed9e4403c875945e6d52384b0a58 kenshin <kenshin.acs@gmail.com> 1488385107 +0800	commit: Free current upstream pool only when new pool load successful
+f7d7180a7efeed9e4403c875945e6d52384b0a58 879efcaff5f4e74365dff120a964650004ff1b7a kenshin <kenshin.acs@gmail.com> 1488425758 +0800	commit: Auto refresh upstream proxt pool in a single thread
+879efcaff5f4e74365dff120a964650004ff1b7a 0d9823df1eabe9c642f43676e851f7c7be4808d1 kenshin <kenshin.acs@gmail.com> 1488426077 +0800	commit: Fix: thread number != server number
+0d9823df1eabe9c642f43676e851f7c7be4808d1 991cfd9ba71c972259e8fb839c35eb8ed7caeeec kenshin <kenshin.acs@gmail.com> 1488426930 +0800	commit: More reasonable rps_strcmp function
+991cfd9ba71c972259e8fb839c35eb8ed7caeeec 52e98abe39c773a9eed4d0a7ee762d551e8655e0 kenshin <kenshin.acs@gmail.com> 1488432758 +0800	commit: Add upstream schedule algorithm configuration
+52e98abe39c773a9eed4d0a7ee762d551e8655e0 e18dbb0fcb7d8fdbb0d67562957e2e5ab732b6ba kenshin <kenshin.acs@gmail.com> 1488432959 +0800	commit: upstream_pool_teardown function
+e18dbb0fcb7d8fdbb0d67562957e2e5ab732b6ba 82eb65cb41e12c772bb0d954f8654975bc3b9364 kenshin <kenshin.acs@gmail.com> 1488433710 +0800	commit: Style: better naming
+82eb65cb41e12c772bb0d954f8654975bc3b9364 df65297fa6ca0c5e125922ed84ce9869d3da8de5 kenshin <kenshin.acs@gmail.com> 1488518968 +0800	commit: Remove include core.h in config.h invoid endless loop include
+df65297fa6ca0c5e125922ed84ce9869d3da8de5 c1742e6bd8e9309658210c05d5e1209ac4726698 kenshin <kenshin.acs@gmail.com> 1488519560 +0800	commit: Get upstream from pool
+c1742e6bd8e9309658210c05d5e1209ac4726698 9ebce6010dbf9d49fadae47869a0477dce5a28d0 kenshin <kenshin.acs@gmail.com> 1488530222 +0800	commit: Move upstream related source code into upstream module
+9ebce6010dbf9d49fadae47869a0477dce5a28d0 295497bcc4aa19c80352e72d51455f563d4ff4d5 kenshin <kenshin.acs@gmail.com> 1488530253 +0800	commit: Disable http module temporary avoid massive gcc comole warnning
+295497bcc4aa19c80352e72d51455f563d4ff4d5 4fd877b36c540afe1d56243d29dc5b41a245b5bf kenshin <kenshin.acs@gmail.com> 1488533225 +0800	commit: Upstream random get strategy
+4fd877b36c540afe1d56243d29dc5b41a245b5bf cab70276bee94984ccb32a8e64b7d9c2dd486d1f kenshin <kenshin.acs@gmail.com> 1488816362 +0800	commit: Upstream pool related configurations
+cab70276bee94984ccb32a8e64b7d9c2dd486d1f c093798d4d8e1ba5c92e7ace935086a46e9f8afd kenshin <kenshin.acs@gmail.com> 1488817377 +0800	commit: Define upstreams struct
+c093798d4d8e1ba5c92e7ace935086a46e9f8afd 85c23096e76c2a2158ae28f57c2fff9022e1b0a8 kenshin <kenshin.acs@gmail.com> 1488817449 +0800	commit: Distinguish socks5 and http proxy pool
+85c23096e76c2a2158ae28f57c2fff9022e1b0a8 33e4f8caa3a883369e1e3841cd4910547d207689 kenshin <kenshin.acs@gmail.com> 1488818592 +0800	commit: Remove unused marco
+33e4f8caa3a883369e1e3841cd4910547d207689 00a767e4ef9fc9b81079888f114d4b76e8902603 kenshin <kenshin.acs@gmail.com> 1488818625 +0800	commit: Avoid free null pointer
+00a767e4ef9fc9b81079888f114d4b76e8902603 26d385a3e575177f5190da6973446de38992bf86 kenshin <kenshin.acs@gmail.com> 1488854218 +0800	commit: Pretty output
+26d385a3e575177f5190da6973446de38992bf86 87e8f6aeb0c7b79db7c52047f7f96dd04e11bc4d kenshin <kenshin.acs@gmail.com> 1488864226 +0800	commit: Avoid procedure dump if json decode failed.
+87e8f6aeb0c7b79db7c52047f7f96dd04e11bc4d 0477765080b46165729825777faa8dacd61ee837 kenshin <kenshin.acs@gmail.com> 1488866116 +0800	commit: array_random function
+0477765080b46165729825777faa8dacd61ee837 829ab8d45d2e445adda0c98783cc127b54cbf667 kenshin <kenshin.acs@gmail.com> 1488866177 +0800	commit: upstreams support hybrid mode
+829ab8d45d2e445adda0c98783cc127b54cbf667 110b2168632c3f6eb4211f60854d9fd020b4f0cb kenshin <kenshin.acs@gmail.com> 1488866525 +0800	commit: handle exception while no available upstream proxy
+110b2168632c3f6eb4211f60854d9fd020b4f0cb 324cff1e87c1f1a2b48dea16f1f1c9fd0d6d2059 kenshin <kenshin.acs@gmail.com> 1488942723 +0800	commit: Upstream max connect retry configurable
+324cff1e87c1f1a2b48dea16f1f1c9fd0d6d2059 4b16ccd964af2f6ff71fec5e1286c842684fea7b kenshin <kenshin.acs@gmail.com> 1488943777 +0800	commit: Set upstreams maxretry attribute
+4b16ccd964af2f6ff71fec5e1286c842684fea7b aa3f16e93f078dc88c72b7d7a3e2c020b4e06deb kenshin <kenshin.acs@gmail.com> 1488943805 +0800	commit: Add c_conn context state
+aa3f16e93f078dc88c72b7d7a3e2c020b4e06deb c393b90d18fc3380ff3d82c8c20ec6ccbf0da5df kenshin <kenshin.acs@gmail.com> 1488962317 +0800	commit: Connect upstream proxy
+c393b90d18fc3380ff3d82c8c20ec6ccbf0da5df 2d188c88be212d533341208e9106b68c6d389ad4 kenshin <kenshin.acs@gmail.com> 1488986179 +0800	commit: fix: float exception if max = 0
+2d188c88be212d533341208e9106b68c6d389ad4 1cc91b69d5e54e36d6808a390a0c4132769c415a kenshin <kenshin.acs@gmail.com> 1489029873 +0800	commit: Adjust log level and some minor defect
+1cc91b69d5e54e36d6808a390a0c4132769c415a bb5f02e9ff81eee2fa5eef0f209939926e7b6fb0 kenshin <kenshin.acs@gmail.com> 1489031522 +0800	commit: fix: uv_tcp_init must be called before call uv_tcp_connect each time.
+bb5f02e9ff81eee2fa5eef0f209939926e7b6fb0 9c952c468605a3d92ca28fa1adf7374a64eb0229 kenshin <kenshin.acs@gmail.com> 1489032448 +0800	commit: fix: pointer reference error
+9c952c468605a3d92ca28fa1adf7374a64eb0229 21ce53a8eab96d668c42025a1d0107370685064c kenshin <kenshin.acs@gmail.com> 1489032523 +0800	commit: remove make no sense code
+21ce53a8eab96d668c42025a1d0107370685064c 7c5acdee4a3e31af3018ffe2cc2c5c1f19ec0554 kenshin <kenshin.acs@gmail.com> 1489037915 +0800	commit: Avoid double call uv_close
+7c5acdee4a3e31af3018ffe2cc2c5c1f19ec0554 a7f182ab676da12ba30194b28db1f9940cae0be9 kenshin <kenshin.acs@gmail.com> 1489038298 +0800	commit: Eliminate gcc unused warnning
+a7f182ab676da12ba30194b28db1f9940cae0be9 c017b071c1b60fe573c1ab0e0104482772ffb674 kenshin <kenshin.acs@gmail.com> 1489045161 +0800	commit: c_wait instead of c_ignore
+c017b071c1b60fe573c1ab0e0104482772ffb674 ece2bf62afde6cba12db9ebad217fb45f261ee8b kenshin <kenshin.acs@gmail.com> 1489052022 +0800	commit: Fix: dont tcp_init after connect success
+ece2bf62afde6cba12db9ebad217fb45f261ee8b 0e07610aae7eec585d32f20098a50f7f49f8d309 kenshin <kenshin.acs@gmail.com> 1489072256 +0800	commit: Distinguish session close and context close
+0e07610aae7eec585d32f20098a50f7f49f8d309 85c1cf75f5b73c65e0422b0736186669139b01b7 kenshin <kenshin.acs@gmail.com> 1489075986 +0800	commit: Make sure upstreams_get are thread-safe
+85c1cf75f5b73c65e0422b0736186669139b01b7 a75733f8c2d440dc72df04cc352051d1d2893dcb kenshin <kenshin.acs@gmail.com> 1489113806 +0800	commit: Close session in better way
+a75733f8c2d440dc72df04cc352051d1d2893dcb e5e32dc857c92c7878eb8a4573352bb8605f752f kenshin <kenshin.acs@gmail.com> 1489116719 +0800	commit: fix: alen == strlen(hostname) instead of sizeof(hostname)
+e5e32dc857c92c7878eb8a4573352bb8605f752f 489df300300f46b9b8a512867aeffafd885249c3 kenshin <kenshin.acs@gmail.com> 1489117445 +0800	commit: refactoring: optimize server_do_next function
+489df300300f46b9b8a512867aeffafd885249c3 b4aa5460a3debbdd15521f082fd04f44b2a8606b kenshin <kenshin.acs@gmail.com> 1489117864 +0800	commit: print upstream used count
+b4aa5460a3debbdd15521f082fd04f44b2a8606b 8d5efc99554b61ff55e3124f0475d6d87836a1ff kenshin <kenshin.acs@gmail.com> 1489125801 +0800	commit: Remove c_wait state
+8d5efc99554b61ff55e3124f0475d6d87836a1ff 0518393d52d2a01ad1c8f70a3a430449cc6b60ad kenshin <kenshin.acs@gmail.com> 1489125955 +0800	commit: millstone: begin socks5 protocol client-side
+0518393d52d2a01ad1c8f70a3a430449cc6b60ad c52cadda43efed37ded47b5533ef46c1bfe9a081 kenshin <kenshin.acs@gmail.com> 1489130752 +0800	commit: Undo debug configuration
+c52cadda43efed37ded47b5533ef46c1bfe9a081 7a65c470a2bb583c45a002e71d596f7ec4fed993 kenshin <kenshin.acs@gmail.com> 1489139253 +0800	commit: refactoring: optimize server_do_next function
+7a65c470a2bb583c45a002e71d596f7ec4fed993 b28370be1664f51780fcdf211c90a63a841a5319 kenshin <kenshin.acs@gmail.com> 1489139412 +0800	commit: c_exchange state instead of c_reply_pre
+b28370be1664f51780fcdf211c90a63a841a5319 e75647cc146189149409740cd0c015a5ebd7a9fd kenshin <kenshin.acs@gmail.com> 1489141546 +0800	commit: correct upstream copy
+e75647cc146189149409740cd0c015a5ebd7a9fd 87059be51c9de237129833331b991f299d8c4b28 kenshin <kenshin.acs@gmail.com> 1489376307 +0800	commit: Finished socks client-side authentication
+87059be51c9de237129833331b991f299d8c4b28 22dfda8d5896f93fa5398e0e92510a34e94d94f1 kenshin <kenshin.acs@gmail.com> 1489382479 +0800	commit: socks5 client send requests
+22dfda8d5896f93fa5398e0e92510a34e94d94f1 ee0a51553ba513d65703a4114fbe9c0d561360fd kenshin <kenshin.acs@gmail.com> 1489419952 +0800	commit: scoks5 client do reply
+ee0a51553ba513d65703a4114fbe9c0d561360fd 160ad5360925404f7eb2be9e8c5cdf17e1ed4267 kenshin <kenshin.acs@gmail.com> 1489458802 +0800	commit: switch back to request reply phase
+160ad5360925404f7eb2be9e8c5cdf17e1ed4267 b03b5dcb7646d694fd01a518d09dea47ef1deff1 kenshin <kenshin.acs@gmail.com> 1489461573 +0800	commit: millstone: socks5 sesstion establishement
+b03b5dcb7646d694fd01a518d09dea47ef1deff1 695977bfbafcfcefcb01d78fd3a2a3334f1d985a kenshin <kenshin.acs@gmail.com> 1489463351 +0800	commit: Pretty log output
+695977bfbafcfcefcb01d78fd3a2a3334f1d985a 40354b4946895f724da2fac4b529fe04bd0ed744 kenshin <kenshin.acs@gmail.com> 1489463705 +0800	commit: shrunk unnecessary memorry allocate
+40354b4946895f724da2fac4b529fe04bd0ed744 88d45e41dbd57ac5d492a49975862bd242eb39e7 kenshin <kenshin.acs@gmail.com> 1489489477 +0800	commit: Tunnel establishment begin forward traffic
+88d45e41dbd57ac5d492a49975862bd242eb39e7 47be8d7651781c6b64423814531a52fa750de3da kenshin <kenshin.acs@gmail.com> 1489563859 +0800	commit: Add extra write buffer instead share with read buffer, avoid conflict and overwritten
+47be8d7651781c6b64423814531a52fa750de3da a8028fbddf75f6ffc0bdf2b72694fe6b1b48ab2d kenshin <kenshin.acs@gmail.com> 1489568579 +0800	commit: write backlog data
+a8028fbddf75f6ffc0bdf2b72694fe6b1b48ab2d 0ecfc1b3ae0565396be7498727f55ed9a6d80065 kenshin <kenshin.acs@gmail.com> 1489570638 +0800	commit: Fix: misspecified a c_closed context state be c_kill, and trigger uv_close twice.
+0ecfc1b3ae0565396be7498727f55ed9a6d80065 3b3e2c90fa8b276c72a31005c840192cfad9939c kenshin <kenshin.acs@gmail.com> 1489570694 +0800	commit: Make sure reply message be sent even though reply code is not success.
+3b3e2c90fa8b276c72a31005c840192cfad9939c eea8ca99fa4304a9f49e0d10861cd4cbc30142ff kenshin <kenshin.acs@gmail.com> 1489573559 +0800	commit: Remove unused code.
+eea8ca99fa4304a9f49e0d10861cd4cbc30142ff 1be0caf8d4fdc918c56363d7f61e2c8cae5f8c9e kenshin <kenshin.acs@gmail.com> 1489573991 +0800	commit: server_ctx_closed function
+1be0caf8d4fdc918c56363d7f61e2c8cae5f8c9e 828e23a9800f61284d9e734fbfe5aeba0ec77b4b kenshin <kenshin.acs@gmail.com> 1489574248 +0800	commit: Print hex traffic payload ,may lead to core abort
+828e23a9800f61284d9e734fbfe5aeba0ec77b4b 5002ccac99f3dcbc85f35d186c3069ca295723dc kenshin <kenshin.acs@gmail.com> 1489575757 +0800	commit: Pretty log
+5002ccac99f3dcbc85f35d186c3069ca295723dc 85e0c6724edd6e2faf2da2993a73426ddff11eb9 kenshin <kenshin.acs@gmail.com> 1489590156 +0800	commit: Fix: print excrescent buffer size
+85e0c6724edd6e2faf2da2993a73426ddff11eb9 5a0851bea59cc23b527c59622a3fdc8985a6b8c3 kenshin <kenshin.acs@gmail.com> 1489593385 +0800	commit: Close handle in more elegant way
+5a0851bea59cc23b527c59622a3fdc8985a6b8c3 393877734074c99542025c070c82e9b587d84914 kenshin <kenshin.acs@gmail.com> 1489594068 +0800	commit: Try new upstream while client handshake or authentication failed.
+393877734074c99542025c070c82e9b587d84914 cd4f3b2f80f547128ebd29567f841e3d030c304e kenshin <kenshin.acs@gmail.com> 1489595701 +0800	commit: Fix: free memory before reuse
+cd4f3b2f80f547128ebd29567f841e3d030c304e a0a140bd18ac39461602f8dd84da0731956a5f09 kenshin <kenshin.acs@gmail.com> 1489642043 +0800	commit: shrunk the write buffer size
+a0a140bd18ac39461602f8dd84da0731956a5f09 404ced0ecbd3d552dbf8552956765dfbebd93733 kenshin <kenshin.acs@gmail.com> 1489642261 +0800	commit: Handle read 0 byte
+404ced0ecbd3d552dbf8552956765dfbebd93733 ed37f0b24fa5bad1af7e7f57684b29a1578f09a5 kenshin <kenshin.acs@gmail.com> 1489649127 +0800	commit: Prevent write buffer overflow
+ed37f0b24fa5bad1af7e7f57684b29a1578f09a5 873edea217cb0078881e46ef5e2e51a037ff2755 kenshin <kenshin.acs@gmail.com> 1489661055 +0800	commit: Add reconn configuration and rename retry to reconn
+873edea217cb0078881e46ef5e2e51a037ff2755 14fb05b834cd6d08e28a8720ca27808b69dc6d92 kenshin <kenshin.acs@gmail.com> 1489661198 +0800	commit: upstreams set maxretry
+14fb05b834cd6d08e28a8720ca27808b69dc6d92 34a9a3f895d44b430c0beddae6c532a23a9bfcb9 kenshin <kenshin.acs@gmail.com> 1489661403 +0800	commit: Add c_retry state
+34a9a3f895d44b430c0beddae6c532a23a9bfcb9 8674edf8a6906738b62afb6af40c92ae4709659f kenshin <kenshin.acs@gmail.com> 1489661413 +0800	commit: init retry
+8674edf8a6906738b62afb6af40c92ae4709659f fdbe5004b2468d40efb1e9969020ab0122502653 kenshin <kenshin.acs@gmail.com> 1489682725 +0800	commit: Attempt new upstream proxy if establish tunnel failed.
+fdbe5004b2468d40efb1e9969020ab0122502653 c9b33bad9600ded32554425b48288d5acb1f7674 kenshin <kenshin.acs@gmail.com> 1489684291 +0800	commit: Reconnect forward must ensure the tcp handle has been closed.
+c9b33bad9600ded32554425b48288d5acb1f7674 5f45ca26bdcabc2735a10844ba99156f2002142d kenshin <kenshin.acs@gmail.com> 1489720230 +0800	commit: pretty log
+5f45ca26bdcabc2735a10844ba99156f2002142d 1dea0d38fada2e2ed4795fe22f6f8ad0c21380c3 kenshin <kenshin.acs@gmail.com> 1489720309 +0800	commit: Catch upstream context read error and perform retry
+1dea0d38fada2e2ed4795fe22f6f8ad0c21380c3 0be4ca7a41d793aea4c225fb21463ca4678f9367 kenshin <kenshin.acs@gmail.com> 1489744732 +0800	commit: cautiously handle read callback while error and EOF catched
+0be4ca7a41d793aea4c225fb21463ca4678f9367 069f8f298189a53cb59f5781d8b435a87ff7ab31 kenshin <kenshin.acs@gmail.com> 1489931221 +0800	commit: Remove obscure last_status attribute
+069f8f298189a53cb59f5781d8b435a87ff7ab31 ce8f7e98d752c04dccb935731f4a94e4cf89ae08 kenshin <kenshin.acs@gmail.com> 1489931769 +0800	commit: Pretty debug log
+ce8f7e98d752c04dccb935731f4a94e4cf89ae08 cd9bb44203e02040a24a6f388fbd6b4c4bc3805c kenshin <kenshin.acs@gmail.com> 1489933828 +0800	commit: Write result to client even if the request is failed
+cd9bb44203e02040a24a6f388fbd6b4c4bc3805c 1ef8e37c3011459523baf44b2b27e6bcba51543e kenshin <kenshin.acs@gmail.com> 1489940170 +0800	commit: request maybe killed before forward connected.
+1ef8e37c3011459523baf44b2b27e6bcba51543e 90c403b61a6ad986fe45f7d281fcf9ac339bb7dd kenshin <kenshin.acs@gmail.com> 1489983108 +0800	commit: Fix: overlength domain trigger memory overflow
+90c403b61a6ad986fe45f7d281fcf9ac339bb7dd adf1290b6e7caf9500057a4a810269b661b8c264 kenshin <kenshin.acs@gmail.com> 1489987027 +0800	commit: Assert max domain length
+adf1290b6e7caf9500057a4a810269b661b8c264 ffcc3dd3462795979d0f93c97923a93135fb45ac kenshin <kenshin.acs@gmail.com> 1489987145 +0800	commit: Adjust log level, make output be more clean in non-debug mode
+ffcc3dd3462795979d0f93c97923a93135fb45ac 1c9a4e8f16218099b3ccac9a00c3fcdfd2ac4533 kenshin <kenshin.acs@gmail.com> 1489991997 +0800	commit: Set write buffer be 64K, and alloc heap memory instead of stack.
+1c9a4e8f16218099b3ccac9a00c3fcdfd2ac4533 03d3640df7c6078c056676520f45e743bde7b65e kenshin <kenshin.acs@gmail.com> 1489997194 +0800	commit: Append maxreconn and maxretry configure.
+03d3640df7c6078c056676520f45e743bde7b65e 0c2c4f7c3f087f4dbd490f80584a48e1a6639988 kenshin <kenshin.acs@gmail.com> 1490026057 +0800	commit: Correct handle exception
+0c2c4f7c3f087f4dbd490f80584a48e1a6639988 4ef7c6e3322faa7c4c106634c75bbb2764d50f12 kenshin <kenshin.acs@gmail.com> 1490026079 +0800	commit: pretty log
+4ef7c6e3322faa7c4c106634c75bbb2764d50f12 a30b3d3ca34b6c12041d859c89c77906ddab7952 kenshin <kenshin.acs@gmail.com> 1490071323 +0800	commit: milestone: begin http based tcp tunnel proxy
+a30b3d3ca34b6c12041d859c89c77906ddab7952 28be5fcfc09de7bcbebe3dc4bf73ab4c2bf0c788 kenshin <kenshin.acs@gmail.com> 1490092945 +0800	commit: mold of http do handshake and do auth
+28be5fcfc09de7bcbebe3dc4bf73ab4c2bf0c788 e15e1eaf89efe7a14383c74f86ab899200c5c0ae kenshin <kenshin.acs@gmail.com> 1491471312 +0800	pull git@github.com:kenshinx/rps.git: Fast-forward
+e15e1eaf89efe7a14383c74f86ab899200c5c0ae fd27483014e1ad234e75a11a5d96759d6fe72fb8 kenshin <kenshin.acs@gmail.com> 1491532656 +0800	pull git@github.com:kenshinx/rps.git: Fast-forward
+fd27483014e1ad234e75a11a5d96759d6fe72fb8 df93de6ad22a0e8729598fbe433b642fb2b18f32 kenshin <kenshin.acs@gmail.com> 1491880617 +0800	pull git@github.com:kenshinx/rps.git: Fast-forward
+df93de6ad22a0e8729598fbe433b642fb2b18f32 8d92c9e438e6c0f6e47d7e7b060812ecbab68915 kenshin <kenshin.acs@gmail.com> 1491880970 +0800	commit: convert identation to spaces
+8d92c9e438e6c0f6e47d7e7b060812ecbab68915 53e0a516f586247b8fa53a8d1292e0e3bfdcbf94 kenshin <kenshin.acs@gmail.com> 1491885339 +0800	pull git@github.com:kenshinx/rps.git: Merge made by the 'recursive' strategy.
+53e0a516f586247b8fa53a8d1292e0e3bfdcbf94 8771086e180759f6e71cca408f9139a934b5a129 kenshin <kenshin.acs@gmail.com> 1491885762 +0800	commit: Remove contrib/*.tar.gz
+8771086e180759f6e71cca408f9139a934b5a129 845430f1adff6d7cf65f9e452f61865f15a46265 kenshin <kenshin.acs@gmail.com> 1491886601 +0800	commit: More detailed error log
+845430f1adff6d7cf65f9e452f61865f15a46265 13197dbd736b008043a877a2abf2af8a8c891a77 kenshin <kenshin.acs@gmail.com> 1491906628 +0800	commit: Improve the roubust
+13197dbd736b008043a877a2abf2af8a8c891a77 f1218b688e2e96b90c1ddd1b5c171904a7645103 kenshin <kenshin.acs@gmail.com> 1491924885 +0800	commit: Don’t use uv_default_loop in multi thread case, avoid side effect
+f1218b688e2e96b90c1ddd1b5c171904a7645103 7b1a8e2eb30b13553eaa3ffb34b596622a02981c kenshin <kenshin.acs@gmail.com> 1491925492 +0800	commit: Make sure timer be stopped befor free handler memory
+7b1a8e2eb30b13553eaa3ffb34b596622a02981c a3209a9e22252dbd29bdf77d6f3edaf1d16231b6 kenshin <kenshin.acs@gmail.com> 1491976563 +0800	commit: request stop read before forward establishment and restart read at establish phase
+a3209a9e22252dbd29bdf77d6f3edaf1d16231b6 75ce9a5eb3890df6e1e778dcaf4bd97eb69e21c2 kenshin <kenshin.acs@gmail.com> 1491977177 +0800	commit: append ‘\0’ before print string
+75ce9a5eb3890df6e1e778dcaf4bd97eb69e21c2 2983479bec0a1c10fbceaedd9dc841884b4c349e kenshin <kenshin.acs@gmail.com> 1491977420 +0800	commit: Terminate http request with single CRLF
+2983479bec0a1c10fbceaedd9dc841884b4c349e 8c0c030fc4b6e98fd4be3e0da59847427135cb7f kenshin <kenshin.acs@gmail.com> 1491992791 +0800	pull git@github.com:kenshinx/rps.git: Merge made by the 'recursive' strategy.
+8c0c030fc4b6e98fd4be3e0da59847427135cb7f 702fc67a8c692035b8a6769090d78ee2e2c34b1d kenshin <kenshin.acs@gmail.com> 1491992835 +0800	commit: update rps chart
+702fc67a8c692035b8a6769090d78ee2e2c34b1d 3a7136613d1e016ee9979290f0c8e05ece79aa14 kenshin <kenshin.acs@gmail.com> 1491993498 +0800	commit: Update document flow chart
+3a7136613d1e016ee9979290f0c8e05ece79aa14 761cc43412fba4998ba6509ff2f82b6bd34ba854 kenshin <kenshin.acs@gmail.com> 1491993575 +0800	rebase finished: refs/heads/master onto 99acc5bda119bd58e2229434301bcedc24de150c
+761cc43412fba4998ba6509ff2f82b6bd34ba854 2362900b62a547f9eb210d6578288360fd3a5a49 kenshin <kenshin.acs@gmail.com> 1491993585 +0800	rebase finished: refs/heads/master onto 905c22add61998a1afb916062e185f7e9044a8d0
+2362900b62a547f9eb210d6578288360fd3a5a49 986962fd6f092d2f7f5feac5b48884a8db1497c2 kenshin <kenshin.acs@gmail.com> 1492748475 +0800	commit: Adjust log
+986962fd6f092d2f7f5feac5b48884a8db1497c2 fd0b9ea75665d9c63d4d5840a56fd9058b2024d1 kenshin <kenshin.acs@gmail.com> 1493003447 +0800	commit: Add rtimeout and ftimeout configuration
+fd0b9ea75665d9c63d4d5840a56fd9058b2024d1 a786e5977b0e7c0fac2d56810ca0a47e3b115f1f kenshin <kenshin.acs@gmail.com> 1493004853 +0800	commit: server struct add rtimeout and ftimeout relevant attribute
+a786e5977b0e7c0fac2d56810ca0a47e3b115f1f c3007dc673ddcf5e67cd80076b94168f941a5de0 kenshin <kenshin.acs@gmail.com> 1493008635 +0800	commit: request and forward can set timeout independent
+c3007dc673ddcf5e67cd80076b94168f941a5de0 4dc1535ef98e9f8801bcf263133e4230e6234818 kenshin <kenshin.acs@gmail.com> 1493011936 +0800	commit: Set forward protocol after upstream connect successful
+4dc1535ef98e9f8801bcf263133e4230e6234818 3045beb76e66ec6697f4aba2b6704b85325d65ce kenshin <kenshin.acs@gmail.com> 1493027791 +0800	commit: Unified reply code, mapping with http and socks5 reponse code
+3045beb76e66ec6697f4aba2b6704b85325d65ce 0baf0b5bba9acabc2bc25d37d5abdc7b7c1c66f0 kenshin <kenshin.acs@gmail.com> 1493030119 +0800	commit: typo
+0baf0b5bba9acabc2bc25d37d5abdc7b7c1c66f0 d56850b67a40a20b2fd172f63bb378537306889a kenshin <kenshin.acs@gmail.com> 1493046069 +0800	commit: work in hybrid mode.
+d56850b67a40a20b2fd172f63bb378537306889a 25b8f9fa5bad1c890879a71277469617acbc1083 kenshin <kenshin.acs@gmail.com> 1493047265 +0800	commit: Handle remote addr in a appropriate way while hybrid enable.
+25b8f9fa5bad1c890879a71277469617acbc1083 20a2c08390bd132849161fca154f7a4cc52cc820 kenshin <kenshin.acs@gmail.com> 1493048946 +0800	commit: upstream do retry on timeout
+20a2c08390bd132849161fca154f7a4cc52cc820 9fb26e2bec08221413696581e09176ccff3b7ca0 kenshin <kenshin.acs@gmail.com> 1493093363 +0800	commit: bidirectional handshake has been established retry dosen’t make sense
+9fb26e2bec08221413696581e09176ccff3b7ca0 d83f5aa935a541fdbc8c36af3e185dc6da3954e9 kenshin <kenshin.acs@gmail.com> 1493095244 +0800	commit: Fix: avoid print forward protocol before setting protocol
+d83f5aa935a541fdbc8c36af3e185dc6da3954e9 a5dfa064d00d69951b950ef12240330b16f8742c kenshin <kenshin.acs@gmail.com> 1493100813 +0800	commit (merge): Merge branch 'fix-uv__io_poll-segfault'
+a5dfa064d00d69951b950ef12240330b16f8742c 7dbdab4c9a39b73f03a9b504739c55f6ad0ad56e kenshin <kenshin.acs@gmail.com> 1493352658 +0800	commit: fflush log into file in line
+7dbdab4c9a39b73f03a9b504739c55f6ad0ad56e 2a7eb022718e5b8aabfb3beb5976f6c9ebf73faa kenshin <kenshin.acs@gmail.com> 1495615685 +0800	commit: Disbale hybrid mode default.
+2a7eb022718e5b8aabfb3beb5976f6c9ebf73faa ab39b657a782035e43a4b018ae5e79f06dcfc99c kenshin <kenshin.acs@gmail.com> 1495621550 +0800	commit: setup signal
+ab39b657a782035e43a4b018ae5e79f06dcfc99c 1eb2c5ce3b6336fc056cffe485007b34ff71ccc5 kenshin <kenshin.acs@gmail.com> 1495624457 +0800	commit: signal handler
+1eb2c5ce3b6336fc056cffe485007b34ff71ccc5 b1dba71c36669a3b537d5cec8aef173657e8394b kenshin <kenshin.acs@gmail.com> 1495683174 +0800	commit: Handler SIGTTIN and SIGTTOU signals
+b1dba71c36669a3b537d5cec8aef173657e8394b 0935342abebc632137d3b86dec6322741ff4c419 kenshin <kenshin.acs@gmail.com> 1495685368 +0800	commit: Reentrant function, async-signal-safe snprintf and vsnprintf
+0935342abebc632137d3b86dec6322741ff4c419 095b0729e23051d3ecb96a29bb3f905401f132ce kenshin <kenshin.acs@gmail.com> 1495687066 +0800	commit: Async-Signal-Safe reentrant fucntion log_safe
+095b0729e23051d3ecb96a29bb3f905401f132ce e9e58a03e530f1630a92a719ef57b3742cf74082 kenshin <kenshin.acs@gmail.com> 1495690227 +0800	commit: Handler SIGSEGV signal and log stack trace
+e9e58a03e530f1630a92a719ef57b3742cf74082 597b194fee75fef381baf6a25261e70588aafe57 kenshin <kenshin.acs@gmail.com> 1495767422 +0800	commit: Use low level FILE I/O function instead of starndard library which is not reentrant function
+597b194fee75fef381baf6a25261e70588aafe57 1ad6c40e0a3822efcc2fd004a557af4ca33ef495 kenshin <kenshin.acs@gmail.com> 1495798118 +0800	commit: daemonize function
+1ad6c40e0a3822efcc2fd004a557af4ca33ef495 8802313191c75f21ab0303d4d97755078590fc19 kenshin <kenshin.acs@gmail.com> 1497002905 +0800	commit: Guarantee upstreams had load sucessed before server accept connect
+8802313191c75f21ab0303d4d97755078590fc19 e54985207d7a1f20106f6f244542747d6f3cd1e7 kenshin <kenshin.acs@gmail.com> 1498013790 +0800	commit: manipulate pid file.
+e54985207d7a1f20106f6f244542747d6f3cd1e7 da979662083c3467de3ef0b6116ab05a27f9683d kenshin <kenshin.acs@gmail.com> 1498018745 +0800	commit: Exit directly if bind failed.
+da979662083c3467de3ef0b6116ab05a27f9683d 846afb1ddfc6d1194474db101d2de7f93155deb3 kenshin <kenshin.acs@gmail.com> 1501585134 +0800	pull git@github.com:kenshinx/rps.git: Fast-forward
+846afb1ddfc6d1194474db101d2de7f93155deb3 f9fef59c0d76db9a391f5b90aafaf081ecc373b7 kenshin <kenshin.acs@gmail.com> 1501644405 +0800	commit: delete 3rd compile files.
+f9fef59c0d76db9a391f5b90aafaf081ecc373b7 d514f0bb9b2dc7281de0882965ad8f23157b4343 kenshin <kenshin.acs@gmail.com> 1501828083 +0800	rebase finished: refs/heads/master onto d514f0bb9b2dc7281de0882965ad8f23157b4343
+d514f0bb9b2dc7281de0882965ad8f23157b4343 0d8cd64b87601c2aac80d8f91401ba310f78ad90 kenshin <kenshin.acs@gmail.com> 1501832743 +0800	commit: Adjust upstream pool default length
+0d8cd64b87601c2aac80d8f91401ba310f78ad90 f0bfc307b5dba18e32d1c1f51dd2e707e2fed6d2 kenshin <kenshin.acs@gmail.com> 1501832929 +0800	commit: valgrind make rule
+f0bfc307b5dba18e32d1c1f51dd2e707e2fed6d2 66e7ad7c3dbb5c35226593e9d19115afd12c2eba kenshin <kenshin.acs@gmail.com> 1501833133 +0800	commit: Modify default make debug rule.
+66e7ad7c3dbb5c35226593e9d19115afd12c2eba 265aa0db4521c3d65084cde9b6b587ac91db4a0b kenshin <kenshin.acs@gmail.com> 1502080699 +0800	commit: hashmap deepcopy and reconstruct http request header in http_tunnel_send_request function
+265aa0db4521c3d65084cde9b6b587ac91db4a0b 9fa99d5ad6f6ff7a2b46dd2853047af8453c7bb2 kenshin <kenshin.acs@gmail.com> 1502081042 +0800	rebase finished: refs/heads/master onto 9fa99d5ad6f6ff7a2b46dd2853047af8453c7bb2
+9fa99d5ad6f6ff7a2b46dd2853047af8453c7bb2 8a78c75e7278cd9164f2ba8168be3d97e04c3fa1 kenshin <kenshin.acs@gmail.com> 1502168302 +0800	rebase finished: refs/heads/master onto 8a78c75e7278cd9164f2ba8168be3d97e04c3fa1
+8a78c75e7278cd9164f2ba8168be3d97e04c3fa1 da6dce0e09dda2a4af4cf73da21bf5ccc6096e96 kenshin <kenshin.acs@gmail.com> 1502185901 +0800	commit: better coding style
+da6dce0e09dda2a4af4cf73da21bf5ccc6096e96 c938f8e47da820d1642e4b8e475f7f74cb765da3 kenshin <kenshin.acs@gmail.com> 1502189964 +0800	rebase finished: refs/heads/master onto 8c7bc13d7b1b9836be23f3eb86dc93b3344ddd41
+c938f8e47da820d1642e4b8e475f7f74cb765da3 1c888f8f0665b7817f4c70e4efd927951d3a94b5 kenshin <kenshin.acs@gmail.com> 1502245576 +0800	commit: Handle HTTP post request body
+1c888f8f0665b7817f4c70e4efd927951d3a94b5 b1e4fd800b20e77c6044bba71edbc8279000bb0c kenshin <kenshin.acs@gmail.com> 1502340931 +0800	commit: webapi initial commit
+b1e4fd800b20e77c6044bba71edbc8279000bb0c bc7f969198fb280e7ac9cb1cba99cbde92b62d98 kenshin <kenshin.acs@gmail.com> 1503973742 +0800	commit: delete pyc
+bc7f969198fb280e7ac9cb1cba99cbde92b62d98 b2703308dcfcc5aff573a23ba90ad5ebc6898c72 kenshin <kenshin.acs@gmail.com> 1503973787 +0800	pull git@github.com:kenshinx/rps.git: Merge made by the 'recursive' strategy.
+b2703308dcfcc5aff573a23ba90ad5ebc6898c72 098094f5447782c04a45bf52ffca7e547a45cd01 kenshin <kenshin.acs@gmail.com> 1503980891 +0800	commit: webapi run on gunicorn
+098094f5447782c04a45bf52ffca7e547a45cd01 c34fc6a19820ae714ef1690b9761d21a98c79513 kenshin <kenshin.acs@gmail.com> 1503980926 +0800	commit (amend): webapi run on gunicorn
+c34fc6a19820ae714ef1690b9761d21a98c79513 1d210e287d81db64e6fb59c1f770b6baa4a8dcef kenshin <kenshin.acs@gmail.com> 1503981126 +0800	rebase finished: refs/heads/master onto d99aeffddbc0d861a4dd0d4339e7a6a69afea874
+1d210e287d81db64e6fb59c1f770b6baa4a8dcef 3428c9697df7538d0526e33fe7e60c187a046c10 kenshin <kenshin.acs@gmail.com> 1504067085 +0800	commit: bugfix: wrong indent
+3428c9697df7538d0526e33fe7e60c187a046c10 1aab15c23e652800f5955875472b47a365f47290 kenshin <kenshin.acs@gmail.com> 1504083022 +0800	commit: ignore .svn files

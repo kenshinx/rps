@@ -1,0 +1,57 @@
+0000000000000000000000000000000000000000 da979662083c3467de3ef0b6116ab05a27f9683d kenshin <kenshin.acs@gmail.com> 1500463628 +0800	branch: Created from master
+da979662083c3467de3ef0b6116ab05a27f9683d 186394ffdefb205dda8fac055e81532d11310044 kenshin <kenshin.acs@gmail.com> 1500519896 +0800	commit: Use http_tunnel as more appropriate naming.
+186394ffdefb205dda8fac055e81532d11310044 adbc157f12ad7080422526e6c5503793bd419ce0 kenshin <kenshin.acs@gmail.com> 1500519923 +0800	commit: http proxy test pcap
+adbc157f12ad7080422526e6c5503793bd419ce0 72c966d4516cb6aeb2327756067c8764e4aa195f kenshin <kenshin.acs@gmail.com> 1500522987 +0800	commit: http proxy protocol
+72c966d4516cb6aeb2327756067c8764e4aa195f 476093e707d920b045fe1b18d1227c1c9bd2dc15 kenshin <kenshin.acs@gmail.com> 1500523245 +0800	commit: Add make rule
+476093e707d920b045fe1b18d1227c1c9bd2dc15 caf4e03852a94af0c1d3ca1be1b7e93e7a331c33 kenshin <kenshin.acs@gmail.com> 1500524255 +0800	commit: Add http proxy related configucation
+caf4e03852a94af0c1d3ca1be1b7e93e7a331c33 3f2851bb9239838759b9914e4b422c6081e71e56 kenshin <kenshin.acs@gmail.com> 1500539490 +0800	commit: Distinguish HTTP protocol and version field
+3f2851bb9239838759b9914e4b422c6081e71e56 cddfa1f4957ca9d6c6608e908a63c3d3a281a849 kenshin <kenshin.acs@gmail.com> 1500606062 +0800	commit: More sophisticated HTTP protocol implementation
+cddfa1f4957ca9d6c6608e908a63c3d3a281a849 37175f630a647e9c43f1c02c3259bb802a29d857 kenshin <kenshin.acs@gmail.com> 1500624328 +0800	commit: Adjust switch-case indent style
+37175f630a647e9c43f1c02c3259bb802a29d857 b1b901f5b5579b5c4acf74b627e31c650639ae44 kenshin <kenshin.acs@gmail.com> 1500625019 +0800	commit: c_requests -> c_request more accurate naming
+b1b901f5b5579b5c4acf74b627e31c650639ae44 e335deb70ee2208cd902607f09398b01639bc3f8 kenshin <kenshin.acs@gmail.com> 1500628468 +0800	commit: c_request has been occipied, still use c_requests
+e335deb70ee2208cd902607f09398b01639bc3f8 c6f8a5ec883e612995b0388465526aaedf42c9cc kenshin <kenshin.acs@gmail.com> 1500635477 +0800	commit: sniffer http proxy traffic
+c6f8a5ec883e612995b0388465526aaedf42c9cc ceba92806701c389ac328e8b4f327b1d3b926140 kenshin <kenshin.acs@gmail.com> 1500637121 +0800	commit: Part of the implementation of the HTTP proxy server endpoint protocol
+ceba92806701c389ac328e8b4f327b1d3b926140 5f0e443e9e42356c8fcef21d382f825dd35ff6bc kenshin <kenshin.acs@gmail.com> 1500860976 +0800	commit: Add line break for response body
+5f0e443e9e42356c8fcef21d382f825dd35ff6bc 9649868b23a1700e5d67979721af0c0f3c439024 kenshin <kenshin.acs@gmail.com> 1500870234 +0800	commit: context struct add req pointer to transmit http request paramters from client to upstream
+9649868b23a1700e5d67979721af0c0f3c439024 4a6e05f7e560e8090197df985ac0b24bacb6a65f kenshin <kenshin.acs@gmail.com> 1500872475 +0800	commit: Better log
+4a6e05f7e560e8090197df985ac0b24bacb6a65f 63e8e76c8997f7bca3a5460839c913dc4e3b147f kenshin <kenshin.acs@gmail.com> 1500879114 +0800	commit: Make http request struct memeory be freed appropriately
+63e8e76c8997f7bca3a5460839c913dc4e3b147f c9a6b685d9642fbb1160602e42a92a2efb54af50 kenshin <kenshin.acs@gmail.com> 1500886207 +0800	commit: Server endpoint HTTP proxy protocol
+c9a6b685d9642fbb1160602e42a92a2efb54af50 3db481029208924be81cc2112d88c24c66481ac9 kenshin <kenshin.acs@gmail.com> 1500951690 +0800	commit: universal http_reponse_verify
+3db481029208924be81cc2112d88c24c66481ac9 a0b5158c61eba193f6fb6bbf6aa7fcaf7b268c29 kenshin <kenshin.acs@gmail.com> 1500957896 +0800	commit: Correct Proxy-Authorization request header
+a0b5158c61eba193f6fb6bbf6aa7fcaf7b268c29 4663c0e41bbaa1adbb8b14ad39232c77b6bc0fbf kenshin <kenshin.acs@gmail.com> 1500957939 +0800	commit: Http proxy protocol the client side implementation
+4663c0e41bbaa1adbb8b14ad39232c77b6bc0fbf 9f3265f5a81b11eb7de9881a18db60a26d3b0d11 kenshin <kenshin.acs@gmail.com> 1500958352 +0800	commit: tcp-keepalive does not make sense in our approach
+9f3265f5a81b11eb7de9881a18db60a26d3b0d11 5c828c4a2215c7d8feca5351c42d6b303d8d3d04 kenshin <kenshin.acs@gmail.com> 1500972250 +0800	commit: keep retry after trice reconn failed.
+5c828c4a2215c7d8feca5351c42d6b303d8d3d04 cd0b4387747e8af62f8f0ba7ed5e5e3f37c4e083 kenshin <kenshin.acs@gmail.com> 1500973217 +0800	commit: Define tunnel and pipeline forwarding and add more logs
+cd0b4387747e8af62f8f0ba7ed5e5e3f37c4e083 8c4e3540a0e4eca552ab44024e7297fe4a5c90eb kenshin <kenshin.acs@gmail.com> 1500973261 +0800	commit: Send the error code to client after retry
+8c4e3540a0e4eca552ab44024e7297fe4a5c90eb bcbba122982cbb7e2401a4b6f13c026677fde71c kenshin <kenshin.acs@gmail.com> 1500976709 +0800	commit: Fix the random function bug, srand() should be called only once.
+bcbba122982cbb7e2401a4b6f13c026677fde71c 8eeb2affbb6c31963e55a2d61b7595705c30acf4 kenshin <kenshin.acs@gmail.com> 1500976783 +0800	commit: Avoid server_ctx_close() be called twice
+8eeb2affbb6c31963e55a2d61b7595705c30acf4 b9c5825a14cfcc74151c2597b2194940416b3d91 kenshin <kenshin.acs@gmail.com> 1500978670 +0800	commit: Distinguish the naming between http tunnel proxy protocol and http proxy protocol
+b9c5825a14cfcc74151c2597b2194940416b3d91 b68f6b554e88a757176fe2a46d440436ac1fe9bb kenshin <kenshin.acs@gmail.com> 1500979854 +0800	commit: Captured c_closing state and clear the allocated resources.
+b68f6b554e88a757176fe2a46d440436ac1fe9bb 527cbbceccde6f8fafaab06b9b83389b75243bef kenshin <kenshin.acs@gmail.com> 1501034182 +0800	commit: Connection header be configurable
+527cbbceccde6f8fafaab06b9b83389b75243bef 2d8e1dc652db10dfb6f6860294a78a642336e89b kenshin <kenshin.acs@gmail.com> 1501037304 +0800	commit: http proxy and http tunnel proxy reuse the same http_request_send function
+2d8e1dc652db10dfb6f6860294a78a642336e89b cf6fae33b83c55ea7c2eeb7c886fbaa666898ed5 kenshin <kenshin.acs@gmail.com> 1501041280 +0800	commit: Free allocated http request struct in http protocol
+cf6fae33b83c55ea7c2eeb7c886fbaa666898ed5 57a8baaa562e07c2774aa0f5d97c403302e142db kenshin <kenshin.acs@gmail.com> 1501041297 +0800	commit: Fix: tunnel or pipeline has been established retry dosen’t make sense
+57a8baaa562e07c2774aa0f5d97c403302e142db 2e047e44b2a2e8a1f2307eae46249ce22d0f85df kenshin <kenshin.acs@gmail.com> 1501066719 +0800	commit: Fix: Avoid server_cycle in endpoint has been closed and make sure ctx->do_next be defined
+2e047e44b2a2e8a1f2307eae46249ce22d0f85df a28207c42440b7fb63e6b84532c088b8fa83dd0b kenshin <kenshin.acs@gmail.com> 1501067986 +0800	commit: Default errro code return 400 instead of 500
+a28207c42440b7fb63e6b84532c088b8fa83dd0b 040c5131095b2a65f30b6acf3d7c70603955b9cd kenshin <kenshin.acs@gmail.com> 1501120543 +0800	commit: Handle HTTP 301 302
+040c5131095b2a65f30b6acf3d7c70603955b9cd c33bcd54a2c15e503a820d1fabbe48d843b16d7d kenshin <kenshin.acs@gmail.com> 1501125593 +0800	commit: Update document about hybrid mode
+c33bcd54a2c15e503a820d1fabbe48d843b16d7d 0b9b80883f4911074a46a9e5f806f570595875ec kenshin <kenshin.acs@gmail.com> 1501153663 +0800	commit: Fix: socks5 handler capture c_closing state
+0b9b80883f4911074a46a9e5f806f570595875ec bbf037ecce3b9cff43247c2548c9f4f0d3c8158a kenshin <kenshin.acs@gmail.com> 1501153748 +0800	commit: In hybrid mode, http_tunnel, socks5 can only be forwarded via http_tunnel or socks5 protocol
+bbf037ecce3b9cff43247c2548c9f4f0d3c8158a 8bd211a1b4159519ef292ce8c807f64ad374a14c kenshin <kenshin.acs@gmail.com> 1501155143 +0800	commit: Return http 405 if http tunnel server receive non-CONNECT method.
+8bd211a1b4159519ef292ce8c807f64ad374a14c f7a5dbd40bc5a8fabd9b63cf26a207b18c41f900 kenshin <kenshin.acs@gmail.com> 1501155251 +0800	commit (amend): Return http 405 if http tunnel server receive non-CONNECT method.
+f7a5dbd40bc5a8fabd9b63cf26a207b18c41f900 11b05ed13afd0115a81aa8ed3f1a47f7d2f56876 kenshin <kenshin.acs@gmail.com> 1501159568 +0800	commit: Fix, typo
+11b05ed13afd0115a81aa8ed3f1a47f7d2f56876 a11e9344189584efd0d0e2a41a245af6cfb4eef9 kenshin <kenshin.acs@gmail.com> 1501161162 +0800	commit: robust http request dump function
+a11e9344189584efd0d0e2a41a245af6cfb4eef9 f36a8e513b83170d8cde50fdfa71e2ad3326e736 kenshin <kenshin.acs@gmail.com> 1501209479 +0800	commit: parse http request line, guess possible port
+f36a8e513b83170d8cde50fdfa71e2ad3326e736 797fe780042e72e434f7e58901377246d8f8975c kenshin <kenshin.acs@gmail.com> 1501211591 +0800	commit: http proxy support hybrid mode.
+797fe780042e72e434f7e58901377246d8f8975c 4ad4ea327e4a361245b957707c602c69cada5a55 kenshin <kenshin.acs@gmail.com> 1501224831 +0800	commit: 1. Define context stream(tunnel, pipeline), 2. c_establish & c_established state.
+4ad4ea327e4a361245b957707c602c69cada5a55 179658526ff23cf2227c51e84595e207b5795638 kenshin <kenshin.acs@gmail.com> 1501225223 +0800	commit: Update document
+179658526ff23cf2227c51e84595e207b5795638 84648018278afb2b02bb167a318531d9038acc59 kenshin <kenshin.acs@gmail.com> 1501229910 +0800	commit: Fix, redirect response from upsteam to client directly
+84648018278afb2b02bb167a318531d9038acc59 91671ccc7bbf3712169a59c6b44570262c032e26 kenshin <kenshin.acs@gmail.com> 1501232679 +0800	commit: stop request read may trigger client close be ignored
+91671ccc7bbf3712169a59c6b44570262c032e26 cf96f1f9337242b0612c3bea954afba38e91d200 kenshin <kenshin.acs@gmail.com> 1501473943 +0800	commit: Fix: avoid memory overflow
+cf96f1f9337242b0612c3bea954afba38e91d200 a72f3bbff3b1485387488105dd0f04c10f1344d0 kenshin <kenshin.acs@gmail.com> 1501473980 +0800	commit: http header value maybe null
+a72f3bbff3b1485387488105dd0f04c10f1344d0 2b655db0d91e9a285c3b7eb22e1dc38ed2f2b622 kenshin <kenshin.acs@gmail.com> 1501482320 +0800	commit: More detailed log
+2b655db0d91e9a285c3b7eb22e1dc38ed2f2b622 783f374765c38b177935b29abc148ff9849691f6 kenshin <kenshin.acs@gmail.com> 1501490963 +0800	commit: Eliminate the issue, request may continue read data before pipeline established successful.
+783f374765c38b177935b29abc148ff9849691f6 ef1d5e04f8427cc82da39e65ec80abffcb547424 kenshin <kenshin.acs@gmail.com> 1501574660 +0800	commit: Don’t parse http reponse body and fix the silly segfault
+ef1d5e04f8427cc82da39e65ec80abffcb547424 0139a3c52b7c5c5bab06a2beac047f978814e709 kenshin <kenshin.acs@gmail.com> 1501575915 +0800	commit: Ignore io event if context has been closed or been closing.
+0139a3c52b7c5c5bab06a2beac047f978814e709 41e459bf49d8bd750dd7e21f787c3d1f7dc3ef03 kenshin <kenshin.acs@gmail.com> 1501575973 +0800	commit: Adjust HTTP message max length
+41e459bf49d8bd750dd7e21f787c3d1f7dc3ef03 4ff8810947e403891d96b01b70884012553e8e40 kenshin <kenshin.acs@gmail.com> 1501584463 +0800	commit: Handle HTTP 304

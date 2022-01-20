@@ -1,0 +1,39 @@
+[2017-09-25 12:10:56 <werkzeug>] INFO:  * Running on http://127.0.0.1:9898/ (Press CTRL+C to quit)
+[2017-09-25 12:10:56 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-25 12:10:56 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-25 12:10:56 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-25 12:10:58 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:10:58] "GET /api/proxy/http_tunnel HTTP/1.1" 404 -
+[2017-09-25 12:10:59 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:10:59] "GET /favicon.ico HTTP/1.1" 404 -
+[2017-09-25 12:11:12 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:11:12] "GET /api/godaddy/proxy/http_tunnel HTTP/1.1" 301 -
+[2017-09-25 12:11:16 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:11:16] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-25 12:11:34 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-25 12:11:34 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-25 12:11:34 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-25 12:11:34 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-25 12:11:36 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-25 12:11:37 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-25 12:11:37 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-25 12:11:37 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-25 12:12:12 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:12:12] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-25 12:12:19 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-25 12:12:20 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-25 12:12:20 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-25 12:12:20 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-25 12:12:28 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:12:28] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-25 12:12:39 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:12:39] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-25 12:12:59 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-25 12:12:59 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-25 12:13:00 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-25 12:13:00 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-25 12:14:04 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-25 12:14:04 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-25 12:14:05 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-25 12:14:05 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-25 12:14:11 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:14:11] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-25 12:14:32 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:14:32] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-25 12:15:54 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:15:54] "POST /api/proxy/ban/62.84.66.39 HTTP/1.1" 200 -
+[2017-09-25 12:16:03 <werkzeug>] INFO: 127.0.0.1 - - [25/Sep/2017 12:16:03] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-25 12:17:43 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-25 12:17:43 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-25 12:17:43 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-25 12:17:43 <werkzeug>] INFO:  * Debugger PIN: 149-174-201

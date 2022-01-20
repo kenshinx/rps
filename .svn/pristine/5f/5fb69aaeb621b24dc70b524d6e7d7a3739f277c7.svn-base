@@ -1,0 +1,232 @@
+[2017-08-29 12:24:05 +0800] [43285] [INFO] Starting gunicorn 19.7.1
+[2017-08-29 12:24:05 +0800] [43285] [INFO] Listening at: http://0.0.0.0:9898 (43285)
+[2017-08-29 12:24:05 +0800] [43285] [INFO] Using worker: threads
+[2017-08-29 12:24:05 +0800] [43289] [INFO] Booting worker with pid: 43289
+[2017-08-29 12:24:05 +0800] [43289] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/arbiter.py", line 578, in spawn_worker
+    worker.init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/gthread.py", line 109, in init_process
+    super(ThreadWorker, self).init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 126, in init_process
+    self.load_wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 135, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/util.py", line 352, in import_app
+    __import__(module)
+  File "/Users/kenshin/workspace/rps/api/wsgi.py", line 9, in <module>
+    from rfs import createAPP
+ImportError: No module named rfs
+[2017-08-29 12:24:05 +0800] [43289] [INFO] Worker exiting (pid: 43289)
+[2017-08-29 12:24:05 +0800] [43285] [INFO] Shutting down: Master
+[2017-08-29 12:24:05 +0800] [43285] [INFO] Reason: Worker failed to boot.
+[2017-08-29 12:24:49 +0800] [43324] [INFO] Starting gunicorn 19.7.1
+[2017-08-29 12:24:49 +0800] [43324] [INFO] Listening at: http://0.0.0.0:9898 (43324)
+[2017-08-29 12:24:49 +0800] [43324] [INFO] Using worker: threads
+[2017-08-29 12:24:49 +0800] [43327] [INFO] Booting worker with pid: 43327
+[2017-08-29 12:24:49 +0800] [43328] [INFO] Booting worker with pid: 43328
+[2017-08-29 12:24:49 +0800] [43329] [INFO] Booting worker with pid: 43329
+[2017-08-29 12:24:49 +0800] [43330] [INFO] Booting worker with pid: 43330
+[2017-08-29 12:24:49 +0800] [43331] [INFO] Booting worker with pid: 43331
+[2017-08-29 12:25:18 +0800] [43324] [INFO] Handling signal: int
+[2017-08-29 12:25:18 +0800] [43330] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/arbiter.py", line 578, in spawn_worker
+    worker.init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/gthread.py", line 109, in init_process
+    super(ThreadWorker, self).init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 126, in init_process
+    self.load_wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 135, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/util.py", line 352, in import_app
+    __import__(module)
+  File "/Users/kenshin/workspace/rps/api/wsgi.py", line 10, in <module>
+    application = createAPP()
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 41, in createAPP
+    configDB(app)
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 59, in configDB
+    mongo.init_app(app)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/flask_pymongo/__init__.py", line 283, in init_app
+    mechanism=auth_mechanism)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/database.py", line 1075, in authenticate
+    connect=True)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/mongo_client.py", line 542, in _cache_credentials
+    writable_preferred_server_selector)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 214, in select_server
+    address))
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 205, in select_servers
+    for sd in server_descriptions]
+error: release unlocked lock
+[2017-08-29 12:25:18 +0800] [43327] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/arbiter.py", line 578, in spawn_worker
+    worker.init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/gthread.py", line 109, in init_process
+    super(ThreadWorker, self).init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 126, in init_process
+    self.load_wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 135, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/util.py", line 352, in import_app
+    __import__(module)
+  File "/Users/kenshin/workspace/rps/api/wsgi.py", line 10, in <module>
+    application = createAPP()
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 41, in createAPP
+    configDB(app)
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 59, in configDB
+    mongo.init_app(app)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/flask_pymongo/__init__.py", line 283, in init_app
+    mechanism=auth_mechanism)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/database.py", line 1075, in authenticate
+    connect=True)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/mongo_client.py", line 542, in _cache_credentials
+    writable_preferred_server_selector)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 214, in select_server
+    address))
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 205, in select_servers
+    for sd in server_descriptions]
+error: release unlocked lock
+[2017-08-29 12:25:18 +0800] [43329] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/arbiter.py", line 578, in spawn_worker
+    worker.init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/gthread.py", line 109, in init_process
+    super(ThreadWorker, self).init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 126, in init_process
+    self.load_wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 135, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/util.py", line 352, in import_app
+    __import__(module)
+  File "/Users/kenshin/workspace/rps/api/wsgi.py", line 10, in <module>
+    application = createAPP()
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 41, in createAPP
+    configDB(app)
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 59, in configDB
+    mongo.init_app(app)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/flask_pymongo/__init__.py", line 283, in init_app
+    mechanism=auth_mechanism)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/database.py", line 1075, in authenticate
+    connect=True)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/mongo_client.py", line 542, in _cache_credentials
+    writable_preferred_server_selector)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 214, in select_server
+    address))
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 205, in select_servers
+    for sd in server_descriptions]
+error: release unlocked lock
+[2017-08-29 12:25:18 +0800] [43328] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/arbiter.py", line 578, in spawn_worker
+    worker.init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/gthread.py", line 109, in init_process
+    super(ThreadWorker, self).init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 126, in init_process
+    self.load_wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 135, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/util.py", line 352, in import_app
+    __import__(module)
+  File "/Users/kenshin/workspace/rps/api/wsgi.py", line 10, in <module>
+    application = createAPP()
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 41, in createAPP
+    configDB(app)
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 59, in configDB
+    mongo.init_app(app)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/flask_pymongo/__init__.py", line 283, in init_app
+    mechanism=auth_mechanism)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/database.py", line 1075, in authenticate
+    connect=True)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/mongo_client.py", line 542, in _cache_credentials
+    writable_preferred_server_selector)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 214, in select_server
+    address))
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 205, in select_servers
+    for sd in server_descriptions]
+error: release unlocked lock
+[2017-08-29 12:25:18 +0800] [43331] [ERROR] Exception in worker process
+Traceback (most recent call last):
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/arbiter.py", line 578, in spawn_worker
+    worker.init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/gthread.py", line 109, in init_process
+    super(ThreadWorker, self).init_process()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 126, in init_process
+    self.load_wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/workers/base.py", line 135, in load_wsgi
+    self.wsgi = self.app.wsgi()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/base.py", line 67, in wsgi
+    self.callable = self.load()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 65, in load
+    return self.load_wsgiapp()
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/app/wsgiapp.py", line 52, in load_wsgiapp
+    return util.import_app(self.app_uri)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/gunicorn/util.py", line 352, in import_app
+    __import__(module)
+  File "/Users/kenshin/workspace/rps/api/wsgi.py", line 10, in <module>
+    application = createAPP()
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 41, in createAPP
+    configDB(app)
+  File "/Users/kenshin/workspace/rps/api/rps/app.py", line 59, in configDB
+    mongo.init_app(app)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/flask_pymongo/__init__.py", line 283, in init_app
+    mechanism=auth_mechanism)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/database.py", line 1075, in authenticate
+    connect=True)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/mongo_client.py", line 542, in _cache_credentials
+    writable_preferred_server_selector)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 214, in select_server
+    address))
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/pymongo/topology.py", line 205, in select_servers
+    for sd in server_descriptions]
+error: release unlocked lock
+[2017-08-29 12:25:18 +0800] [43330] [INFO] Worker exiting (pid: 43330)
+[2017-08-29 12:25:18 +0800] [43329] [INFO] Worker exiting (pid: 43329)
+[2017-08-29 12:25:18 +0800] [43331] [INFO] Worker exiting (pid: 43331)
+[2017-08-29 12:25:18 +0800] [43327] [INFO] Worker exiting (pid: 43327)
+[2017-08-29 12:25:18 +0800] [43328] [INFO] Worker exiting (pid: 43328)
+[2017-08-29 12:26:27 +0800] [43408] [INFO] Starting gunicorn 19.7.1
+[2017-08-29 12:26:27 +0800] [43408] [INFO] Listening at: http://0.0.0.0:9898 (43408)
+[2017-08-29 12:26:27 +0800] [43408] [INFO] Using worker: threads
+[2017-08-29 12:26:27 +0800] [43411] [INFO] Booting worker with pid: 43411
+[2017-08-29 12:26:27 +0800] [43412] [INFO] Booting worker with pid: 43412
+[2017-08-29 12:26:27 +0800] [43413] [INFO] Booting worker with pid: 43413
+[2017-08-29 12:26:28 +0800] [43414] [INFO] Booting worker with pid: 43414
+[2017-08-29 12:26:28 +0800] [43415] [INFO] Booting worker with pid: 43415
+[2017-08-29 12:26:36 +0800] [43408] [INFO] Handling signal: int
+[2017-08-29 12:26:36 +0800] [43412] [INFO] Worker exiting (pid: 43412)
+[2017-08-29 12:26:36 +0800] [43413] [INFO] Worker exiting (pid: 43413)
+[2017-08-29 12:26:36 +0800] [43415] [INFO] Worker exiting (pid: 43415)
+[2017-08-29 12:26:36 +0800] [43411] [INFO] Worker exiting (pid: 43411)
+[2017-08-29 12:26:36 +0800] [43414] [INFO] Worker exiting (pid: 43414)
+[2017-08-29 12:26:36 +0800] [43408] [INFO] Shutting down: Master

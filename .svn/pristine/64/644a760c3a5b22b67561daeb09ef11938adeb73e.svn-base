@@ -1,0 +1,35 @@
+0000000000000000000000000000000000000000 6fcb1c830d223b3ab5261a5982ae512137cfabce kenshin <kenshin.acs@gmail.com> 1482831018 +0800	fetch -v --progress rps: storing head
+6fcb1c830d223b3ab5261a5982ae512137cfabce cf476384cc6b696d035972b3891b81e6604f206d kenshin <kenshin.acs@gmail.com> 1482831830 +0800	update by push
+cf476384cc6b696d035972b3891b81e6604f206d 726d41607b0b7cc200fd88e581fc8bc19096a941 kenshin <kenshin.acs@gmail.com> 1482831945 +0800	update by push
+726d41607b0b7cc200fd88e581fc8bc19096a941 f8903bfa9646ddccd910e3c417c3d607bc0b8170 kenshin <kenshin.acs@gmail.com> 1482832587 +0800	update by push
+f8903bfa9646ddccd910e3c417c3d607bc0b8170 3137539f15ebb6f7a334f888f3915f1b976c4dfc kenshin <kenshin.acs@gmail.com> 1482832981 +0800	update by push
+3137539f15ebb6f7a334f888f3915f1b976c4dfc bb1b6424a7d6d481f12ca07f6d4b10cf00a061a8 kenshin <kenshin.acs@gmail.com> 1482849668 +0800	fetch -v --progress --prune rps: fast-forward
+bb1b6424a7d6d481f12ca07f6d4b10cf00a061a8 0eedad492100df8c77fd6a749dbbb83ddba2c5da kenshin <kenshin.acs@gmail.com> 1482902535 +0800	fetch -v --progress --prune rps: fast-forward
+0eedad492100df8c77fd6a749dbbb83ddba2c5da 0d195e523322f506a79989b3b3b8f7652ee91bba kenshin <kenshin.acs@gmail.com> 1484671426 +0800	update by push
+0d195e523322f506a79989b3b3b8f7652ee91bba 0efb031d302065f8fa19e91cb8de3a83c9dae9e2 kenshin <kenshin.acs@gmail.com> 1484672398 +0800	update by push
+0efb031d302065f8fa19e91cb8de3a83c9dae9e2 4ef7c6e3322faa7c4c106634c75bbb2764d50f12 kenshin <kenshin.acs@gmail.com> 1490027528 +0800	update by push
+4ef7c6e3322faa7c4c106634c75bbb2764d50f12 7e5f523aa9576c91213667c39d4fbb5e39ae996a kenshin <kenshin.acs@gmail.com> 1490112349 +0800	fetch -v --progress --prune rps: fast-forward
+7e5f523aa9576c91213667c39d4fbb5e39ae996a e15e1eaf89efe7a14383c74f86ab899200c5c0ae kenshin <kenshin.acs@gmail.com> 1491000283 +0800	fetch -v --progress --prune rps: fast-forward
+e15e1eaf89efe7a14383c74f86ab899200c5c0ae bcf6fb799b16461ec291f59eef82808806254164 kenshin <kenshin.acs@gmail.com> 1491491375 +0800	fetch -v --progress --prune rps: fast-forward
+bcf6fb799b16461ec291f59eef82808806254164 fd27483014e1ad234e75a11a5d96759d6fe72fb8 kenshin <kenshin.acs@gmail.com> 1491530241 +0800	fetch -v --progress --prune rps: fast-forward
+fd27483014e1ad234e75a11a5d96759d6fe72fb8 df93de6ad22a0e8729598fbe433b642fb2b18f32 kenshin <kenshin.acs@gmail.com> 1491881558 +0800	fetch -v --progress --prune rps: fast-forward
+df93de6ad22a0e8729598fbe433b642fb2b18f32 744db742795b8ee41997ec0cadebf220d3bc570b kenshin <kenshin.acs@gmail.com> 1491885384 +0800	fetch -v --progress --prune rps: fast-forward
+744db742795b8ee41997ec0cadebf220d3bc570b 7b1a8e2eb30b13553eaa3ffb34b596622a02981c kenshin <kenshin.acs@gmail.com> 1491927504 +0800	update by push
+7b1a8e2eb30b13553eaa3ffb34b596622a02981c 702fc67a8c692035b8a6769090d78ee2e2c34b1d kenshin <kenshin.acs@gmail.com> 1491992847 +0800	update by push
+702fc67a8c692035b8a6769090d78ee2e2c34b1d 905c22add61998a1afb916062e185f7e9044a8d0 kenshin <kenshin.acs@gmail.com> 1491993202 +0800	fetch -v --progress --prune rps: fast-forward
+905c22add61998a1afb916062e185f7e9044a8d0 2362900b62a547f9eb210d6578288360fd3a5a49 kenshin <kenshin.acs@gmail.com> 1491993609 +0800	update by push
+2362900b62a547f9eb210d6578288360fd3a5a49 da979662083c3467de3ef0b6116ab05a27f9683d kenshin <kenshin.acs@gmail.com> 1498018772 +0800	update by push
+da979662083c3467de3ef0b6116ab05a27f9683d 846afb1ddfc6d1194474db101d2de7f93155deb3 kenshin <kenshin.acs@gmail.com> 1501585101 +0800	fetch -v --progress --prune rps: fast-forward
+846afb1ddfc6d1194474db101d2de7f93155deb3 f9fef59c0d76db9a391f5b90aafaf081ecc373b7 kenshin <kenshin.acs@gmail.com> 1501644417 +0800	update by push
+f9fef59c0d76db9a391f5b90aafaf081ecc373b7 d514f0bb9b2dc7281de0882965ad8f23157b4343 kenshin <kenshin.acs@gmail.com> 1501828083 +0800	pull -v --progress --rebase rps refs/heads/master: fast-forward
+d514f0bb9b2dc7281de0882965ad8f23157b4343 f0bfc307b5dba18e32d1c1f51dd2e707e2fed6d2 kenshin <kenshin.acs@gmail.com> 1501832943 +0800	update by push
+f0bfc307b5dba18e32d1c1f51dd2e707e2fed6d2 66e7ad7c3dbb5c35226593e9d19115afd12c2eba kenshin <kenshin.acs@gmail.com> 1501833144 +0800	update by push
+66e7ad7c3dbb5c35226593e9d19115afd12c2eba 265aa0db4521c3d65084cde9b6b587ac91db4a0b kenshin <kenshin.acs@gmail.com> 1502080721 +0800	update by push
+265aa0db4521c3d65084cde9b6b587ac91db4a0b 9fa99d5ad6f6ff7a2b46dd2853047af8453c7bb2 kenshin <kenshin.acs@gmail.com> 1502081042 +0800	pull -v --progress --rebase rps refs/heads/master: fast-forward
+9fa99d5ad6f6ff7a2b46dd2853047af8453c7bb2 8a78c75e7278cd9164f2ba8168be3d97e04c3fa1 kenshin <kenshin.acs@gmail.com> 1502168301 +0800	pull -v --progress --rebase rps refs/heads/master: fast-forward
+8a78c75e7278cd9164f2ba8168be3d97e04c3fa1 8c7bc13d7b1b9836be23f3eb86dc93b3344ddd41 kenshin <kenshin.acs@gmail.com> 1502189963 +0800	pull -v --progress --rebase rps refs/heads/master: fast-forward
+8c7bc13d7b1b9836be23f3eb86dc93b3344ddd41 1c888f8f0665b7817f4c70e4efd927951d3a94b5 kenshin <kenshin.acs@gmail.com> 1502245618 +0800	update by push
+1c888f8f0665b7817f4c70e4efd927951d3a94b5 ddaadafb705693984aa63d993ec9e03c702fccd4 kenshin <kenshin.acs@gmail.com> 1503972795 +0800	fetch -v --progress --prune rps: fast-forward
+ddaadafb705693984aa63d993ec9e03c702fccd4 d99aeffddbc0d861a4dd0d4339e7a6a69afea874 kenshin <kenshin.acs@gmail.com> 1503978505 +0800	fetch -v --progress --prune rps: fast-forward
+d99aeffddbc0d861a4dd0d4339e7a6a69afea874 1d210e287d81db64e6fb59c1f770b6baa4a8dcef kenshin <kenshin.acs@gmail.com> 1503981180 +0800	update by push
+1d210e287d81db64e6fb59c1f770b6baa4a8dcef 3428c9697df7538d0526e33fe7e60c187a046c10 kenshin <kenshin.acs@gmail.com> 1504067246 +0800	update by push

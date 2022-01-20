@@ -1,0 +1,53 @@
+[2017-08-30 12:14:23 <werkzeug>] INFO:  * Running on http://127.0.0.1:9898/ (Press CTRL+C to quit)
+[2017-08-30 12:14:23 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:14:23 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:14:23 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:14:25 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:14:25] "GET /api/godaddy/proxy/socks5/ HTTP/1.1" 200 -
+[2017-08-30 12:14:26 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:14:26] "GET /favicon.ico HTTP/1.1" 404 -
+[2017-08-30 12:15:19 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-08-30 12:15:19 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:15:19 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:15:19 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:15:20 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:15:20] "GET /api/godaddy/proxy/socks5/ HTTP/1.1" 200 -
+[2017-08-30 12:15:40 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:15:40] "GET /api/godaddy/proxy/http_tunne;/ HTTP/1.1" 404 -
+[2017-08-30 12:15:44 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:15:44] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-08-30 12:30:56 <werkzeug>] INFO:  * Running on http://127.0.0.1:9898/ (Press CTRL+C to quit)
+[2017-08-30 12:30:56 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:30:57 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:30:57 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:33:07 <werkzeug>] INFO:  * Running on http://127.0.0.1:9898/ (Press CTRL+C to quit)
+[2017-08-30 12:33:07 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:33:07 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:33:07 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:33:09 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:33:09] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-08-30 12:33:09 <werkzeug>] ERROR: Error on request:
+Traceback (most recent call last):
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/werkzeug/serving.py", line 209, in run_wsgi
+    execute(self.server.app)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/werkzeug/serving.py", line 200, in execute
+    write(data)
+  File "/Users/kenshin/workspace/.virtualenvs/rps/lib/python2.7/site-packages/werkzeug/serving.py", line 181, in write
+    self.wfile.write(data)
+IOError: [Errno 32] Broken pipe
+[2017-08-30 12:33:09 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:33:09] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-08-30 12:35:07 <werkzeug>] INFO: 127.0.0.1 - - [30/Aug/2017 12:35:07] "POST /api/proxy/ban/192.129.198.42 HTTP/1.1" 200 -
+[2017-08-30 12:40:06 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-08-30 12:40:06 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:40:07 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:40:07 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:40:15 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-08-30 12:40:15 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:40:16 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:40:16 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:40:17 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-08-30 12:40:17 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:40:17 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:40:17 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:40:18 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-08-30 12:40:19 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:40:19 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:40:19 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-08-30 12:41:38 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-08-30 12:41:38 <werkzeug>] INFO:  * Restarting with stat
+[2017-08-30 12:41:38 <werkzeug>] WARNING:  * Debugger is active!
+[2017-08-30 12:41:38 <werkzeug>] INFO:  * Debugger PIN: 149-174-201

@@ -1,0 +1,26 @@
+[2017-09-01 12:20:01 <werkzeug>] INFO:  * Running on http://127.0.0.1:9898/ (Press CTRL+C to quit)
+[2017-09-01 12:20:01 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-01 12:20:01 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-01 12:20:01 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-01 12:20:09 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:20:09] "GET /api/proxy/http HTTP/1.1" 404 -
+[2017-09-01 12:20:10 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:20:10] "GET /favicon.ico HTTP/1.1" 404 -
+[2017-09-01 12:20:16 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:20:16] "GET /api/godaddy/proxy/http HTTP/1.1" 301 -
+[2017-09-01 12:20:16 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:20:16] "GET /api/godaddy/proxy/http/ HTTP/1.1" 200 -
+[2017-09-01 12:20:32 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-01 12:20:33 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-01 12:20:33 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-01 12:20:33 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-01 12:20:33 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:20:33] "GET /api/godaddy/proxy/http/ HTTP/1.1" 200 -
+[2017-09-01 12:21:07 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-01 12:21:08 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-01 12:21:08 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-01 12:21:08 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-01 12:21:46 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:21:46] "GET /api/godaddy/proxy/http/ HTTP/1.1" 200 -
+[2017-09-01 12:21:55 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:21:55] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-01 12:24:10 <werkzeug>] INFO:  * Detected change in '/Users/kenshin/workspace/rps/api/rps/api/views.py', reloading
+[2017-09-01 12:24:11 <werkzeug>] INFO:  * Restarting with stat
+[2017-09-01 12:24:11 <werkzeug>] WARNING:  * Debugger is active!
+[2017-09-01 12:24:11 <werkzeug>] INFO:  * Debugger PIN: 149-174-201
+[2017-09-01 12:24:12 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:24:12] "GET /api/godaddy/proxy/http/ HTTP/1.1" 200 -
+[2017-09-01 12:24:21 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:24:21] "GET /api/godaddy/proxy/http_tunnel/ HTTP/1.1" 200 -
+[2017-09-01 12:24:29 <werkzeug>] INFO: 127.0.0.1 - - [01/Sep/2017 12:24:29] "GET /api/godaddy/proxy/socks5/ HTTP/1.1" 200 -

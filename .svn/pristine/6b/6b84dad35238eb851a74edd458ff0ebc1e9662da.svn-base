@@ -1,0 +1,6 @@
+0000000000000000000000000000000000000000 d83f5aa935a541fdbc8c36af3e185dc6da3954e9 kenshin <kenshin.acs@gmail.com> 1493095441 +0800	branch: Created from master
+d83f5aa935a541fdbc8c36af3e185dc6da3954e9 c3007dc673ddcf5e67cd80076b94168f941a5de0 kenshin <kenshin.acs@gmail.com> 1493095693 +0800	reset: moving to c3007dc673ddcf5e67cd80076b94168f941a5de0
+c3007dc673ddcf5e67cd80076b94168f941a5de0 4dc1535ef98e9f8801bcf263133e4230e6234818 kenshin <kenshin.acs@gmail.com> 1493095937 +0800	reset: moving to 4dc1535ef98e9f8801bcf263133e4230e6234818
+4dc1535ef98e9f8801bcf263133e4230e6234818 25b8f9fa5bad1c890879a71277469617acbc1083 kenshin <kenshin.acs@gmail.com> 1493096547 +0800	reset: moving to 25b8f9fa5bad1c890879a71277469617acbc1083
+25b8f9fa5bad1c890879a71277469617acbc1083 d39a796d7ff4881f19c845468177901656efc6e9 kenshin <kenshin.acs@gmail.com> 1493098196 +0800	commit: bidirectional handshake has been established retry dosen’t make sense
+d39a796d7ff4881f19c845468177901656efc6e9 cc8108b661b3e283127e8fdc13cfa606c1beadf8 kenshin <kenshin.acs@gmail.com> 1493100160 +0800	commit: Make sure previous connection has been closed before re-connect

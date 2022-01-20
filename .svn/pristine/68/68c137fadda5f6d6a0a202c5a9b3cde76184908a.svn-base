@@ -1,0 +1,24 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "rps"]
+	url = https://kenshinx@github.com/kenshinx/rps
+	fetch = +refs/heads/*:refs/remotes/rps/*
+	sslVerify = true
+	gtServiceAccountIdentifier = 29b84eadff2f5e8d77030e1ffc6b071d565fffa30b71313144b07eed166349da
+[branch "http-tunnel-proxy"]
+	remote = rps
+	merge = refs/heads/http-tunnel-proxy
+[branch "upstream-retry-fail"]
+	remote = rps
+	merge = refs/heads/upstream-retry-fail
+[branch "http-proxy"]
+	remote = rps
+	merge = refs/heads/http-proxy
+[branch "mongodb-as-storage"]
+	remote = rps
+	merge = refs/heads/mongodb-as-storage

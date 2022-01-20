@@ -1,0 +1,16 @@
+# -*- coding: utf-8 -*-
+import logging
+
+MONGO_HOST     = "dev"
+MONGO_HOST     = "10.160.151.227:7528, 10.160.121.95:7528"
+MONGO_USERNAME = "mongo"
+MONGO_PASSWORD = "secret"
+MONGO_PASSWORD = "70d05ef8690900a4"
+MONGO_REPLICA_SET = "7000"
+MONGO_REPLICA_SET = "7528"
+
+
+
+
+LOG_LEVEL = logging.INFO
+LOG_FORMAT = "%(name)s %(message)s"

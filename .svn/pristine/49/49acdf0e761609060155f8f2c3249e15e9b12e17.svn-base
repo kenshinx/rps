@@ -1,0 +1,20 @@
+0000000000000000000000000000000000000000 70711f156e118592fd8526db20b683e9c7a8d29b kenshin <kenshin.acs@gmail.com> 1484276335 +0800	branch: Created from master
+70711f156e118592fd8526db20b683e9c7a8d29b e5bc32338ccdc067d4f894e7dec988bf25d019f8 kenshin <kenshin.acs@gmail.com> 1484276808 +0800	commit: Add related rfc links
+e5bc32338ccdc067d4f894e7dec988bf25d019f8 dacc870fe5cbd296d874646cc2b29e20721c4a2d kenshin <kenshin.acs@gmail.com> 1484294494 +0800	commit: Avoid include dependence dead lock
+dacc870fe5cbd296d874646cc2b29e20721c4a2d 86e401d6e1b418eea41aec5e76625baa87a053b3 kenshin <kenshin.acs@gmail.com> 1484407574 +0800	commit: Parse client method request
+86e401d6e1b418eea41aec5e76625baa87a053b3 4347893c09735ea25bb6cf5f6f0ab028a2150d2f kenshin <kenshin.acs@gmail.com> 1484407589 +0800	commit: Ignore ctags
+4347893c09735ea25bb6cf5f6f0ab028a2150d2f 290eca4319ef571f48ce5cf2ce2b94d4b5d7e515 kenshin <kenshin.acs@gmail.com> 1484407631 +0800	commit: string_empty function
+290eca4319ef571f48ce5cf2ce2b94d4b5d7e515 0bf2f1c5c2ae5fcab87022b69468bbbe30079c6c kenshin <kenshin.acs@gmail.com> 1484543460 +0800	commit: Server write function
+0bf2f1c5c2ae5fcab87022b69468bbbe30079c6c c26ea537391b14f3c81894e1250115bd78f5177c kenshin <kenshin.acs@gmail.com> 1484543482 +0800	commit: Use remote instead of destinaton
+c26ea537391b14f3c81894e1250115bd78f5177c 8a7aaef8ad2e209c4cc3d809e453dade56f8cba4 kenshin <kenshin.acs@gmail.com> 1484556410 +0800	commit: write respond to method request
+8a7aaef8ad2e209c4cc3d809e453dade56f8cba4 b021a8ac0a332407073c9f5546f6166567456678 kenshin <kenshin.acs@gmail.com> 1484559136 +0800	commit: debug log
+b021a8ac0a332407073c9f5546f6166567456678 d30042bea8a721ecd75f15db5e7cf1416aae229a kenshin <kenshin.acs@gmail.com> 1484581883 +0800	commit: Parse socks5 username/password authentication request
+d30042bea8a721ecd75f15db5e7cf1416aae229a c52165cf22ccde7ca959beb154d4705a791bfdea kenshin <kenshin.acs@gmail.com> 1484584116 +0800	commit: write socks5 auth response
+c52165cf22ccde7ca959beb154d4705a791bfdea 2ade47a6bebe88258ec205c1f1fd88c7f8fa9c26 kenshin <kenshin.acs@gmail.com> 1484623036 +0800	commit: Begin parse socks5 request
+2ade47a6bebe88258ec205c1f1fd88c7f8fa9c26 a6532748389c1ae5b4088071e77a299e24ce2719 kenshin <kenshin.acs@gmail.com> 1484624641 +0800	commit: Add socks5 protocol comments
+a6532748389c1ae5b4088071e77a299e24ce2719 35869b52b992e2fe7159a2444d1465c97932ac36 kenshin <kenshin.acs@gmail.com> 1484625187 +0800	commit: Elimate gcc warnning
+35869b52b992e2fe7159a2444d1465c97932ac36 b5cda57461b7020539372a288c3f87c7fbfba6be kenshin <kenshin.acs@gmail.com> 1484645044 +0800	commit: Resolve ipv4 addr in request phase
+b5cda57461b7020539372a288c3f87c7fbfba6be 93d9fbacf61e054018eb2a195d023bcb5e62997f kenshin <kenshin.acs@gmail.com> 1484647772 +0800	commit: Parse ipv6 and unix_hostname address
+93d9fbacf61e054018eb2a195d023bcb5e62997f 26a5af403f55b9b46973b8da9c1b54dae57a2e2c kenshin <kenshin.acs@gmail.com> 1484666906 +0800	commit: Parse remote ipv4, ipv6 and hostname request addr
+26a5af403f55b9b46973b8da9c1b54dae57a2e2c eb5e179ee83ba2dc5d83ee7c82f2c419f0cb6b08 kenshin <kenshin.acs@gmail.com> 1484670782 +0800	commit: Return response in timely manner during request has unsupport field.
+eb5e179ee83ba2dc5d83ee7c82f2c419f0cb6b08 0d195e523322f506a79989b3b3b8f7652ee91bba kenshin <kenshin.acs@gmail.com> 1484671321 +0800	commit: Remove no more used s5_parse , s5_handle_t and s5_state_t

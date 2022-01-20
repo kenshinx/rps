@@ -1,0 +1,33 @@
+0000000000000000000000000000000000000000 b1e4fd800b20e77c6044bba71edbc8279000bb0c kenshin <kenshin.acs@gmail.com> 1502351124 +0800	branch: Created from master
+b1e4fd800b20e77c6044bba71edbc8279000bb0c 02e9a7cf38342de77d91be8d0117c43848755227 kenshin <kenshin.acs@gmail.com> 1502357017 +0800	commit: valgrind shell command
+02e9a7cf38342de77d91be8d0117c43848755227 9a3f4300014adfb7c6c97df534ae68e0cbf29364 kenshin <kenshin.acs@gmail.com> 1502362498 +0800	commit: Top level Makefile
+9a3f4300014adfb7c6c97df534ae68e0cbf29364 9146897f5ea4b7cc2627a78c5e9363498bbabac7 kenshin <kenshin.acs@gmail.com> 1502363623 +0800	commit: ignore compiled executable file
+9146897f5ea4b7cc2627a78c5e9363498bbabac7 73ce07488c2bc34737fabcd814a77cbb345c0108 kenshin <kenshin.acs@gmail.com> 1502363802 +0800	commit: Remove redis depency and add libcurl
+73ce07488c2bc34737fabcd814a77cbb345c0108 b621002479c314c7d68f3c7232880f79c704f615 kenshin <kenshin.acs@gmail.com> 1502420693 +0800	commit: Remove redis dependency
+b621002479c314c7d68f3c7232880f79c704f615 5bef98ac678129f961e0a64989fadcc0d1f8e56e kenshin <kenshin.acs@gmail.com> 1502441396 +0800	commit: ignore logs file
+5bef98ac678129f961e0a64989fadcc0d1f8e56e 3332c246dfc9079dcb27816b8744a9734eda1e92 kenshin <kenshin.acs@gmail.com> 1502441436 +0800	commit: curl request api
+3332c246dfc9079dcb27816b8744a9734eda1e92 00e72a6dbf08baed01cd5958213dd3a006791e57 kenshin <kenshin.acs@gmail.com> 1502445592 +0800	commit: parse the upstream json records which fetched from webapi
+00e72a6dbf08baed01cd5958213dd3a006791e57 7f1685dab16e1004a34007721be77de3932f36ca kenshin <kenshin.acs@gmail.com> 1502679900 +0800	commit: Add configurations about upstream request rate
+7f1685dab16e1004a34007721be77de3932f36ca de85d9899226715a068dc0e2f708ff5fae2d7bc3 kenshin <kenshin.acs@gmail.com> 1502683650 +0800	commit: upstream be a pointer of session instead of struct
+de85d9899226715a068dc0e2f708ff5fae2d7bc3 1372c0f61d2ad8dafd13b085cc0598ae086dfa6c kenshin <kenshin.acs@gmail.com> 1502709459 +0800	commit: Logging session status and elapsed
+1372c0f61d2ad8dafd13b085cc0598ae086dfa6c b29e8d53acfd8543ea9526defb228cea58c35d7a kenshin <kenshin.acs@gmail.com> 1502771443 +0800	commit: rps_addr_uninit method
+b29e8d53acfd8543ea9526defb228cea58c35d7a 8a815104c0b02e085c3cf8680ea7f2021f3732d4 kenshin <kenshin.acs@gmail.com> 1502771546 +0800	commit: improved http max header length and optimize logging
+8a815104c0b02e085c3cf8680ea7f2021f3732d4 eb0544fe50f1fa8608443d0d26badb7fc2f1b98f kenshin <kenshin.acs@gmail.com> 1502783888 +0800	commit: define upstream max fail threshold
+eb0544fe50f1fa8608443d0d26badb7fc2f1b98f 03e9b892af314238f27e962af0c39adf890112a7 kenshin <kenshin.acs@gmail.com> 1502784102 +0800	commit: ignore max_fail_rate if be setted to 0
+03e9b892af314238f27e962af0c39adf890112a7 b72884a9ca5bb188e94d7f9aea0623b16f5dcf76 kenshin <kenshin.acs@gmail.com> 1502784407 +0800	commit: set max loop count, avoid infinite loop
+b72884a9ca5bb188e94d7f9aea0623b16f5dcf76 e223e2ccd8a60a5c1764817e2ee171db6c151d69 kenshin <kenshin.acs@gmail.com> 1502866369 +0800	commit: Circular array based FIFO queue
+e223e2ccd8a60a5c1764817e2ee171db6c151d69 e7c5b89711b2801b7baee67ab8c7537fa842fbee kenshin <kenshin.acs@gmail.com> 1502866409 +0800	commit: FIFO queue as timewheel storage backend.
+e7c5b89711b2801b7baee67ab8c7537fa842fbee e06c4a62e045bbe7f1d239ffc58437540ab9617d kenshin <kenshin.acs@gmail.com> 1502882480 +0800	commit: upstream_request_too_often limitation
+e06c4a62e045bbe7f1d239ffc58437540ab9617d 7eacefa4d57859ca3df80152e9e9f7d11f6f8fe3 kenshin <kenshin.acs@gmail.com> 1502883579 +0800	commit: ignore timewheel if not any request limitation set
+7eacefa4d57859ca3df80152e9e9f7d11f6f8fe3 dfbb6ed4aa972081cdd783a99990405b4c6e759f kenshin <kenshin.acs@gmail.com> 1502884485 +0800	commit: correct handle deadline accroding the mr1m, mr1h, mr1d configuration
+dfbb6ed4aa972081cdd783a99990405b4c6e759f c0f6d4ab6421ce56e443a1afe3eac892b2d54cb9 kenshin <kenshin.acs@gmail.com> 1503042474 +0800	commit: ignore pyc file
+c0f6d4ab6421ce56e443a1afe3eac892b2d54cb9 32019b0e0e55883f2e724c1e2b20a94ae57c341a kenshin <kenshin.acs@gmail.com> 1503042909 +0800	commit: pip freeze
+32019b0e0e55883f2e724c1e2b20a94ae57c341a b82c1350b14c57446e43d6c98eec36306997bcb8 kenshin <kenshin.acs@gmail.com> 1503049829 +0800	commit: Ban specific upstream proxy via API
+b82c1350b14c57446e43d6c98eec36306997bcb8 a80880a630e46e4997ef37397fd0eb5873b0585b kenshin <kenshin.acs@gmail.com> 1503049852 +0800	commit: Remove pyc file
+a80880a630e46e4997ef37397fd0eb5873b0585b 749b74171b4b484c27f2b5a1897b6a57b317fef8 kenshin <kenshin.acs@gmail.com> 1503049965 +0800	commit: remove pyc file
+749b74171b4b484c27f2b5a1897b6a57b317fef8 612b9cfe5e0a142e087e60ed98bded120fcc9b21 kenshin <kenshin.acs@gmail.com> 1503886302 +0800	commit: remove debug code
+612b9cfe5e0a142e087e60ed98bded120fcc9b21 9ac5b85eda81930d1b9793524ec11851b53bc87b kenshin <kenshin.acs@gmail.com> 1503912454 +0800	commit: upstreams refresh
+9ac5b85eda81930d1b9793524ec11851b53bc87b abfd1e73d06122e5d4ee59a9a26a355f0adb5987 kenshin <kenshin.acs@gmail.com> 1503919696 +0800	commit: storage upstream proxy statistics via webapi
+abfd1e73d06122e5d4ee59a9a26a355f0adb5987 079976d0f6a1fbf643d9b5c58014d79b241ce49e kenshin <kenshin.acs@gmail.com> 1503971007 +0800	commit: view the statistic information
+079976d0f6a1fbf643d9b5c58014d79b241ce49e ab910ca28af1c9869f28b01475d257eb415c89b8 kenshin <kenshin.acs@gmail.com> 1503971330 +0800	commit: forget init memroy
+ab910ca28af1c9869f28b01475d257eb415c89b8 0b9192af7f1c21e44b9f58c4efcabec9b8b22cbf kenshin <kenshin.acs@gmail.com> 1503972601 +0800	commit: jump the statistic info post procedure during the initialization phase
