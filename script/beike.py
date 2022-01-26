@@ -56,8 +56,8 @@ class BeikeProxy(threading.Thread):
 	
         expire_date = datetime.strptime(r["expire_time"], "%Y-%m-%d %H:%M:%S")
         # expire in one minute.
-        if expire_date < (datetime.now() + timedelta(seconds=60)):
-            print "%s:%d will expire in one minute" % (r["ip"], r["port"])
+        if expire_date < (datetime.now() + timedelta(seconds=30)):
+            print "%s:%d will expire in half minute" % (r["ip"], int(r["port"]))
             return
 
         filter = {
@@ -114,8 +114,8 @@ class BeikeProxy(threading.Thread):
         self._addProxy(HTTPS_API, "http_tunnel")
 
     def delExpireProxy(self):
-        # expire in one minute.
-        expire_date = datetime.now() + timedelta(seconds=60)
+        # expire in half minute.
+        expire_date = datetime.now() + timedelta(seconds=30)
         socks5 = self.db.socks5.delete_many(
             {"source": "beike", "expire_date": {"$lt": expire_date}})
         http = self.db.http.delete_many(
