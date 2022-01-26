@@ -18,20 +18,8 @@ servers:
         - proto: socks5
           listen: 10.220.137.171
           port: 9883
-          #username: rps
-          #password: secret
-          
-        #- proto: http
-        #  listen: 0.0.0.0
-        #  port: 9894
-        #  username: rps
-        #  password: secret
-
-        #- proto: http_tunnel
-        #  listen: "10.220.137.171"
-        #  port: 9793
-        #  username: rps
-        #  password: secret
+          username: netlab
+          password: TmEWQhqUZ9mn
 
 
 upstreams:
@@ -76,7 +64,7 @@ upstreams:
 api:
     url: http://10.220.137.171:9897/api/tmp3
     #Fetching proxy resouce from specific source
-    s5_source: "zhima"
+    s5_source: "beike"
     http_source: ""
     http_tunnel_source: ""
     timeout: 30

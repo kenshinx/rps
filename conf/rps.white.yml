@@ -18,20 +18,9 @@ servers:
         - proto: socks5
           listen: 10.220.137.171
           port: 9880
-          username: rps
-          password: secret
+          username: netlab
+          password: LcM34ijGr8Qf
           
-       # - proto: http
-       #   listen: 0.0.0.0
-       #   port: 9881
-       #   username: rps
-       #   password: secret
-
-       # - proto: http_tunnel
-       #   listen: "0.0.0.0"
-       #   port: 9882
-       #   username: rps
-       #   password: secret
 
 
 upstreams:
@@ -73,14 +62,12 @@ upstreams:
     pools:
         - proto: socks5
 
-        #- proto: http
 
-        #- proto: http_tunnel
 
 api:
     url: http://10.220.137.171:9897/api/white
     #Fetching proxy resouce from specific source
-    s5_source: "zhima"
+    s5_source: "beike"
     http_source: ""
     http_tunnel_source: ""
     timeout: 30
