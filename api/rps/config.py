@@ -13,7 +13,7 @@ class BaseConfig(object):
 
 
 
-    SECRET_KEY = 'oiAd}gRN9EsH47UqYQTiZNYDy74vbJ2P'
+    SECRET_KEY = os.environ.get("RPS_SECRET_KEY", 'oiAd}gRN9EsH47UqYQTiZNYDy74vbJ2P')
 
     # log
     LOG_FMT = '[%(asctime)s <%(name)s>] %(levelname)s: %(message)s'
@@ -28,12 +28,10 @@ class BaseConfig(object):
     LOG_FILE = "rps_api.log"
     LOG_PATH = os.path.join(LOG_FOLDER, LOG_FILE)
 
-    MONGO_HOST     = "dev"
-    MONGO_HOST     = "10.160.151.227:7528, 10.160.121.95:7528"
-    MONGO_USERNAME = "mongo"
-    MONGO_PASSWORD = "secret"
-    MONGO_PASSWORD = "70d05ef8690900a4"
-    MONGO_DBNAME = "rps"
+    MONGO_HOST     = os.environ.get("MONGO_HOST", "localhost:27017")
+    MONGO_USERNAME = os.environ.get("MONGO_USERNAME", "mongo")
+    MONGO_PASSWORD = os.environ.get("MONGO_PASSWORD", "")
+    MONGO_DBNAME = os.environ.get("MONGO_DBNAME", "rps")
     MONGO_AUTH_SOURCE = "admin"
 
 
@@ -43,12 +41,6 @@ class ProductionConfig(BaseConfig):
 
     LOG_LEVEL = logging.INFO
     LOG_STDOUT = False
-
-    
-    MONGO_HOST     = "dev1"
-    MONGO_USERNAME = "mongo"
-    MONGO_PASSWORD = "secret"
-    MONGO_DBNAME = "rps"
 
 class DevelopmentConfig(BaseConfig):
 

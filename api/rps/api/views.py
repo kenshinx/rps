@@ -79,10 +79,10 @@ def proxy(tag, proto):
     now = datetime.now().replace(tzinfo=None)
 
     for r in collection.find(filter, {"_id":0}):
-        if not r.has_key("insert_date"):
+        if "insert_date" not in r:
             continue
 
-        if r.has_key("expire_date"):
+        if "expire_date" in r:
             if r["expire_date"].replace(tzinfo = None) <= now:
                 continue
             r["expire_date"] = dt2ts(r["expire_date"])
