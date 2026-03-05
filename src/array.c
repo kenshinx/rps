@@ -123,9 +123,13 @@ array_get(rps_array_t *a, uint32_t idx) {
     if (array_is_empty(a)) {
         return NULL;
     }
-    
+
+    if (idx >= a->nelts) {
+        return NULL;
+    }
+
     elt = (uint8_t *)a->elts + a->size * idx;
-    
+
     return elt;
 }
 

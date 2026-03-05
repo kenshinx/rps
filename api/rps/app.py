@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from flask import Flask, request, render_template, session
-
+from flask import Flask, request, jsonify
 
 from .api import api
 from .log import LogConfig
@@ -54,6 +53,15 @@ def configLOG(app):
 def configBlueprints(app, blueprints):
     for blueprint in blueprints:
         app.register_blueprint(blueprint)
+
+    api_key = os.environ.get("RPS_API_KEY", "")
+    if api_key:
+        @app.before_request
+        def check_api_key():
+            if request.path == "/":
+                return None
+            if request.headers.get("X-RPS-API-Key") != api_key:
+                return jsonify(status="UNAUTHORIZED", error="Invalid or missing API key"), 401
 
 def configDB(app):
     mongo.init_app(app)
