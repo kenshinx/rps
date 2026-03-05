@@ -11,20 +11,23 @@
 
 #include <unistd.h>
 
-#define TCP_BACKLOG  65536
+#define TCP_BACKLOG         128
 #define TCP_KEEPALIVE_DELAY 120
+#define MAX_CONNECTIONS     10000
 
 
 struct server {
-    uv_loop_t               loop;   
+    uv_loop_t               loop;
     uv_tcp_t                us; /* libuv tcp server */
 
     rps_proto_t             proto;
-    
+
     rps_addr_t              listen;
-    
+
     uint32_t                rtimeout; /* request context timeout */
     uint32_t                ftimeout; /* forward context timeout */
+
+    uint32_t                conn_count; /* active connection count */
 
     struct config_server    *cfg;
 

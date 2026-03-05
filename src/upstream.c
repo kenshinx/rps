@@ -914,7 +914,7 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
             NOT_REACHED();
     }   
 
-    uv_rwlock_rdlock(&up->rwlock);
+    uv_rwlock_wrlock(&up->rwlock);
 
     for ( ; ; ) {
         if (count >= UPSTREAM_MAX_LOOP) {
@@ -965,6 +965,6 @@ upstreams_get(struct upstreams *us, rps_proto_t proto) {
         }
     }
     
-    uv_rwlock_rdunlock(&up->rwlock);
+    uv_rwlock_wrunlock(&up->rwlock);
     return upstream;
 }

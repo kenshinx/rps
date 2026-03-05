@@ -45,6 +45,7 @@ server_init(struct server *s, struct config_server *cfg,
     s->upstreams = us;
     s->rtimeout = rtimeout;
     s->ftimeout = ftimeout;
+    s->conn_count = 0;
 
     return RPS_OK;
 }
@@ -166,6 +167,9 @@ server_sess_free(rps_sess_t *sess) {
         return;
     }
 
+    if (sess->server->conn_count > 0) {
+        sess->server->conn_count--;
+    }
     sess->upstream = NULL;
     rps_free(sess);
 }
@@ -717,12 +721,22 @@ server_on_request_connect(uv_stream_t *us, int err) {
     }
 
     s = (struct server*)us->data;
-    
+
+    if (s->conn_count >= MAX_CONNECTIONS) {
+        log_warn("max connections (%d) reached, rejecting new connection.", MAX_CONNECTIONS);
+        uv_tcp_t tmp;
+        uv_tcp_init(&s->loop, &tmp);
+        uv_accept(us, (uv_stream_t *)&tmp);
+        uv_close((uv_handle_t *)&tmp, NULL);
+        return;
+    }
+
     sess = (struct session*)rps_alloc(sizeof(struct session));
     if (sess == NULL) {
         return;
     }
     server_sess_init(sess, s);
+    s->conn_count++;
 
     request = (struct context *)rps_alloc(sizeof(struct context));
     if (request == NULL) {
@@ -732,6 +746,7 @@ server_on_request_connect(uv_stream_t *us, int err) {
     sess->request = request;
     status = server_ctx_init(request, sess, c_request, s->rtimeout);
     if (status != RPS_OK) {
+        rps_free(request);
         rps_free(sess);
         return;
     }
@@ -903,7 +918,7 @@ server_forward_connect(rps_ctx_t *forward) {
     sess = forward->sess;
 
     ASSERT(forward->flag == c_forward);
-    ASSERT(forward->state = c_conn);
+    ASSERT(forward->state == c_conn);
 
 
     /* Be called after connect done */
